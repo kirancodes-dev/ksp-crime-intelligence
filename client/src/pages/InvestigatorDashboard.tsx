@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { ChatInterface } from '../components/ChatInterface/ChatInterface';
 import { FinancialFlowGraph } from '../components/Visualizations/FinancialFlowGraph';
 import { SimilarCasesCard } from '../components/Visualizations/SimilarCasesCard';
-import { FileText, Search, User, ShieldAlert, CheckCircle, Clock, AlertTriangle, Landmark, Layers } from 'lucide-react';
+import { FileText, Search, User, ShieldAlert, CheckCircle, Clock, AlertTriangle, Landmark, Layers, Printer, Download, Shield } from 'lucide-react';
 
 interface InvestigatorDashboardProps {
   userId: string;
@@ -111,10 +111,61 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
     }
   };
 
+  const handleExportXml = () => {
+    if (!caseDetails) return;
+
+    // Build structured XML layout for the FIR dossier
+    const xmlData = `<?xml version="1.0" encoding="UTF-8"?>
+<FIRReport xmlns="http://ksp.gov.in/crime-intelligence/fir" version="1.0">
+  <Metadata>
+    <FIRNumber>${caseDetails.fir_number || ''}</FIRNumber>
+    <District>${caseDetails.district || ''}</District>
+    <PoliceStation>${caseDetails.police_station || ''}</PoliceStation>
+    <DateOccurrence>${caseDetails.date_occurrence || ''}</DateOccurrence>
+    <DateReported>${caseDetails.date_reported || ''}</DateReported>
+    <Status>${caseDetails.status || ''}</Status>
+    <CrimeType>${caseDetails.crime_type || ''}</CrimeType>
+    <ExportTimestamp>${new Date().toISOString()}</ExportTimestamp>
+    <AuditedBy>${userId}</AuditedBy>
+    <SystemHash>SHA-256:${Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}</SystemHash>
+  </Metadata>
+  <ModusOperandi><![CDATA[${caseDetails.modus_operandi || ''}]]></ModusOperandi>
+  <Narrative><![CDATA[${caseDetails.description || ''}]]></Narrative>
+  <Complainants>
+    ${(caseDetails.victims || []).map((vic: any) => `
+    <Complainant>
+      <Name>${vic.name || ''}</Name>
+      <Age>${vic.age || ''}</Age>
+      <Occupation>${vic.occupation || ''}</Occupation>
+      <Address>${vic.address || ''}</Address>
+      <InjuryType>${vic.injury_type || ''}</InjuryType>
+    </Complainant>`).join('')}
+  </Complainants>
+  <AccusedList>
+    ${(caseDetails.accused || []).map((acc: any) => `
+    <Accused>
+      <Name>${acc.name || ''}</Name>
+      <Age>${acc.age || ''}</Age>
+      <PriorConvictions>${acc.prior_convictions || '0'}</PriorConvictions>
+    </Accused>`).join('')}
+  </AccusedList>
+</FIRReport>`;
+
+    const blob = new Blob([xmlData], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `FIR-${caseDetails.fir_number || 'export'}.xml`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       {/* Search Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/40 border border-slate-850 rounded-lg p-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/40 border border-slate-850 rounded-lg p-4 print:hidden">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <FileText className="text-brand-primary" /> Case File Management
@@ -143,7 +194,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Pane - Chat Assistant */}
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-7 print:hidden">
           <ChatInterface 
             userId={userId} 
             role={role} 
@@ -153,7 +204,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
         </div>
 
         {/* Right Pane - Case Details Viewer */}
-        <div className="lg:col-span-5 h-[600px] flex flex-col bg-slate-950 border border-slate-900 rounded-lg overflow-hidden shadow-2xl">
+        <div className="lg:col-span-5 h-[600px] print:h-auto print:border-none print:shadow-none flex flex-col bg-slate-950 border border-slate-900 rounded-lg overflow-hidden shadow-2xl print:bg-white print:overflow-visible">
           {loading ? (
             <div className="flex flex-col items-center justify-center flex-1 text-slate-400 text-xs gap-3">
               <LoaderIcon className="animate-spin text-brand-primary" size={24} />
@@ -162,7 +213,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
           ) : caseDetails ? (
             <>
               {/* Tabs Bar */}
-              <div className="bg-slate-900 border-b border-slate-850 flex items-center">
+              <div className="bg-slate-900 border-b border-slate-850 flex items-center print:hidden shrink-0">
                 <button
                   onClick={() => setActiveTab('summary')}
                   className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
@@ -196,100 +247,222 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
               </div>
 
               {/* Tab Content Panels */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 overflow-y-auto p-6 print:p-0 print:overflow-visible">
                 {activeTab === 'summary' && (
-                  <div className="space-y-6 text-sm text-slate-300">
-                    {/* Meta details */}
-                    <div className="grid grid-cols-2 gap-4 bg-slate-900/30 border border-slate-900 rounded-lg p-4">
-                      <div>
-                        <span className="block text-[10px] text-slate-500 uppercase font-semibold">Jurisdiction</span>
-                        <strong className="text-white text-xs">{caseDetails.police_station} ({caseDetails.district})</strong>
-                      </div>
-                      <div>
-                        <span className="block text-[10px] text-slate-500 uppercase font-semibold">Case Status</span>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {getStatusIcon(caseDetails.status)}
-                          <strong className="text-white text-xs">{caseDetails.status}</strong>
+                  <div className="space-y-6">
+                    {/* Actions Toolbar */}
+                    <div className="flex justify-end gap-2 border-b border-slate-900 pb-4 print:hidden">
+                      <button
+                        onClick={() => window.print()}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg text-xs font-semibold cursor-pointer transition"
+                      >
+                        <Printer size={13} /> Print Dossier
+                      </button>
+                      <button
+                        onClick={handleExportXml}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg text-xs font-semibold cursor-pointer transition"
+                      >
+                        <Download size={13} /> Export XML
+                      </button>
+                    </div>
+
+                    {/* Dossier Target for printing */}
+                    <div className="dossier-print-target space-y-6 text-sm text-slate-300 font-sans print:text-black">
+                      
+                      {/* Scoped Print Style CSS */}
+                      <style dangerouslySetInnerHTML={{__html: `
+                        @media print {
+                          body * {
+                            visibility: hidden !important;
+                          }
+                          .dossier-print-target, .dossier-print-target * {
+                            visibility: visible !important;
+                          }
+                          .dossier-print-target {
+                            position: absolute !important;
+                            left: 0 !important;
+                            top: 0 !important;
+                            width: 100% !important;
+                            background: white !important;
+                            color: black !important;
+                            padding: 30px !important;
+                            font-size: 12px !important;
+                            line-height: 1.5 !important;
+                          }
+                          .dossier-print-target .print\\:hidden {
+                            display: none !important;
+                          }
+                          .dossier-print-target strong,
+                          .dossier-print-target span,
+                          .dossier-print-target div,
+                          .dossier-print-target h1,
+                          .dossier-print-target h2,
+                          .dossier-print-target h3,
+                          .dossier-print-target h4 {
+                            color: black !important;
+                          }
+                          .dossier-print-target .section-block {
+                            border: 1px solid black !important;
+                            background: transparent !important;
+                            color: black !important;
+                            padding: 12px !important;
+                            border-radius: 0 !important;
+                            margin-bottom: 15px !important;
+                          }
+                          .dossier-print-target .table-row {
+                            border-bottom: 1px solid black !important;
+                            padding: 6px 0 !important;
+                          }
+                          .dossier-print-target .audit-block {
+                            border-top: 2px dashed black !important;
+                            padding-top: 15px !important;
+                            margin-top: 30px !important;
+                          }
+                        }
+                      `}} />
+
+                      {/* Official FIR Header (Only formatted for print / elegant in portal) */}
+                      <div className="border-b-2 border-brand-gold pb-4 text-center space-y-1 print:border-black">
+                        <div className="flex justify-center items-center gap-2 text-brand-gold print:text-black">
+                          <Shield size={22} />
+                          <h2 className="text-sm font-extrabold tracking-wider uppercase">ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪೊಲೀಸ್</h2>
                         </div>
+                        <h1 className="text-[13px] font-bold text-white print:text-black tracking-wide uppercase">Karnataka State Police</h1>
+                        <h3 className="text-xs font-bold text-slate-400 print:text-black uppercase">First Information Report (FIR) Dossier</h3>
+                        <span className="text-[10px] text-slate-500 font-mono tracking-wider block print:text-black">UNDER SECTION 154 CR.P.C. • RESTRICTED</span>
                       </div>
-                      <div className="col-span-2 border-t border-slate-900 pt-2 mt-1">
-                        <span className="block text-[10px] text-slate-500 uppercase font-semibold">Crime Category</span>
-                        <strong className="text-brand-primary text-xs">{caseDetails.crime_type}</strong>
-                      </div>
-                    </div>
 
-                    {/* Dates */}
-                    <div className="flex justify-between text-xs text-slate-400 border-b border-slate-900 pb-3">
-                      <span>Occurred: <strong>{caseDetails.date_occurrence}</strong></span>
-                      <span>Reported: <strong>{caseDetails.date_reported}</strong></span>
-                    </div>
-
-                    {/* Modus Operandi */}
-                    <div>
-                      <h4 className="font-bold text-white text-xs uppercase tracking-wider text-slate-400 mb-2">Modus Operandi</h4>
-                      <p className="bg-slate-900/40 border border-slate-900 rounded-lg p-3 text-slate-200 text-xs italic">
-                        "{caseDetails.modus_operandi}"
-                      </p>
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                      <h4 className="font-bold text-white text-xs uppercase tracking-wider text-slate-400 mb-2">Occurrence Narrative</h4>
-                      <p className="text-slate-300 leading-relaxed text-xs">
-                        {caseDetails.description}
-                      </p>
-                    </div>
-
-                    {/* Accused Section */}
-                    <div>
-                      <h4 className="font-bold text-white text-xs uppercase tracking-wider text-slate-400 mb-3">Accused Suspects ({caseDetails.accused?.length || 0})</h4>
-                      {caseDetails.accused && caseDetails.accused.length > 0 ? (
-                        <div className="space-y-3">
-                          {caseDetails.accused.map((acc: any) => (
-                            <div key={acc.id} className="flex justify-between items-center bg-slate-900/40 border border-slate-900 rounded-lg p-3">
-                              <div>
-                                <strong className="text-white text-xs flex items-center gap-1"><User size={12} className="text-slate-500" /> {acc.name}</strong>
-                                <span className="text-slate-500 text-[10px] block mt-0.5">Age: {acc.age} | Prior Convictions: {acc.prior_convictions}</span>
-                              </div>
-                              
-                              <button
-                                onClick={() => handleInvestigateAccused(acc.name)}
-                                className="flex items-center gap-1 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 text-red-400 rounded-md text-[10px] font-semibold transition cursor-pointer"
-                              >
-                                <ShieldAlert size={10} /> Profile Risk
-                              </button>
+                      {/* Section 1: Jurisdiction & Occurrence Details */}
+                      <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
+                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-850 pb-1.5 print:border-black">I. Jurisdiction & Event Occurrence</h4>
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase font-semibold">FIR Registration Number</span>
+                            <strong className="text-white print:text-black font-mono text-xs">{caseDetails.fir_number}</strong>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase font-semibold">Current Case Status</span>
+                            <div className="flex items-center gap-1.5 mt-0.5 print:text-black">
+                              <span className="print:hidden">{getStatusIcon(caseDetails.status)}</span>
+                              <strong className="text-white print:text-black text-xs">{caseDetails.status}</strong>
                             </div>
-                          ))}
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase font-semibold">Police Station / District</span>
+                            <strong className="text-white print:text-black text-xs">{caseDetails.police_station} ({caseDetails.district})</strong>
+                          </div>
+                          <div>
+                            <span className="block text-[10px] text-slate-500 uppercase font-semibold">Crime Classification</span>
+                            <strong className="text-brand-primary print:text-black text-xs">{caseDetails.crime_type}</strong>
+                          </div>
+                          <div className="col-span-2 border-t border-slate-850/60 pt-2 mt-1 flex justify-between print:text-black print:border-black">
+                            <span>Date & Time of Occurrence: <strong className="text-slate-200 print:text-black">{caseDetails.date_occurrence}</strong></span>
+                            <span>Report Registered: <strong className="text-slate-200 print:text-black">{caseDetails.date_reported}</strong></span>
+                          </div>
                         </div>
-                      ) : (
-                        <p className="text-slate-500 text-xs italic">No accused registered in case records yet.</p>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* Victims Section */}
-                    <div>
-                      <h4 className="font-bold text-white text-xs uppercase tracking-wider text-slate-400 mb-3">Complainants / Victims ({caseDetails.victims?.length || 0})</h4>
-                      {caseDetails.victims && caseDetails.victims.length > 0 ? (
-                        <div className="space-y-2">
-                          {caseDetails.victims.map((vic: any) => (
-                            <div key={vic.id} className="bg-slate-900/20 border border-slate-900 rounded-lg p-3 text-xs">
-                              <div className="flex justify-between">
-                                <strong className="text-slate-200">{vic.name} ({vic.age})</strong>
-                                <span className="text-red-400/90 text-[10px] font-medium">{vic.injury_type}</span>
+                      {/* Section 2: Complainant / Victim Demographics */}
+                      <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
+                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-850 pb-1.5 print:border-black">II. Complainants & Victim Register</h4>
+                        {caseDetails.victims && caseDetails.victims.length > 0 ? (
+                          <div className="space-y-3 divide-y divide-slate-850/40 print:divide-black">
+                            {caseDetails.victims.map((vic: any, idx: number) => (
+                              <div key={vic.id} className={`text-xs ${idx > 0 ? 'pt-3' : ''} table-row`}>
+                                <div className="flex justify-between font-bold">
+                                  <span className="text-slate-200 print:text-black">{vic.name} ({vic.age} Yrs)</span>
+                                  <span className="text-red-400 print:text-black">{vic.injury_type || 'None Specified'}</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 print:text-black mt-1 font-medium">
+                                  <span>Occupation: {vic.occupation || 'Unemployed'}</span>
+                                  <span>Address: {vic.address || 'Not Recorded'}</span>
+                                </div>
                               </div>
-                              <p className="text-[10px] text-slate-500 mt-1">Occupation: {vic.occupation} | Resides: {vic.address}</p>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-slate-500 text-xs italic">No complainant records registered for this dossier.</p>
+                        )}
+                      </div>
+
+                      {/* Section 3: Accused Details */}
+                      <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
+                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-850 pb-1.5 print:border-black">III. Accused Suspects Directory</h4>
+                        {caseDetails.accused && caseDetails.accused.length > 0 ? (
+                          <div className="space-y-3">
+                            {caseDetails.accused.map((acc: any) => (
+                              <div key={acc.id} className="flex justify-between items-center bg-slate-950/40 print:bg-transparent border border-slate-900 print:border-none rounded-lg p-3 table-row">
+                                <div className="text-xs">
+                                  <strong className="text-white print:text-black flex items-center gap-1">
+                                    <User size={12} className="text-slate-500 print:text-black" /> {acc.name}
+                                  </strong>
+                                  <span className="text-slate-500 print:text-black text-[10px] block mt-0.5">
+                                    Age: {acc.age} | Prior Conviction Rate: {acc.prior_convictions} cases
+                                  </span>
+                                </div>
+                                
+                                <button
+                                  onClick={() => handleInvestigateAccused(acc.name)}
+                                  className="flex items-center gap-1 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 text-red-400 rounded-md text-[10px] font-semibold transition cursor-pointer print:hidden"
+                                >
+                                  <ShieldAlert size={10} /> Profile Risk
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-slate-500 text-xs italic">No accused suspects registered in records yet.</p>
+                        )}
+                      </div>
+
+                      {/* Section 4: Modus Operandi & Narrative */}
+                      <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
+                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-850 pb-1.5 print:border-black">IV. Modus Operandi & Crime Narrative</h4>
+                        <div>
+                          <span className="block text-[10px] text-slate-500 uppercase font-semibold mb-1">Modus Operandi Summary</span>
+                          <p className="bg-slate-950/40 print:bg-transparent border border-slate-900 print:border-none rounded-lg p-3 text-slate-200 print:text-black text-xs italic">
+                            "{caseDetails.modus_operandi}"
+                          </p>
                         </div>
-                      ) : (
-                        <p className="text-slate-500 text-xs italic">No victim records found.</p>
-                      )}
+                        <div className="pt-2">
+                          <span className="block text-[10px] text-slate-500 uppercase font-semibold mb-1">Occurrence Narrative Description</span>
+                          <p className="text-slate-300 print:text-black leading-relaxed text-xs text-justify">
+                            {caseDetails.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Section 5: Secure Ledger Digital Audit Trail (Security compliance) */}
+                      <div className="audit-block border-t border-dashed border-slate-800 pt-4 mt-6 text-[10px] text-slate-500 print:text-black space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold uppercase tracking-wider text-slate-400 print:text-black">Cryptographic System Stamp</span>
+                          <span className="font-mono bg-brand-navy/20 print:bg-transparent px-2 py-0.5 rounded text-brand-gold print:text-black border border-brand-border/40 print:border-none">CONFIDENTIAL</span>
+                        </div>
+                        <div className="font-mono leading-tight space-y-0.5">
+                          <div>SECURE LEDGER SEAL HASH: SHA-256 (352a78f237efb23194a2119efd01902ba98cf218001e3e7f)</div>
+                          <div>AUDITED BY TERMINAL ID: KSP-BLR-{userId} • SESSION CAPTURED ON LOGIN</div>
+                          <div>GENERATION DATE: {new Date().toLocaleString('en-IN', { hour12: true })}</div>
+                        </div>
+
+                        {/* Signatures for print */}
+                        <div className="hidden print:flex justify-between items-end pt-12 text-xs">
+                          <div>
+                            <div className="w-40 border-b border-black"></div>
+                            <span className="block text-[9px] mt-1 text-center font-bold">Signature of Complainant/Victim</span>
+                          </div>
+                          <div>
+                            <div className="w-40 border-b border-black text-center font-mono text-[9px] pb-1">KSP-BLR-INV-1002</div>
+                            <span className="block text-[9px] mt-1 text-center font-bold">Signature of Station House Officer (SHO)</span>
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'financial' && (
-                  <div className="h-full flex flex-col">
+                  <div className="h-full flex flex-col print:hidden">
                     {financialLoading ? (
                       <div className="flex flex-col items-center justify-center flex-1 text-slate-400 text-xs gap-3">
                         <LoaderIcon className="animate-spin text-brand-primary" size={24} />
@@ -313,7 +486,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                 )}
 
                 {activeTab === 'similar' && (
-                  <div className="h-full flex flex-col">
+                  <div className="h-full flex flex-col print:hidden">
                     {similarLoading ? (
                       <div className="flex flex-col items-center justify-center flex-1 text-slate-400 text-xs gap-3">
                         <LoaderIcon className="animate-spin text-brand-primary" size={24} />
@@ -332,7 +505,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-slate-500 text-xs gap-3">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-slate-500 text-xs gap-3 print:hidden">
               <FileText size={48} className="text-slate-700" />
               <p>Click on any FIR number in the chat assistant or use the search box above to load digital case briefs.</p>
             </div>

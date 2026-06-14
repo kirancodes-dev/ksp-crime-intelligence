@@ -3,7 +3,8 @@ import { InvestigatorDashboard } from './pages/InvestigatorDashboard';
 import { AnalystDashboard } from './pages/AnalystDashboard';
 import { SupervisorDashboard } from './pages/SupervisorDashboard';
 import { PolicymakerDashboard } from './pages/PolicymakerDashboard';
-import { Shield, Clock, UserCheck } from 'lucide-react';
+import { LoginScreen } from './components/LoginScreen/LoginScreen';
+import { Shield, Clock, UserCheck, LogOut } from 'lucide-react';
 import './App.css';
 
 type UserRole = 'Investigator' | 'Analyst' | 'Supervisor' | 'Policymaker';
@@ -16,22 +17,17 @@ const ROLE_LABELS: Record<UserRole, { rank: string; name: string }> = {
 };
 
 function App() {
-  const [activeRole, setActiveRole] = useState<UserRole>('Investigator');
+  const [activeRole, setActiveRole] = useState<UserRole | null>(() => {
+    return (localStorage.getItem('ksp_user_role') as UserRole) || null;
+  });
+  const [userId, setUserId] = useState<string | null>(() => {
+    return localStorage.getItem('ksp_user_id') || null;
+  });
+  const [mfaVerified, setMfaVerified] = useState<boolean>(() => {
+    return localStorage.getItem('ksp_mfa_verified') === 'true';
+  });
+  
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Mapping of roles to mock user IDs
-  const getMockUserId = (role: UserRole) => {
-    switch (role) {
-      case 'Analyst':
-        return 'ANA-2041';
-      case 'Supervisor':
-        return 'SUP-3001';
-      case 'Policymaker':
-        return 'POL-4001';
-      default:
-        return 'INV-1002';
-    }
-  };
 
   // Live clock
   useEffect(() => {
@@ -39,7 +35,29 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const userId = getMockUserId(activeRole);
+  const handleLoginSuccess = (uid: string, urole: string) => {
+    setUserId(uid);
+    setActiveRole(urole as UserRole);
+    setMfaVerified(true);
+    localStorage.setItem('ksp_user_id', uid);
+    localStorage.setItem('ksp_user_role', urole);
+    localStorage.setItem('ksp_mfa_verified', 'true');
+  };
+
+  const handleLogout = () => {
+    setUserId(null);
+    setActiveRole(null);
+    setMfaVerified(false);
+    localStorage.removeItem('ksp_user_id');
+    localStorage.removeItem('ksp_user_role');
+    localStorage.removeItem('ksp_mfa_verified');
+  };
+
+  // Switch to Login screen if not authenticated
+  if (!userId || !activeRole || !mfaVerified) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
   const roleInfo = ROLE_LABELS[activeRole];
 
   return (
@@ -90,19 +108,10 @@ function App() {
           {/* Divider */}
           <div className="hidden lg:block w-px h-6 bg-brand-border"></div>
 
-          {/* Role Switcher */}
-          <div className="flex items-center gap-2 bg-brand-card border border-brand-border rounded-lg px-3 py-1.5">
-            <UserCheck size={13} className="text-brand-primary" />
-            <select
-              value={activeRole}
-              onChange={(e) => setActiveRole(e.target.value as UserRole)}
-              className="bg-transparent text-white font-semibold text-xs focus:outline-none cursor-pointer border-none pr-5 py-0"
-            >
-              <option value="Investigator" className="bg-brand-card text-white">Investigator ({getMockUserId('Investigator')})</option>
-              <option value="Analyst" className="bg-brand-card text-white">Analyst ({getMockUserId('Analyst')})</option>
-              <option value="Supervisor" className="bg-brand-card text-white">Supervisor ({getMockUserId('Supervisor')})</option>
-              <option value="Policymaker" className="bg-brand-card text-white">Policymaker ({getMockUserId('Policymaker')})</option>
-            </select>
+          {/* Active Role Portal Tag */}
+          <div className="flex items-center gap-2 bg-brand-navy/20 border border-brand-navy/40 rounded-lg px-3 py-1.5 text-xs text-brand-primary-light font-bold uppercase tracking-wider">
+            <UserCheck size={13} className="text-brand-gold" />
+            <span>{activeRole} Portal</span>
           </div>
 
           {/* User Badge */}
@@ -115,6 +124,18 @@ function App() {
               <span className="text-[10px] text-slate-500">Badge: {userId}</span>
             </div>
           </div>
+
+          {/* Divider */}
+          <div className="hidden sm:block w-px h-6 bg-brand-border"></div>
+
+          {/* Logout Trigger */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 rounded-lg text-xs font-bold transition cursor-pointer"
+          >
+            <LogOut size={13} />
+            <span>Logout</span>
+          </button>
         </div>
 
       </header>

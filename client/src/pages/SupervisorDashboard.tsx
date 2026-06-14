@@ -13,6 +13,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
   const [alerts, setAlerts] = useState<AnomalyAlert[]>([]);
   const [logFilter, setLogFilter] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Client-side pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchSupervisorData();
@@ -49,6 +53,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
       log.action_taken.toLowerCase().includes(term)
     );
   });
+
+  // Calculate pagination variables
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const paginatedLogs = filteredLogs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
@@ -133,7 +144,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               <span className="text-sm font-bold text-white uppercase tracking-wider">Predictive Intelligence Flags</span>
             </div>
 
-            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-[520px] overflow-y-auto pr-2">
               {alerts.length > 0 ? (
                 alerts.map((alert, idx) => (
                   <div 
@@ -180,7 +191,10 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                 <input
                   type="text"
                   value={logFilter}
-                  onChange={(e) => setLogFilter(e.target.value)}
+                  onChange={(e) => {
+                    setLogFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   placeholder="Filter logs..."
                   className="bg-slate-950 border border-slate-850 focus:border-brand-primary focus:outline-none rounded-lg pl-8 pr-3 py-1 text-[11px] text-slate-100 placeholder-slate-500 w-full"
                 />
@@ -188,8 +202,8 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
             </div>
 
             {/* Audit Log Table */}
-            <div className="bg-slate-950 border border-slate-900 rounded-lg overflow-hidden shadow-2xl">
-              <div className="overflow-x-auto max-h-[460px] overflow-y-auto">
+            <div className="bg-slate-950 border border-slate-900 rounded-lg overflow-hidden shadow-2xl flex flex-col">
+              <div className="overflow-x-auto min-h-[380px] max-h-[460px] overflow-y-auto">
                 <table className="w-full text-left border-collapse text-xs table-zebra">
                   <thead>
                     <tr className="bg-slate-900 text-slate-400 font-semibold border-b border-slate-850">
@@ -201,8 +215,8 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-900 text-slate-300">
-                    {filteredLogs.length > 0 ? (
-                      filteredLogs.map((log) => (
+                    {paginatedLogs.length > 0 ? (
+                      paginatedLogs.map((log) => (
                         <tr key={log.id} className="hover:bg-slate-900/30 transition">
                           <td className="p-3 whitespace-nowrap">
                             <span className="font-bold text-white block">{log.user_id}</span>
@@ -246,6 +260,34 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-between items-center bg-slate-900 px-4 py-3 border-t border-slate-850 text-xs mt-auto">
+                  <span className="text-slate-400 font-medium">
+                    Showing <strong className="text-white">{(currentPage - 1) * itemsPerPage + 1}</strong> to <strong className="text-white">{Math.min(currentPage * itemsPerPage, filteredLogs.length)}</strong> of <strong className="text-white">{filteredLogs.length}</strong> logs
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 disabled:opacity-50 disabled:hover:bg-slate-950 text-slate-300 border border-slate-850 rounded text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed transition"
+                    >
+                      Prev
+                    </button>
+                    <span className="px-2.5 py-1 bg-slate-950/40 text-slate-300 border border-slate-850 rounded font-mono text-[11px]">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 disabled:opacity-50 disabled:hover:bg-slate-950 text-slate-300 border border-slate-850 rounded text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed transition"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
