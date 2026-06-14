@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { ChatInterface } from '../components/ChatInterface/ChatInterface';
 import { FinancialFlowGraph } from '../components/Visualizations/FinancialFlowGraph';
 import { SimilarCasesCard } from '../components/Visualizations/SimilarCasesCard';
-import { FileText, Search, User, ShieldAlert, CheckCircle, Clock, AlertTriangle, Landmark, Layers, Printer, Download, Shield } from 'lucide-react';
+import { FileText, Search, User, ShieldAlert, CheckCircle, Clock, AlertTriangle, Landmark, Layers, Printer, Download, Shield, UploadCloud, Fingerprint, Languages } from 'lucide-react';
 
 interface InvestigatorDashboardProps {
   userId: string;
@@ -16,6 +16,16 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
   const [firInput, setFirInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [chatOverrideQuery, setChatOverrideQuery] = useState<string | undefined>(undefined);
+
+  // Phase 6 Massive Upgrades: OCR & Biometric Matcher States
+  const [ocrFileName, setOcrFileName] = useState('');
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [ocrResult, setOcrResult] = useState<any | null>(null);
+
+  const [biometricScanning, setBiometricScanning] = useState(false);
+  const [biometricMatches, setBiometricMatches] = useState<any[]>([]);
+  const [selectedMugshot, setSelectedMugshot] = useState<string | null>(null);
 
   // Phase 2 Tabs and Data States
   const [activeTab, setActiveTab] = useState<'summary' | 'financial' | 'similar'>('summary');
@@ -98,6 +108,55 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
   const handleInvestigateAccused = (name: string) => {
     setChatOverrideQuery(`Calculate the risk profile of ${name}`);
     setTimeout(() => setChatOverrideQuery(undefined), 100);
+  };
+
+  const handleOcrUpload = async (sampleName: string) => {
+    setOcrFileName(sampleName);
+    setOcrLoading(true);
+    setOcrResult(null);
+    setOcrProgress(10);
+    
+    // Animate progress bar
+    const interval = setInterval(() => {
+      setOcrProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 90;
+        }
+        return prev + 30;
+      });
+    }, 250);
+
+    try {
+      const res = await api.analyzeOcr(sampleName, 'text/plain', 'MOCK_BASE64', userId, role);
+      clearInterval(interval);
+      setOcrProgress(100);
+      setTimeout(() => {
+        setOcrResult(res);
+        setOcrLoading(false);
+      }, 200);
+    } catch (err) {
+      clearInterval(interval);
+      setOcrLoading(false);
+      alert("OCR translation pipeline failed.");
+    }
+  };
+
+  const handleBiometricSearch = async (photoId: string, name: string) => {
+    setSelectedMugshot(photoId);
+    setBiometricScanning(true);
+    setBiometricMatches([]);
+    
+    try {
+      const res = await api.searchBiometrics(name, userId, role);
+      if (res.success) {
+        setBiometricMatches(res.matches);
+      }
+    } catch (err) {
+      alert("Biometric analysis failed.");
+    } finally {
+      setBiometricScanning(false);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -512,6 +571,220 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
           )}
         </div>
 
+      </div>
+
+      {/* Phase 6 Massive Upgrades: Vernacular OCR & Biometric Matcher */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 print:hidden">
+        {/* Vernacular OCR Scanner Card */}
+        <div className="card-panel border border-slate-200 rounded-lg p-5 bg-white flex flex-col space-y-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <Languages className="text-brand-primary" size={16} />
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Vernacular OCR Document Intelligence</h3>
+          </div>
+          
+          <div className="text-xs text-slate-500 font-medium leading-relaxed">
+            Drag-and-drop or select hand-written Kannada documents to perform simulated OCR text translation and relational entity extraction.
+          </div>
+
+          {/* Upload Drop Zone / Sample Select */}
+          <div className="border border-dashed border-slate-300 rounded-lg p-4 bg-slate-50 text-center flex flex-col items-center justify-center space-y-2 hover:border-brand-primary/50 transition duration-200">
+            <UploadCloud size={32} className="text-slate-400" />
+            <span className="text-xs text-slate-600 font-semibold">Select and Analyze Sample Vernacular File:</span>
+            
+            <div className="flex flex-wrap justify-center gap-2 mt-1">
+              <button 
+                onClick={() => handleOcrUpload('Sample_Threat_Warning.txt')}
+                disabled={ocrLoading}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 border border-slate-200 rounded text-[11px] font-bold cursor-pointer transition"
+              >
+                Threat Note Scan
+              </button>
+              <button 
+                onClick={() => handleOcrUpload('Sample_Hawala_Ledger.txt')}
+                disabled={ocrLoading}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 border border-slate-200 rounded text-[11px] font-bold cursor-pointer transition"
+              >
+                Hawala Ledger
+              </button>
+              <button 
+                onClick={() => handleOcrUpload('Sample_Suspect_Brief.txt')}
+                disabled={ocrLoading}
+                className="px-2.5 py-1 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 border border-slate-200 rounded text-[11px] font-bold cursor-pointer transition"
+              >
+                Suspect Report
+              </button>
+            </div>
+          </div>
+
+          {/* Loading Progress State */}
+          {ocrLoading && (
+            <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-150">
+              <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
+                <span className="flex items-center gap-1.5">
+                  <LoaderIcon className="animate-spin text-brand-primary" size={12} />
+                  <span>Processing {ocrFileName}...</span>
+                </span>
+                <span>{ocrProgress}%</span>
+              </div>
+              <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                <div 
+                  className="bg-brand-primary h-1.5 rounded-full transition-all duration-300"
+                  style={{ width: `${ocrProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* OCR / Translation Output Results */}
+          {!ocrLoading && ocrResult && (
+            <div className="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Raw Kannada Text</span>
+                  <div className="p-2 bg-white rounded border border-slate-200 font-mono text-[11px] text-slate-700 min-h-[60px] max-h-[80px] overflow-y-auto">
+                    {ocrResult.rawKannada}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">English Translation</span>
+                  <div className="p-2 bg-white rounded border border-slate-200 text-[11px] text-slate-700 min-h-[60px] max-h-[80px] overflow-y-auto leading-relaxed">
+                    {ocrResult.translatedEnglish}
+                  </div>
+                </div>
+              </div>
+
+              {/* Extracted Entities */}
+              <div className="pt-2 border-t border-slate-200 space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Extracted System Entities</span>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="flex justify-between items-center bg-white p-1.5 rounded border border-slate-150">
+                    <span className="text-slate-400">Suspects:</span>
+                    <strong className="text-slate-800">{ocrResult.entities.suspects.join(', ') || 'None'}</strong>
+                  </div>
+                  <div className="flex justify-between items-center bg-white p-1.5 rounded border border-slate-150">
+                    <span className="text-slate-400">Locations:</span>
+                    <strong className="text-slate-800">{ocrResult.entities.locations.join(', ') || 'None'}</strong>
+                  </div>
+                  <div className="flex justify-between items-center bg-white p-1.5 rounded border border-slate-150 col-span-2">
+                    <span className="text-slate-400">Monetary:</span>
+                    <strong className="text-slate-800">{ocrResult.entities.monetaryAmount}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button: Feed to chat */}
+              {ocrResult.entities.suspects.length > 0 && (
+                <button
+                  onClick={() => {
+                    const suspect = ocrResult.entities.suspects[0];
+                    const prompt = `Evaluate the risk profile of ${suspect} with active warrant`;
+                    setChatOverrideQuery(prompt);
+                    setTimeout(() => setChatOverrideQuery(undefined), 100);
+                  }}
+                  className="w-full mt-1.5 py-1.5 bg-brand-primary hover:bg-brand-primary-light text-white rounded text-[11px] font-bold cursor-pointer transition text-center shadow"
+                >
+                  Verify Threat Score of {ocrResult.entities.suspects[0]}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Zia Vision Biometric Facial Search Card */}
+        <div className="card-panel border border-slate-200 rounded-lg p-5 bg-white flex flex-col space-y-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <Fingerprint className="text-brand-primary" size={16} />
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Zia Vision Biometric Facial Search</h3>
+          </div>
+
+          <div className="text-xs text-slate-500 font-medium leading-relaxed">
+            Upload a suspect photo or select pre-loaded criminal mugshots to run real-time similarity matching against the offender registry database.
+          </div>
+
+          {/* Preselected Mugshots */}
+          <div className="flex items-center justify-between bg-slate-50 border border-slate-200 p-2.5 rounded-lg">
+            <span className="text-xs text-slate-600 font-bold">Select Suspect Mugshot:</span>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => handleBiometricSearch('mugshot_rupa', 'Rupa')}
+                disabled={biometricScanning}
+                className={`px-2 py-1 text-[11px] font-bold border rounded cursor-pointer transition ${
+                  selectedMugshot === 'mugshot_rupa' 
+                    ? 'bg-brand-primary text-white border-brand-primary' 
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                Suspect A (Rupa)
+              </button>
+              <button 
+                onClick={() => handleBiometricSearch('mugshot_ramesh', 'Ramesh')}
+                disabled={biometricScanning}
+                className={`px-2 py-1 text-[11px] font-bold border rounded cursor-pointer transition ${
+                  selectedMugshot === 'mugshot_ramesh' 
+                    ? 'bg-brand-primary text-white border-brand-primary' 
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                Suspect B (Ramesh)
+              </button>
+              <button 
+                onClick={() => handleBiometricSearch('mugshot_amit', 'Amit')}
+                disabled={biometricScanning}
+                className={`px-2 py-1 text-[11px] font-bold border rounded cursor-pointer transition ${
+                  selectedMugshot === 'mugshot_amit' 
+                    ? 'bg-brand-primary text-white border-brand-primary' 
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                }`}
+              >
+                Suspect C (Amit)
+              </button>
+            </div>
+          </div>
+
+          {/* Scanning Animation overlay */}
+          {biometricScanning && (
+            <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-lg border border-slate-150 space-y-3 relative overflow-hidden">
+              {/* Spinning Scanner radar grid */}
+              <div className="relative h-16 w-16 rounded-full border-2 border-brand-primary/20 flex items-center justify-center animate-pulse">
+                <div className="absolute inset-0 rounded-full border-t-2 border-brand-primary animate-spin" />
+                <Fingerprint size={28} className="text-brand-primary" />
+              </div>
+              <span className="text-xs text-slate-600 font-bold animate-pulse">Scanning biometric facial nodes...</span>
+            </div>
+          )}
+
+          {/* Results Match List */}
+          {!biometricScanning && biometricMatches.length > 0 && (
+            <div className="space-y-2 max-h-[175px] overflow-y-auto pr-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Top Offender Matches</span>
+              {biometricMatches.map((match, idx) => (
+                <div key={idx} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-xs hover:border-brand-primary/45 transition">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <strong className="text-slate-800 text-[13px]">{match.name}</strong>
+                      <span className="text-[10px] text-slate-400 font-medium">({match.age} yrs • {match.gender})</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-medium">
+                      Gang: <span className="text-slate-700 font-semibold">{match.gang}</span> • Case: <span className="text-brand-primary hover:underline cursor-pointer font-bold" onClick={() => setSelectedFirNumber(match.fir_number)}>{match.fir_number}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right space-y-1">
+                    <div className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[11px] font-bold inline-block">
+                      {match.similarity}% Match
+                    </div>
+                    <button
+                      onClick={() => handleInvestigateAccused(match.name)}
+                      className="block text-[10px] text-brand-primary font-bold hover:underline cursor-pointer text-right w-full"
+                    >
+                      Analyze threat score
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

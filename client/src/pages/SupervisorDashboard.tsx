@@ -25,6 +25,16 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
   const [overrideJustification, setOverrideJustification] = useState('');
   const [submittingOverride, setSubmittingOverride] = useState(false);
 
+  // Phase 6 Massive Upgrades: Emergency Dispatch states
+  const [patrolUnits, setPatrolUnits] = useState<any[]>([]);
+  const [dispatchLogs, setDispatchLogs] = useState<any[]>([
+    { id: 3849, time: "21:15", caller: "Public Witness", details: "Verbal altercation reported at Commercial Street, Bengaluru Central.", status: "Resolved", vehicle: "PATROL-101" },
+    { id: 3850, time: "21:24", caller: "Security Guard", details: "Attempted vehicle break-in near Jayanagar 4th Block.", status: "Resolved", vehicle: "PATROL-102" }
+  ]);
+  const [selectedCall, setSelectedCall] = useState<any | null>(null);
+  const [dispatchRecommendation, setDispatchRecommendation] = useState<any | null>(null);
+  const [dispatchLoading, setDispatchLoading] = useState(false);
+
   useEffect(() => {
     fetchSupervisorData();
   }, []);
@@ -93,6 +103,90 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
     } finally {
       setSubmittingOverride(false);
     }
+  };
+
+  const fetchPatrolUnits = async () => {
+    try {
+      const res = await api.getDispatchUnits(userId, role);
+      if (res.success) {
+        setPatrolUnits(res.units);
+      }
+    } catch (err) {
+      console.error("Failed to load patrol units:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPatrolUnits();
+  }, []);
+
+  useEffect(() => {
+    const alertsQueue = [
+      { id: 3851, time: "21:31", caller: "Citizen Report", details: "Chain snatching incident near Hubballi Railway Station.", status: "Pending", vehicle: "" },
+      { id: 3852, time: "21:33", caller: "Store Manager", details: "Suspicious vehicle observed idling near Chamundi Hill, Mysuru.", status: "Pending", vehicle: "" },
+      { id: 3853, time: "21:35", caller: "Bank Teller", details: "Credit card fraud report at Mangaluru Kadri PS.", status: "Pending", vehicle: "" }
+    ];
+    let index = 0;
+
+    const interval = setInterval(() => {
+      if (index < alertsQueue.length) {
+        setDispatchLogs(prev => [alertsQueue[index], ...prev]);
+        index++;
+      }
+    }, 18000); // Add new alert every 18 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleGenerateRecommendation = async (call: any) => {
+    setDispatchLoading(true);
+    setDispatchRecommendation(null);
+    
+    // Simulate LLM/Route calculation delay
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    
+    let closestUnit = patrolUnits[0] || null;
+    let distance = "4.2 km";
+    let eta = "9 mins";
+    
+    const text = call.details.toLowerCase();
+    if (text.includes('hubballi')) {
+      closestUnit = patrolUnits.find(u => u.id === 'PATROL-301') || closestUnit;
+      distance = "1.8 km";
+      eta = "4 mins";
+    } else if (text.includes('mysuru')) {
+      closestUnit = patrolUnits.find(u => u.id === 'PATROL-201') || closestUnit;
+      distance = "2.9 km";
+      eta = "6 mins";
+    } else if (text.includes('mangaluru') || text.includes('mangalan')) {
+      closestUnit = patrolUnits.find(u => u.id === 'PATROL-401') || closestUnit;
+      distance = "3.1 km";
+      eta = "7 mins";
+    } else {
+      closestUnit = patrolUnits.find(u => u.id === 'PATROL-101') || closestUnit;
+      distance = "1.2 km";
+      eta = "3 mins";
+    }
+    
+    setDispatchRecommendation({
+      unit: closestUnit,
+      distance,
+      eta,
+      routeDescription: `Head north on main highway, take the first exit toward station road. Turn left at junction.`
+    });
+    setDispatchLoading(false);
+  };
+
+  const handleExecuteDispatch = (callId: number, unitId: string) => {
+    setDispatchLogs(prev => 
+      prev.map(c => c.id === callId ? { ...c, status: 'Dispatched', vehicle: unitId } : c)
+    );
+    setPatrolUnits(prev => 
+      prev.map(u => u.id === unitId ? { ...u, status: 'Busy' } : u)
+    );
+    setSelectedCall(null);
+    setDispatchRecommendation(null);
+    alert(`Patrol Unit ${unitId} successfully dispatched to Call #${callId}.`);
   };
 
   const filteredLogs = logs.filter(log => {
@@ -351,6 +445,171 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* Phase 6 Massive Upgrades: Emergency 112 Dispatch & Patrol Router */}
+      {!loading && (
+        <div className="card-panel border border-slate-200 rounded-lg p-5 bg-white space-y-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+            <span className="h-2 w-2 rounded-full bg-red-600 animate-ping shrink-0" />
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">KSP 112 Emergency Dispatch & AI Patrol Router</h3>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Live Ticker Feed */}
+            <div className="lg:col-span-4 space-y-3">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Active Incoming Calls (Live Feed)</span>
+              
+              <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                {dispatchLogs.map((log) => {
+                  const isPending = log.status === 'Pending';
+                  const isDispatched = log.status === 'Dispatched';
+                  
+                  return (
+                    <div 
+                      key={log.id} 
+                      onClick={() => isPending && setSelectedCall(log)}
+                      className={`p-3 rounded-lg border transition text-xs ${
+                        selectedCall?.id === log.id 
+                          ? 'border-brand-primary bg-blue-50/20' 
+                          : isPending 
+                            ? 'border-amber-200 bg-amber-50/10 hover:border-amber-400 cursor-pointer' 
+                            : 'border-slate-200 bg-slate-50/30'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <strong className="text-slate-800">Call #{log.id}</strong>
+                        <span className={`text-[9px] uppercase font-black px-1.5 py-0.5 rounded ${
+                          isPending 
+                            ? 'bg-amber-100 text-amber-700 border border-amber-200' 
+                            : isDispatched 
+                              ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                              : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                        }`}>
+                          {log.status}
+                        </span>
+                      </div>
+                      
+                      <p className="text-slate-650 mt-1.5 font-medium leading-relaxed">{log.details}</p>
+                      
+                      <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-slate-100 text-[10px] text-slate-400">
+                        <span>Time: <strong>{log.time}</strong> • Caller: <strong>{log.caller}</strong></span>
+                        {log.vehicle && (
+                          <span className="text-slate-600 font-bold bg-white px-1.5 py-0.5 border border-slate-200 rounded font-mono">
+                            {log.vehicle}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* AI Dispatch Routing Recommendation */}
+            <div className="lg:col-span-4 space-y-3">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">AI Patrol Dispatch Router</span>
+              
+              {selectedCall ? (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4 text-xs">
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Processing Incident</span>
+                    <strong className="text-slate-850 block">Call #{selectedCall.id}</strong>
+                    <p className="text-slate-600 font-medium">{selectedCall.details}</p>
+                  </div>
+                  
+                  {!dispatchRecommendation && !dispatchLoading && (
+                    <button
+                      onClick={() => handleGenerateRecommendation(selectedCall)}
+                      className="w-full py-2 bg-brand-primary hover:bg-brand-primary-light text-white text-xs font-bold rounded-lg transition cursor-pointer text-center"
+                    >
+                      Calculate AI Dispatch Route
+                    </button>
+                  )}
+
+                  {dispatchLoading && (
+                    <div className="flex flex-col items-center justify-center py-4 text-slate-400 text-xs gap-2">
+                      <Loader2 size={16} className="animate-spin text-brand-primary" />
+                      <span>Spatially locating closest patrol unit...</span>
+                    </div>
+                  )}
+
+                  {dispatchRecommendation && (
+                    <div className="space-y-3 pt-3 border-t border-slate-200">
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="bg-white p-2 rounded border border-slate-200">
+                          <span className="text-slate-400 block mb-0.5">Assigned Unit</span>
+                          <strong className="text-slate-800 block font-mono">{dispatchRecommendation.unit?.id}</strong>
+                          <span className="text-[10px] text-slate-500 font-medium block">{dispatchRecommendation.unit?.vehicle.split(' ')[0]}</span>
+                        </div>
+                        <div className="bg-white p-2 rounded border border-slate-200">
+                          <span className="text-slate-400 block mb-0.5">Distance / ETA</span>
+                          <strong className="text-slate-800 block">{dispatchRecommendation.distance}</strong>
+                          <span className="text-[10px] text-slate-500 font-medium block">{dispatchRecommendation.eta}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-2.5 rounded border border-slate-250">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Optimized Patrol Path</span>
+                        <p className="text-slate-600 italic leading-relaxed">{dispatchRecommendation.routeDescription}</p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleExecuteDispatch(selectedCall.id, dispatchRecommendation.unit?.id)}
+                          className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded cursor-pointer transition text-center"
+                        >
+                          Confirm Dispatch
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedCall(null);
+                            setDispatchRecommendation(null);
+                          }}
+                          className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded text-xs font-bold cursor-pointer transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500 border border-dashed border-slate-350 rounded-lg text-center space-y-2 bg-slate-50">
+                  <span className="h-5 w-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-xs">?</span>
+                  <p className="text-xs font-semibold text-slate-500">Select any pending incident from the live feed to run AI dispatch routing.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Active Patrol Unit Grid */}
+            <div className="lg:col-span-4 space-y-3">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Patrol Fleet Status Ledger</span>
+              
+              <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                {patrolUnits.map((unit) => (
+                  <div key={unit.id} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-xs">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <strong className="text-slate-800 font-mono">{unit.id}</strong>
+                        <span className="text-[10px] text-slate-400 font-medium">({unit.officer})</span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">{unit.vehicle}</span>
+                    </div>
+
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                      unit.status === 'Available' 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-150' 
+                        : 'bg-red-50 text-red-700 border-red-150'
+                    }`}>
+                      {unit.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

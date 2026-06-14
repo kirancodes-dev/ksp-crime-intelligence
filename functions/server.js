@@ -267,6 +267,53 @@ app.get('/api/socio-demographics', async (req, res) => {
       },
       socioCorrelation
     });
+// 12. Multimodal Vernacular OCR Direct Analyzer
+app.post('/api/ocr/analyze', async (req, res) => {
+  try {
+    const { fileName, fileType, base64Data } = req.body;
+    const ocrAnalysis = require('./ocr/index');
+    const result = await ocrAnalysis(fileName, fileType, base64Data);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 13. CDR Cellular Timeline Tracker
+app.get('/api/cdr/timeline', async (req, res) => {
+  try {
+    const { suspect } = req.query;
+    const cdrAnalysis = require('./cdr/index');
+    const result = await cdrAnalysis(suspect);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 14. Zia Vision Biometric Facial Search
+app.post('/api/biometrics/search', async (req, res) => {
+  try {
+    const { name } = req.body;
+    const biometricSearch = require('./biometrics/index');
+    const result = await biometricSearch(name);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 15. Emergency Patrol Dispatch Unit List
+app.get('/api/dispatch/units', async (req, res) => {
+  try {
+    const units = [
+      { id: "PATROL-101", vehicle: "KA-02-G-4102 (Bengaluru City)", lat: 12.9720, lng: 77.5850, status: "Available", officer: "SI Sandeep Patil" },
+      { id: "PATROL-102", vehicle: "KA-01-G-7788 (Bengaluru City)", lat: 12.9550, lng: 77.6100, status: "Busy", officer: "SI Priya Gowda" },
+      { id: "PATROL-201", vehicle: "KA-09-G-1212 (Mysuru)", lat: 12.3010, lng: 76.6450, status: "Available", officer: "SI Manjunath K." },
+      { id: "PATROL-301", vehicle: "KA-25-G-0033 (Hubballi)", lat: 15.3680, lng: 75.1200, status: "Available", officer: "SI Satish Naik" },
+      { id: "PATROL-401", vehicle: "KA-19-G-4455 (Mangaluru)", lat: 12.9150, lng: 74.8500, status: "Available", officer: "SI Harish Poojary" }
+    ];
+    res.json({ success: true, units });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

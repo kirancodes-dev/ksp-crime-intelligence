@@ -294,5 +294,75 @@ export const api = {
     }
     const result = await response.json();
     return result.audioContent;
+  },
+
+  /**
+   * Uploads and runs simulated OCR + translation on a vernacular file
+   */
+  async analyzeOcr(fileName: string, fileType: string, base64Data: string, userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/ocr/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+      body: JSON.stringify({ fileName, fileType, base64Data }),
+    });
+    if (!response.ok) {
+      throw new Error('OCR analysis failed');
+    }
+    return response.json();
+  },
+
+  /**
+   * Fetches simulated CDR timeline trajectory logs for a suspect
+   */
+  async getCdrTimeline(suspect: string, userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/cdr/timeline?suspect=${encodeURIComponent(suspect)}`, {
+      headers: {
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch CDR timeline');
+    }
+    return response.json();
+  },
+
+  /**
+   * Searches suspect databases using facial recognition similarity checks
+   */
+  async searchBiometrics(name: string, userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/biometrics/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+      body: JSON.stringify({ name }),
+    });
+    if (!response.ok) {
+      throw new Error('Biometric search failed');
+    }
+    return response.json();
+  },
+
+  /**
+   * Fetches active emergency dispatch patrol vehicles list
+   */
+  async getDispatchUnits(userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/dispatch/units`, {
+      headers: {
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch dispatch patrol vehicles');
+    }
+    return response.json();
   }
 };

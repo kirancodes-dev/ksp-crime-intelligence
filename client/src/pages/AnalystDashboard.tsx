@@ -5,6 +5,8 @@ import { NetworkGraph } from '../components/Visualizations/NetworkGraph';
 import { SocioDemographicChart } from '../components/Visualizations/SocioDemographicChart';
 import { ForecastAlertPanel } from '../components/Visualizations/ForecastAlertPanel';
 import { Map, Network, Eye, Filter, Loader2, AlertCircle, BarChart3, TrendingUp, X } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface AnalystDashboardProps {
   userId: string;
@@ -32,6 +34,19 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
   
   // Incident selection state for side-drawer details
   const [selectedIncident, setSelectedIncident] = useState<any | null>(null);
+
+  // Phase 6 Massive Upgrades: sub-navigation tabs & CDR Cellular Timeline
+  const [activeSubTab, setActiveSubTab] = useState<'intel' | 'cdr'>('intel');
+  const [cdrSuspect, setCdrSuspect] = useState('Rupa Naik');
+  const [cdrTimelineData, setCdrTimelineData] = useState<any | null>(null);
+  const [cdrLoading, setCdrLoading] = useState(false);
+  const [timelineIndex, setTimelineIndex] = useState(0);
+
+  // Leaflet map refs for custom CDR drawing
+  const cdrMapContainerRef = React.useRef<HTMLDivElement>(null);
+  const cdrMapInstanceRef = React.useRef<L.Map | null>(null);
+  const cdrPathLayerRef = React.useRef<L.Polyline | null>(null);
+  const cdrMarkersRef = React.useRef<any[]>([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -144,6 +159,90 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
     }
   };
 
+  const fetchCdrTimeline = async (suspect: string) => {
+    setCdrLoading(true);
+    try {
+      const res = await api.getCdrTimeline(suspect, userId, role);
+      if (res.success) {
+        setCdrTimelineData(res);
+        setTimelineIndex(0);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCdrLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSubTab === 'cdr') {
+      fetchCdrTimeline(cdrSuspect);
+    }
+  }, [activeSubTab, cdrSuspect]);
+
+  useEffect(() => {
+    if (activeSubTab !== 'cdr' || !cdrMapContainerRef.current) return;
+    
+    if (!cdrMapInstanceRef.current) {
+      cdrMapInstanceRef.current = L.map(cdrMapContainerRef.current, {
+        center: [12.9716, 77.5946],
+        zoom: 12,
+        zoomControl: true
+      });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      }).addTo(cdrMapInstanceRef.current);
+    }
+    
+    if (cdrPathLayerRef.current) {
+      cdrPathLayerRef.current.remove();
+      cdrPathLayerRef.current = null;
+    }
+    cdrMarkersRef.current.forEach(m => m.remove());
+    cdrMarkersRef.current = [];
+
+    if (cdrTimelineData && cdrTimelineData.breadcrumbs?.length > 0 && cdrMapInstanceRef.current) {
+      const coords = cdrTimelineData.breadcrumbs.map((b: any) => [b.lat, b.lng] as [number, number]);
+      
+      cdrPathLayerRef.current = L.polyline(coords, { color: '#2563eb', weight: 3, dashArray: '5, 5' }).addTo(cdrMapInstanceRef.current);
+      
+      cdrTimelineData.breadcrumbs.forEach((b: any, idx: number) => {
+        const isActive = idx === timelineIndex;
+        const color = isActive ? '#dc2626' : '#2563eb';
+        
+        const marker = L.circleMarker([b.lat, b.lng], {
+          radius: isActive ? 9 : 5,
+          fillColor: color,
+          fillOpacity: 0.9,
+          color: '#ffffff',
+          weight: 1.5
+        }).addTo(cdrMapInstanceRef.current!);
+        
+        marker.bindPopup(`<strong>Tower: ${b.tower}</strong><br/>Time: ${b.time}`);
+        cdrMarkersRef.current.push(marker);
+      });
+      
+      try {
+        const bounds = L.latLngBounds(coords);
+        if (bounds.isValid()) {
+          cdrMapInstanceRef.current.fitBounds(bounds, { padding: [40, 40] });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }, [activeSubTab, cdrTimelineData, timelineIndex]);
+
+  // Clean up CDR map on unmount
+  useEffect(() => {
+    return () => {
+      if (cdrMapInstanceRef.current) {
+        cdrMapInstanceRef.current.remove();
+        cdrMapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Filters Header bar */}
@@ -225,26 +324,170 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
         </div>
       )}
 
-      {/* Spatial Map and Network Graph split */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Geographic Hotspot panel */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
-            <Map size={16} className="text-brand-primary" />
-            <span className="text-sm font-bold text-white uppercase tracking-wider">Geographic Hotspot Map</span>
-          </div>
-          <HotspotMap incidents={incidents} onIncidentSelect={setSelectedIncident} />
-        </div>
-
-        {/* Association Network panel */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
-            <Network size={16} className="text-brand-primary" />
-            <span className="text-sm font-bold text-white uppercase tracking-wider">Syndicate Linkage Network</span>
-          </div>
-          <NetworkGraph data={networkData} />
-        </div>
+      {/* Visual Navigation Tabs */}
+      <div className="flex border-b border-slate-250 gap-6 print:hidden">
+        <button
+          onClick={() => setActiveSubTab('intel')}
+          className={`pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
+            activeSubTab === 'intel'
+              ? 'border-brand-primary text-slate-800'
+              : 'border-transparent text-slate-400 hover:text-slate-650'
+          }`}
+        >
+          Geo-Spatial & Syndicate Networks
+        </button>
+        <button
+          onClick={() => setActiveSubTab('cdr')}
+          className={`pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
+            activeSubTab === 'cdr'
+              ? 'border-brand-primary text-slate-800'
+              : 'border-transparent text-slate-400 hover:text-slate-650'
+          }`}
+        >
+          CDR Cellular Timeline Analysis
+        </button>
       </div>
+
+      {/* Spatial Map and Network Graph split */}
+      {activeSubTab === 'intel' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Geographic Hotspot panel */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-1">
+              <Map size={16} className="text-brand-primary" />
+              <span className="text-sm font-bold text-white uppercase tracking-wider">Geographic Hotspot Map</span>
+            </div>
+            <HotspotMap incidents={incidents} onIncidentSelect={setSelectedIncident} />
+          </div>
+
+          {/* Association Network panel */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-1">
+              <Network size={16} className="text-brand-primary" />
+              <span className="text-sm font-bold text-white uppercase tracking-wider">Syndicate Linkage Network</span>
+            </div>
+            <NetworkGraph data={networkData} />
+          </div>
+        </div>
+      )}
+
+      {/* Phase 6 Massive Upgrades: CDR Cellular Map View */}
+      {activeSubTab === 'cdr' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* CDR Controls & Breadcrumbs */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="card-panel border border-slate-200 rounded-lg p-4 bg-white space-y-3">
+              <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider block">Target Suspect</span>
+              <div className="flex gap-2">
+                <select
+                  value={cdrSuspect}
+                  onChange={(e) => setCdrSuspect(e.target.value)}
+                  className="bg-white border border-slate-250 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer flex-1"
+                >
+                  <option value="Rupa Naik">Rupa Naik (Organized Crime)</option>
+                  <option value="Ramesh Kumar">Ramesh Kumar (Theft)</option>
+                  <option value="Amit Verma">Amit Verma (Cyber Crime)</option>
+                </select>
+              </div>
+
+              {cdrTimelineData && (
+                <div className="text-xs space-y-1.5 pt-2 border-t border-slate-100">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Phone:</span>
+                    <strong className="text-slate-750">{cdrTimelineData.phone}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">IMEI:</span>
+                    <strong className="text-slate-755 font-mono">{cdrTimelineData.imei}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Carrier:</span>
+                    <strong className="text-slate-755">{cdrTimelineData.carrier}</strong>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* CDR Chronological Timeline Steps */}
+            <div className="card-panel border border-slate-200 rounded-lg p-4 bg-white space-y-3">
+              <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider block">Chronological Ping Path</span>
+              
+              {cdrLoading ? (
+                <div className="flex justify-center items-center py-6 text-slate-400 gap-2">
+                  <Loader2 size={14} className="animate-spin text-brand-primary" />
+                  <span>Fetching cellular logs...</span>
+                </div>
+              ) : cdrTimelineData && cdrTimelineData.breadcrumbs ? (
+                <div className="space-y-3">
+                  {cdrTimelineData.breadcrumbs.map((b: any, idx: number) => {
+                    const isActive = idx === timelineIndex;
+                    return (
+                      <div 
+                        key={b.id} 
+                        onClick={() => setTimelineIndex(idx)}
+                        className={`flex gap-3 items-start p-2 rounded-lg border transition cursor-pointer text-xs ${
+                          isActive 
+                            ? 'bg-blue-50/50 border-blue-200 text-slate-800' 
+                            : 'bg-slate-50 border-slate-100 hover:border-slate-205 text-slate-600'
+                        }`}
+                      >
+                        <span className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                          isActive ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-650'
+                        }`}>
+                          {b.id}
+                        </span>
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex justify-between">
+                            <strong>{b.tower}</strong>
+                            <span className="text-[10px] text-slate-400 font-bold">{b.time}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-medium">Lat: {b.lat.toFixed(4)}°, Lng: {b.lng.toFixed(4)}°</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-slate-400 text-center py-6 font-medium">No tower pings loaded.</div>
+              )}
+            </div>
+
+            {/* Spatial Collision alerts */}
+            {cdrTimelineData && cdrTimelineData.collisionAlerts?.length > 0 && (
+              <div className="bg-red-50 text-xs border border-red-200 rounded-lg p-4 space-y-2.5">
+                <div className="flex items-center gap-1.5 text-red-700 font-extrabold uppercase tracking-wide">
+                  <AlertCircle size={14} /> Critical Spatial Intersection
+                </div>
+                {cdrTimelineData.collisionAlerts.map((c: any, idx: number) => (
+                  <div key={idx} className="space-y-1.5 text-slate-700">
+                    <p className="leading-relaxed font-medium">
+                      Suspect's cell phone was registered within <strong>{c.distance_meters} meters</strong> of crime incident <strong>{c.fir_number}</strong> at approximately <strong>{c.incident_time}</strong>.
+                    </p>
+                    <div className="flex justify-between text-[10px] pt-1.5 border-t border-red-200/50">
+                      <span className="text-slate-405 font-bold">Tower ID:</span>
+                      <strong className="text-slate-805 font-mono">{c.tower_id}</strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* CDR Map Visualizer */}
+          <div className="lg:col-span-8 space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm font-bold text-slate-800 uppercase tracking-wider">Cellular Trajectory Plot</span>
+              <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 font-bold rounded">
+                Live breadcrumbs representation
+              </span>
+            </div>
+            
+            <div className="relative w-full h-[450px] rounded-lg overflow-hidden border border-slate-200 shadow bg-white">
+              <div ref={cdrMapContainerRef} className="w-full h-full" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Socio-demographic & Predictive alerts section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
