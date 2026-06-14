@@ -1,0 +1,13 @@
+{
+  "name": "ksp-crime-intelligence-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && npm install --prefix client && npm install --prefix functions",
+    "seed": "python3 datastore/seed/generate_synthetic_data.py",
+    "dev": "concurrently \"npm run dev --prefix client\" \"node functions/server.js\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

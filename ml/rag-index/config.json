@@ -1,0 +1,16 @@
+{
+  "index_name": "ksp_fir_narrative_index",
+  "index_type": "vector_search",
+  "embedding_model": "catalyst-z3-embedding-v2",
+  "dimensions": 1536,
+  "chunk_settings": {
+    "strategy": "recursive_character",
+    "chunk_size": 512,
+    "chunk_overlap": 64
+  },
+  "retrieval_settings": {
+    "distance_metric": "cosine",
+    "default_top_k": 5,
+    "alpha": 0.4
+  }
+}

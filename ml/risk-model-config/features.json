@@ -1,0 +1,35 @@
+{
+  "model_type": "tabular_classification",
+  "target_column": "recidivism_risk",
+  "features": [
+    {
+      "name": "prior_convictions",
+      "type": "numeric",
+      "description": "Number of documented past convictions"
+    },
+    {
+      "name": "age",
+      "type": "numeric",
+      "description": "Offender age"
+    },
+    {
+      "name": "gang_affiliation",
+      "type": "categorical",
+      "description": "Syndicate name or independent status"
+    },
+    {
+      "name": "district_crime_density",
+      "type": "numeric",
+      "description": "Local district crime rate index"
+    },
+    {
+      "name": "socio_economic_index",
+      "type": "numeric",
+      "description": "District unemployment and poverty levels"
+    }
+  ],
+  "evaluation_metrics": {
+    "target_auc": 0.89,
+    "confidence_threshold": 0.75
+  }
+}

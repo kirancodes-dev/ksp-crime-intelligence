@@ -1,0 +1,11 @@
+{
+  "name": "ksp-crime-intelligence-backend",
+  "version": "1.0.0",
+  "description": "Catalyst Functions Emulator for KSP Crime Intelligence System",
+  "main": "server.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
+  }
+}

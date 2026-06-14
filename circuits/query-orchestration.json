@@ -1,0 +1,125 @@
+{
+  "CircuitName": "QueryOrchestrationCircuit",
+  "Description": "Orchestrates conversational queries from translation to RAG retrieval, risk scoring, mapping, and audit logging",
+  "StartAt": "LanguageTranslationCheck",
+  "States": {
+    "LanguageTranslationCheck": {
+      "Type": "Task",
+      "Resource": "functions/translate",
+      "Parameters": {
+        "text.$": "$.query",
+        "from": "auto",
+        "to": "en"
+      },
+      "ResultPath": "$.translatedQuery",
+      "Next": "ToolRouterDecision"
+    },
+    "ToolRouterDecision": {
+      "Type": "Task",
+      "Resource": "functions/tool-router",
+      "Parameters": {
+        "query.$": "$.translatedQuery"
+      },
+      "ResultPath": "$.routingResult",
+      "Next": "RoutingBranch"
+    },
+    "RoutingBranch": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.routingResult.tool",
+          "StringEquals": "risk",
+          "Next": "RiskScoringAutoML"
+        },
+        {
+          "Variable": "$.routingResult.tool",
+          "StringEquals": "map",
+          "Next": "SpatialQuery"
+        },
+        {
+          "Variable": "$.routingResult.tool",
+          "StringEquals": "chart",
+          "Next": "TrendAggregationQuery"
+        },
+        {
+          "Variable": "$.routingResult.tool",
+          "StringEquals": "network",
+          "Next": "NetworkLinkageQuery"
+        }
+      ],
+      "Default": "RAGContextRetrieval"
+    },
+    "RiskScoringAutoML": {
+      "Type": "Task",
+      "Resource": "functions/risk-scoring",
+      "Parameters": {
+        "accusedName.$": "$.routingResult.data"
+      },
+      "ResultPath": "$.circuitOutput",
+      "Next": "AuditLogExecution"
+    },
+    "SpatialQuery": {
+      "Type": "Task",
+      "Resource": "datastore/query-locations",
+      "ResultPath": "$.circuitOutput",
+      "Next": "AuditLogExecution"
+    },
+    "TrendAggregationQuery": {
+      "Type": "Task",
+      "Resource": "datastore/query-trends",
+      "ResultPath": "$.circuitOutput",
+      "Next": "AuditLogExecution"
+    },
+    "NetworkLinkageQuery": {
+      "Type": "Task",
+      "Resource": "datastore/query-network",
+      "ResultPath": "$.circuitOutput",
+      "Next": "AuditLogExecution"
+    },
+    "RAGContextRetrieval": {
+      "Type": "Task",
+      "Resource": "functions/rag-query",
+      "Parameters": {
+        "text.$": "$.translatedQuery"
+      },
+      "ResultPath": "$.circuitOutput",
+      "Next": "AuditLogExecution"
+    },
+    "AuditLogExecution": {
+      "Type": "Task",
+      "Resource": "functions/audit-log",
+      "Parameters": {
+        "userId.$": "$.userId",
+        "role.$": "$.role",
+        "query.$": "$.query",
+        "action.$": "$.routingResult.tool"
+      },
+      "Next": "FinalTranslationCheck"
+    },
+    "FinalTranslationCheck": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.language",
+          "StringEquals": "kn",
+          "Next": "TranslateNarrativeToKannada"
+        }
+      ],
+      "Default": "SuccessEnd"
+    },
+    "TranslateNarrativeToKannada": {
+      "Type": "Task",
+      "Resource": "functions/translate",
+      "Parameters": {
+        "text.$": "$.circuitOutput.narrative",
+        "from": "en",
+        "to": "kn"
+      },
+      "ResultPath": "$.circuitOutput.narrative",
+      "Next": "SuccessEnd"
+    },
+    "SuccessEnd": {
+      "Type": "Succeed"
+    }
+  }
+}
