@@ -18,9 +18,10 @@ interface IncidentPin {
 interface HotspotMapProps {
   incidents: IncidentPin[];
   onFirSelect?: (firNumber: string) => void;
+  onIncidentSelect?: (incident: IncidentPin) => void;
 }
 
-export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect }) => {
+export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect, onIncidentSelect }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.FeatureGroup | null>(null);
@@ -29,15 +30,15 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect }
   const getCrimeColor = (crimeType: string) => {
     switch (crimeType) {
       case 'Cyber Crime':
-        return '#3b82f6'; // Blue
+        return '#2563eb'; // Blue
       case 'Theft':
-        return '#f97316'; // Orange
+        return '#ea580c'; // Orange
       case 'Organized Crime':
-        return '#ef4444'; // Red
+        return '#dc2626'; // Red
       case 'Financial Fraud':
-        return '#eab308'; // Yellow
+        return '#d97706'; // Yellow/Amber
       default:
-        return '#10b981'; // Emerald
+        return '#059669'; // Emerald
     }
   };
 
@@ -53,8 +54,8 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect }
         attributionControl: true
       });
 
-      // 2. Add CartoDB Dark Matter tile layer
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // 2. Add CartoDB Voyager Tile layer (Clean Light Official Map style)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 20
@@ -86,18 +87,18 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect }
 
         // Popup HTML structure
         const popupContent = document.createElement('div');
-        popupContent.className = "p-1 font-sans text-xs";
+        popupContent.className = "p-1 font-sans text-xs text-slate-800";
         popupContent.innerHTML = `
-          <div class="font-bold text-sm text-white border-b border-slate-800 pb-1 mb-2 flex justify-between items-center gap-4">
+          <div class="font-bold text-sm text-slate-900 border-b border-slate-200 pb-1 mb-2 flex justify-between items-center gap-4">
             <span class="text-brand-primary cursor-pointer hover:underline" id="popup-fir-${inc.fir_number}">${inc.fir_number}</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">${inc.area_type}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500 font-semibold">${inc.area_type}</span>
           </div>
-          <div class="space-y-1.5 text-slate-300">
-            <div><span class="text-slate-500 font-medium">Type:</span> <strong class="text-white">${inc.crime_type}</strong></div>
-            <div><span class="text-slate-500 font-medium">District:</span> <span>${inc.district}</span></div>
-            <div><span class="text-slate-500 font-medium">Station:</span> <span>${inc.district.split(' ')[0]} Town PS</span></div>
-            <div><span class="text-slate-500 font-medium">Date:</span> <span>${inc.date_reported}</span></div>
-            <div class="pt-1 border-t border-slate-800/40 text-slate-400"><span class="text-slate-500 font-medium">Location:</span> ${inc.address}</div>
+          <div class="space-y-1.5 text-slate-700 font-medium">
+            <div><span class="text-slate-400 font-bold">Type:</span> <strong class="text-slate-900">${inc.crime_type}</strong></div>
+            <div><span class="text-slate-400 font-bold">District:</span> <span>${inc.district}</span></div>
+            <div><span class="text-slate-400 font-bold">Station:</span> <span>${inc.district.split(' ')[0]} Central PS</span></div>
+            <div><span class="text-slate-400 font-bold">Date:</span> <span>${inc.date_reported}</span></div>
+            <div class="pt-1 border-t border-slate-100 text-slate-500"><span class="text-slate-400 font-bold">Address:</span> ${inc.address}</div>
           </div>
         `;
 
@@ -106,6 +107,13 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect }
           e.preventDefault();
           if (onFirSelect) {
             onFirSelect(inc.fir_number);
+          }
+        });
+
+        // Trigger side panel selector on marker click
+        marker.on('click', () => {
+          if (onIncidentSelect) {
+            onIncidentSelect(inc);
           }
         });
 
@@ -126,10 +134,9 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect }
 
     // Cleanup on unmount
     return () => {
-      // We do not destroy the map instance completely on fast redraws, just clear layers
-      // to maintain panning performance, but on full component unmount we destroy:
+      // Clear layers to maintain performance
     };
-  }, [incidents, onFirSelect]);
+  }, [incidents, onFirSelect, onIncidentSelect]);
 
   // Handle full unmount cleanup
   useEffect(() => {
@@ -142,23 +149,23 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect }
   }, []);
 
   return (
-    <div className="relative w-full h-96 min-h-[400px] rounded-lg overflow-hidden border border-slate-800 shadow-xl bg-slate-950">
-      <div className="absolute top-4 right-4 z-[1000] card-panel rounded-lg p-3 text-[10px] text-slate-300 border border-slate-800 space-y-1.5">
-        <span className="block font-bold uppercase tracking-wider text-white border-b border-slate-850 pb-1 mb-1.5">Crime Key</span>
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+    <div className="relative w-full h-96 min-h-[400px] rounded-lg overflow-hidden border border-slate-200 shadow bg-white">
+      <div className="absolute top-4 right-4 z-[1000] card-panel rounded-lg p-3 text-[10px] text-slate-600 border border-slate-200 bg-white space-y-1.5 shadow">
+        <span className="block font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-1 mb-1.5">Crime Key</span>
+        <div className="flex items-center gap-2 font-medium">
+          <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
           <span>Cyber Crime</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+        <div className="flex items-center gap-2 font-medium">
+          <span className="h-2.5 w-2.5 rounded-full bg-orange-600" />
           <span>Theft</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+        <div className="flex items-center gap-2 font-medium">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-650" />
           <span>Organized Crime</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
+        <div className="flex items-center gap-2 font-medium">
+          <span className="h-2.5 w-2.5 rounded-full bg-yellow-600" />
           <span>Financial Fraud</span>
         </div>
       </div>

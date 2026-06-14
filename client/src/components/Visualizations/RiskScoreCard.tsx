@@ -1,9 +1,9 @@
-import React from 'react';
-import { ShieldAlert, User, Briefcase, MapPin, Users, Calendar, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldAlert, User, Briefcase, MapPin, Users, Calendar, ArrowRight, RefreshCw } from 'lucide-react';
 
 interface RiskFactor {
   factor: string;
-  impact: 'High' | 'Medium' | 'Low';
+  impact: 'High' | 'Medium' | 'Low' | 'Critical';
   detail: string;
 }
 
@@ -33,9 +33,17 @@ interface RiskProfile {
 interface RiskScoreCardProps {
   profile: RiskProfile;
   onFirSelect?: (firNumber: string) => void;
+  onRecalculate?: (queryText: string) => void;
 }
 
-export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSelect }) => {
+export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSelect, onRecalculate }) => {
+  // Local state for interactive switches
+  const [warrant, setWarrant] = useState(false);
+  const [weapon, setWeapon] = useState(false);
+  const [hawala, setHawala] = useState(false);
+  const [history, setHistory] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
+
   const scorePercent = Math.round(profile.overall_score * 100);
   
   // Dynamic color palette based on risk
@@ -70,25 +78,50 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (profile.overall_score * circumference);
 
+  const handleRecalculate = () => {
+    if (!onRecalculate) return;
+    setRecalculating(true);
+    
+    // Compile search query with text parameters that toolRouter parses
+    let query = `Calculate the risk score of ${profile.name}`;
+    const flags: string[] = [];
+    if (warrant) flags.push("active arrest warrant");
+    if (weapon) flags.push("weapon association");
+    if (hawala) flags.push("hawala account linkages");
+    if (history) flags.push("prior convictions repeat history");
+    
+    if (flags.length > 0) {
+      query += ` with ${flags.join(' and ')}`;
+    }
+
+    onRecalculate(query);
+    
+    // Add brief animation delay
+    setTimeout(() => {
+      setRecalculating(false);
+    }, 1200);
+  };
+
   return (
-    <div className={`card-panel rounded-lg border p-6 text-slate-200 ${colors.border} max-w-2xl w-full mx-auto my-4`}>
+    <div className={`card-panel rounded-lg border p-6 text-slate-200 ${colors.border} max-w-2xl w-full mx-auto my-4 bg-white border-slate-200`}>
+      
       {/* Header */}
-      <div className="flex justify-between items-start border-b border-slate-800 pb-4 mb-6">
+      <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-6">
         <div>
           <div className="flex items-center gap-2">
             <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${colors.bg} ${colors.text} border ${colors.border}`}>
               {profile.threat_level} Threat
             </span>
             {profile.gang_affiliation && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-red-500/10 text-red-300 border border-red-500/20 flex items-center gap-1">
+              <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-red-500/10 text-red-700 border border-red-500/20 flex items-center gap-1">
                 <Users size={12} /> Syndicate Associated
               </span>
             )}
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white mt-2 flex items-center gap-2">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 mt-2 flex items-center gap-2">
             <User className="text-slate-400" /> {profile.name}
           </h2>
-          <p className="text-slate-400 text-sm mt-1">Recidivism Risk Profile & Recurrent Offender Index</p>
+          <p className="text-slate-500 text-sm mt-1">Recidivism Risk Profile & Recurrent Offender Index</p>
         </div>
 
         {/* Circular Gauge */}
@@ -98,7 +131,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
               cx="56"
               cy="56"
               r={radius}
-              className="stroke-slate-800"
+              className="stroke-slate-100"
               strokeWidth="10"
               fill="transparent"
             />
@@ -115,49 +148,115 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
             />
           </svg>
           <div className="absolute text-center">
-            <span className="text-2xl font-black text-white">{scorePercent}%</span>
+            <span className="text-2xl font-black text-slate-900">{scorePercent}%</span>
             <span className="block text-[10px] text-slate-400 font-medium tracking-wider">INDEX</span>
           </div>
         </div>
       </div>
 
+      {/* Interactive Parameter Switches Panel */}
+      {onRecalculate && (
+        <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 mb-6">
+          <span className="block text-[10px] font-bold text-brand-gold uppercase tracking-wider mb-2">
+            Interactive Risk Recalculator (Simulation)
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={warrant}
+                onChange={(e) => setWarrant(e.target.checked)}
+                className="rounded text-brand-primary border-slate-300 focus:ring-0 cursor-pointer"
+              />
+              <span>Active Arrest Warrant</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={weapon}
+                onChange={(e) => setWeapon(e.target.checked)}
+                className="rounded text-brand-primary border-slate-300 focus:ring-0 cursor-pointer"
+              />
+              <span>Weapon Association</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={hawala}
+                onChange={(e) => setHawala(e.target.checked)}
+                className="rounded text-brand-primary border-slate-300 focus:ring-0 cursor-pointer"
+              />
+              <span>Hawala Linkage</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={history}
+                onChange={(e) => setHistory(e.target.checked)}
+                className="rounded text-brand-primary border-slate-300 focus:ring-0 cursor-pointer"
+              />
+              <span>Habitual Offender History</span>
+            </label>
+          </div>
+          
+          <button
+            type="button"
+            onClick={handleRecalculate}
+            disabled={recalculating}
+            className="w-full mt-3 py-2 bg-brand-primary hover:bg-brand-primary/95 disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            {recalculating ? (
+              <>
+                <RefreshCw size={13} className="animate-spin" />
+                <span>Re-Evaluating Suspect Threat...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw size={13} />
+                <span>Recalculate Profile via LLM</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Profile Details Grid */}
-      <div className="grid grid-cols-2 gap-4 bg-slate-900/40 rounded-lg p-4 border border-slate-800/60 mb-6 text-sm">
-        <div className="flex items-center gap-2 text-slate-300">
-          <Calendar size={16} className="text-slate-500" />
+      <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-lg p-4 border border-slate-100 mb-6 text-sm text-slate-700">
+        <div className="flex items-center gap-2">
+          <Calendar size={16} className="text-slate-400" />
           <span>Age / Gender:</span>
-          <strong className="text-white ml-auto">{profile.age || 'N/A'} yrs / {profile.gender}</strong>
+          <strong className="text-slate-900 ml-auto">{profile.age || 'N/A'} yrs / {profile.gender}</strong>
         </div>
-        <div className="flex items-center gap-2 text-slate-300">
-          <Briefcase size={16} className="text-slate-500" />
+        <div className="flex items-center gap-2">
+          <Briefcase size={16} className="text-slate-400" />
           <span>Occupation:</span>
-          <strong className="text-white ml-auto">{profile.occupation}</strong>
+          <strong className="text-slate-900 ml-auto">{profile.occupation}</strong>
         </div>
-        <div className="flex items-center gap-2 text-slate-300 col-span-2 border-t border-slate-800/40 pt-2 mt-1">
-          <MapPin size={16} className="text-slate-500 shrink-0" />
+        <div className="flex items-center gap-2 col-span-2 border-t border-slate-100 pt-2 mt-1">
+          <MapPin size={16} className="text-slate-400 shrink-0" />
           <span className="shrink-0">Registered Address:</span>
-          <strong className="text-white text-right truncate w-full ml-2">{profile.address}</strong>
+          <strong className="text-slate-900 text-right truncate w-full ml-2" title={profile.address}>{profile.address}</strong>
         </div>
       </div>
 
       {/* Risk Factors */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-100 pb-1">
           <ShieldAlert size={16} className="text-brand-primary" /> Key Risk Factors
         </h3>
         <div className="space-y-3">
           {profile.factors.map((f, index) => (
-            <div key={index} className="flex items-start gap-3 bg-slate-900/20 border border-slate-800/40 rounded-lg p-3">
-              <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 mt-0.5 ${
-                f.impact === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                f.impact === 'Medium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            <div key={index} className="flex items-start gap-3 bg-slate-50 border border-slate-100 rounded-lg p-3">
+              <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded shrink-0 mt-0.5 ${
+                f.impact === 'Critical' || f.impact === 'High' ? 'bg-red-50 text-red-700 border border-red-200' :
+                f.impact === 'Medium' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                'bg-emerald-50 text-emerald-750 border border-emerald-200'
               }`}>
                 {f.impact}
               </span>
               <div>
-                <h4 className="text-sm font-medium text-white">{f.factor}</h4>
-                <p className="text-xs text-slate-400 mt-0.5">{f.detail}</p>
+                <h4 className="text-sm font-bold text-slate-800">{f.factor}</h4>
+                <p className="text-xs text-slate-500 mt-0.5 font-medium">{f.detail}</p>
               </div>
             </div>
           ))}
@@ -165,9 +264,9 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
       </div>
 
       {/* Police Command Action Recommendation */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 mb-6">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Recommended Action</h3>
-        <p className="text-sm text-slate-200 mt-1 font-medium italic border-l-2 border-brand-primary pl-3">
+      <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 mb-6">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Recommended Action</h3>
+        <p className="text-sm text-slate-800 mt-1 font-semibold italic border-l-2 border-brand-primary pl-3">
           "{profile.recommendation}"
         </p>
       </div>
@@ -175,23 +274,23 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
       {/* Linked Incidents */}
       {profile.incidents && profile.incidents.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1">
             Linked Investigations ({profile.incidents.length})
           </h3>
           <div className="space-y-2 max-h-36 overflow-y-auto pr-2">
             {profile.incidents.map((inc, index) => (
               <div 
                 key={index} 
-                className="flex items-center justify-between bg-slate-900/40 hover:bg-slate-800/40 border border-slate-800/60 hover:border-slate-700/60 rounded-lg p-3 transition duration-150 cursor-pointer"
+                className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 rounded-lg p-3 transition duration-150 cursor-pointer"
                 onClick={() => onFirSelect && onFirSelect(inc.fir_number)}
               >
                 <div>
-                  <span className="text-xs font-bold text-brand-primary">{inc.fir_number}</span>
-                  <span className="text-slate-400 text-xs ml-3">{inc.crime_type}</span>
+                  <span className="text-xs font-bold text-brand-primary hover:underline">{inc.fir_number}</span>
+                  <span className="text-slate-600 text-xs ml-3 font-semibold">{inc.crime_type}</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-400 text-xs">
-                  <span>{inc.district}</span>
-                  <ArrowRight size={12} className="text-slate-600" />
+                <div className="flex items-center gap-2 text-slate-500 text-xs">
+                  <span className="font-semibold">{inc.district}</span>
+                  <ArrowRight size={12} className="text-slate-400" />
                 </div>
               </div>
             ))}

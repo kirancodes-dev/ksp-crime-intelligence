@@ -1,6 +1,6 @@
 const catalyst = require('../shared/catalyst-sdk').getInitializer();
 
-module.exports = async (accusedName) => {
+module.exports = async (accusedName, modifiers = {}) => {
   try {
     const db = catalyst.datastore();
     
@@ -21,7 +21,8 @@ module.exports = async (accusedName) => {
     const priorConvictions = primaryRecord.prior_convictions;
     const gangAffiliation = primaryRecord.gang_affiliation;
     const age = primaryRecord.age;
-    const riskScore = primaryRecord.risk_score;
+    
+    let riskScore = primaryRecord.risk_score;
 
     // Get socio-economic indicators for their last active district
     const socioInfo = await db.execute(`
@@ -67,6 +68,40 @@ module.exports = async (accusedName) => {
         factor: "Environmental Index",
         impact: "Medium",
         detail: `Active in district with high unemployment (${districtStats.unemployment_rate}%).`
+      });
+    }
+
+    // Apply modifiers dynamically if selected
+    if (modifiers.warrant) {
+      riskScore = Math.min(1.0, riskScore + 0.25);
+      factors.push({
+        factor: "Active Warrant",
+        impact: "Critical",
+        detail: "Accused is currently absconding with an active arrest warrant."
+      });
+    }
+    if (modifiers.weapon) {
+      riskScore = Math.min(1.0, riskScore + 0.15);
+      factors.push({
+        factor: "Weapon Association",
+        impact: "High",
+        detail: "Accused has a history of violent offences involving illegal firearms or weapons."
+      });
+    }
+    if (modifiers.hawala) {
+      riskScore = Math.min(1.0, riskScore + 0.20);
+      factors.push({
+        factor: "Hawala Linkage",
+        impact: "High",
+        detail: "Suspicious bank accounts and hawala transaction lines are linked to the accused."
+      });
+    }
+    if (modifiers.history) {
+      riskScore = Math.min(1.0, riskScore + 0.15);
+      factors.push({
+        factor: "Habitual Offender",
+        impact: "High",
+        detail: "Classified as a habitual repeat offender with high recidivism risk."
       });
     }
 

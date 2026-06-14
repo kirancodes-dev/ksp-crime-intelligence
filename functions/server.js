@@ -107,6 +107,28 @@ app.get('/api/audit-logs', async (req, res) => {
   }
 });
 
+// 6b. Supervisor Compliance Override Note Writer
+app.post('/api/audit-logs/override', async (req, res) => {
+  try {
+    const { alertTitle, reason, justification } = req.body;
+    const { userId, role } = req.user;
+    const db = catalyst.datastore();
+    
+    const queryText = `OVERRIDE FLAG: "${alertTitle}"`;
+    const actionTaken = `Resolved: ${reason}. Justification: ${justification}`;
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+    
+    await db.execute(
+      "INSERT INTO AuditLog (user_id, role, query_text, action_taken, timestamp, ip_address, data_classification) VALUES (?, ?, ?, ?, datetime('now'), ?, 'Secret')",
+      [userId, role, queryText, actionTaken, ipAddress]
+    );
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 7. Case details fetcher
 app.get('/api/fir/:firNumber', async (req, res) => {
   try {

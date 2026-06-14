@@ -319,7 +319,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <NetworkGraph data={msg.toolResult.data} onNodeSelect={handleNodeSelect} />
                 )}
                 {msg.toolResult.tool === 'risk' && (
-                  <RiskScoreCard profile={msg.toolResult.data} onFirSelect={onFirSelect} />
+                  <RiskScoreCard profile={msg.toolResult.data} onFirSelect={onFirSelect} onRecalculate={(query) => handleSend(query)} />
                 )}
                 {msg.toolResult.tool === 'finance' && (
                   <FinancialFlowGraph data={msg.toolResult.data} totalAmount={msg.toolResult.data.totalAmount} suspiciousCount={msg.toolResult.data.suspiciousCount} />

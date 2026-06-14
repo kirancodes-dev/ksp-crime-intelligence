@@ -102,7 +102,13 @@ module.exports = async (queryText) => {
     if (tool === "risk") {
       const targetName = extractedParams.accused_name;
       if (targetName) {
-        const scoreResult = await riskScoring(targetName);
+        const riskModifiers = {
+          warrant: query.includes("warrant") || query.includes("abscond"),
+          weapon: query.includes("weapon") || query.includes("firearm") || query.includes("arms"),
+          hawala: query.includes("hawala") || query.includes("bank") || query.includes("financial"),
+          history: query.includes("history") || query.includes("repeat") || query.includes("prior")
+        };
+        const scoreResult = await riskScoring(targetName, riskModifiers);
         if (scoreResult.success) {
           data = scoreResult.profile;
           narrative = `Retrieved the intelligence risk profile for accused '${data.name}'. Calculated recidivism threat score: ${(data.overall_score * 100).toFixed(0)}%. ${data.recommendation}`;

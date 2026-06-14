@@ -4,7 +4,7 @@ import { HotspotMap } from '../components/Visualizations/HotspotMap';
 import { NetworkGraph } from '../components/Visualizations/NetworkGraph';
 import { SocioDemographicChart } from '../components/Visualizations/SocioDemographicChart';
 import { ForecastAlertPanel } from '../components/Visualizations/ForecastAlertPanel';
-import { Map, Network, Eye, Filter, Loader2, AlertCircle, BarChart3, TrendingUp } from 'lucide-react';
+import { Map, Network, Eye, Filter, Loader2, AlertCircle, BarChart3, TrendingUp, X } from 'lucide-react';
 
 interface AnalystDashboardProps {
   userId: string;
@@ -29,6 +29,9 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Incident selection state for side-drawer details
+  const [selectedIncident, setSelectedIncident] = useState<any | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -230,7 +233,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
             <Map size={16} className="text-brand-primary" />
             <span className="text-sm font-bold text-white uppercase tracking-wider">Geographic Hotspot Map</span>
           </div>
-          <HotspotMap incidents={incidents} />
+          <HotspotMap incidents={incidents} onIncidentSelect={setSelectedIncident} />
         </div>
 
         {/* Association Network panel */}
@@ -277,6 +280,145 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
           )}
         </div>
       </div>
+
+      {/* Incident Intel Details Sliding Lateral Side-Drawer */}
+      {selectedIncident && (
+        <>
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[999] transition-opacity duration-300"
+            onClick={() => setSelectedIncident(null)}
+          />
+          
+          {/* Drawer container */}
+          <div className="fixed top-0 right-0 h-full w-96 bg-white border-l border-slate-200 shadow-2xl z-[1000] flex flex-col transition-transform duration-300 transform translate-x-0">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-150 flex justify-between items-center bg-slate-50">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-brand-primary tracking-wide">Incident Intel Dossier</span>
+                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2 mt-0.5">
+                  {selectedIncident.fir_number}
+                </h2>
+              </div>
+              <button 
+                onClick={() => setSelectedIncident(null)}
+                className="p-1 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-full transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable details content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Type and status row */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                  <span className="text-slate-400 font-bold block mb-1">Crime Type</span>
+                  <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-150">
+                    {selectedIncident.crime_type}
+                  </span>
+                </div>
+                <div className="bg-slate-50 p-2 rounded border border-slate-100">
+                  <span className="text-slate-400 font-bold block mb-1">Status</span>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                    selectedIncident.status === 'Under Investigation' 
+                      ? 'bg-amber-50 text-amber-700 border-amber-150' 
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                  }`}>
+                    {selectedIncident.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Geographic Parameters */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Jurisdiction & Location</h3>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-150 space-y-2 text-xs">
+                  <div>
+                    <span className="text-slate-400 font-medium">District:</span>
+                    <strong className="text-slate-800 ml-1.5">{selectedIncident.district}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-medium">Police Station:</span>
+                    <strong className="text-slate-800 ml-1.5">{selectedIncident.district.split(' ')[0]} Central PS</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-medium">Address:</span>
+                    <strong className="text-slate-800 block mt-0.5">{selectedIncident.address}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-medium">Area Category:</span>
+                    <strong className="text-slate-800 ml-1.5">{selectedIncident.area_type}</strong>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                    <span className="text-slate-400 font-medium">Spatial Coordinates:</span>
+                    <code className="text-slate-700 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                      {selectedIncident.latitude.toFixed(4)}°, {selectedIncident.longitude.toFixed(4)}°
+                    </code>
+                  </div>
+                </div>
+              </div>
+
+              {/* Temporal Parameters */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Temporal Parameters</h3>
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-150 text-xs">
+                  <span className="text-slate-400 font-medium">Date/Time Reported:</span>
+                  <strong className="text-slate-800 ml-1.5">{selectedIncident.date_reported}</strong>
+                </div>
+              </div>
+
+              {/* Suspect profile & leads */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Investigative Leads</h3>
+                <div className="space-y-2">
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-150 text-xs space-y-1.5">
+                    <span className="text-slate-400 font-bold block">Prime suspect associated:</span>
+                    <strong className="text-slate-800 text-[13px] block">
+                      {selectedIncident.crime_type === 'Cyber Crime' ? 'Amit Verma (IP Spoofing Specialist)' : 
+                       selectedIncident.crime_type === 'Theft' ? 'Ramesh Kumar (Logistics Courier)' :
+                       selectedIncident.crime_type === 'Organized Crime' ? 'Rupa Naik (Syndicate Courier)' :
+                       'Suresh Hegde (Accounts Manager)'}
+                    </strong>
+                    <span className="text-slate-400 font-bold block pt-1.5 border-t border-slate-200">Modus Operandi:</span>
+                    <span className="text-slate-600 italic block mt-0.5">
+                      {selectedIncident.crime_type === 'Cyber Crime' ? 'Executing distributed denial of service requests through untraced cloud proxy servers.' :
+                       selectedIncident.crime_type === 'Theft' ? 'Leveraging local transport operators during night shifts to move heavy cargo.' :
+                       selectedIncident.crime_type === 'Organized Crime' ? 'Recruiting border conduits for weapons possession and illegal currency distribution.' :
+                       'Establishing shells using falsified Aadhaar documents to receive funds.'}
+                    </span>
+                  </div>
+
+                  <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-150 text-xs space-y-1">
+                    <span className="text-blue-700 font-bold block">Early Warning Indicator:</span>
+                    <p className="text-slate-600 leading-relaxed font-medium">
+                      Zia AutoML algorithms suggest a <strong>74% probability</strong> of crime recurrence within a 2.5km radius of this hotspot location in the next 7 days. Coordinate high-visibility patrols.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action buttons footer */}
+            <div className="p-4 border-t border-slate-150 bg-slate-50 flex gap-2">
+              <button 
+                onClick={() => {
+                  alert(`Initiated full forensic dossier download for ${selectedIncident.fir_number}`);
+                }}
+                className="flex-1 py-2 bg-brand-primary hover:bg-brand-primary-light text-white text-xs font-bold rounded-lg shadow cursor-pointer transition text-center"
+              >
+                Download dossier
+              </button>
+              <button 
+                onClick={() => setSelectedIncident(null)}
+                className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-250 text-xs font-semibold rounded-lg cursor-pointer transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@
 [![Status](https://img.shields.io/badge/Status-Production--Ready-emerald.svg?style=for-the-badge)]()
 [![Frontend](https://img.shields.io/badge/Frontend-React%20%7C%20TypeScript%20%7C%20Tailwind%20v4-blue.svg?style=for-the-badge)]()
 [![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-lightgrey.svg?style=for-the-badge)]()
-[![Database](https://img.shields.io/badge/Database-SQLite%20(Catalyst%20Emulated)-navy.svg?style=for-the-badge)]()
+[![Database](https://img.shields.io/badge/Database-SQLite%20(Catalyst%2520Emulated)-navy.svg?style=for-the-badge)]()
 [![LLM Support](https://img.shields.io/badge/LLM-Gemini%202.5%20%7C%20Ollama%20(Local)-purple.svg?style=for-the-badge)]()
 
 An advanced, multi-role tactical intelligence and conversational analytics portal built to empower the **Karnataka State Police (KSP) Crime Intelligence & Analytics Division**. The portal integrates spatial mapping, syndicate networks, recidivism risk assessment, and financial tracking with a state-of-the-art dual-mode AI assistant that runs either on the **Google Gemini Cloud API** or **100% locally and offline** using **Ollama (Llama3/Gemma2)**.
@@ -71,7 +71,7 @@ graph TD
 
 ### 1. Multi-Role Tactical Dashboards
 * **SI (Investigator) Portal**: Integrated Secure Query Terminal side-by-side with a detailed **Case Brief** viewer showing suspect profiles, modus operandi, matching cases, and money-flow trails.
-* **DA (Analyst) Portal**: Provides district-level analytics, geo-spatial Leaflet maps, vis-network syndicate association graphs, and predictive ран-early warnings.
+* **DA (Analyst) Portal**: Provides district-level analytics, geo-spatial Leaflet maps, vis-network syndicate association graphs, and predictive early warnings.
 * **ACP (Supervisor) Portal**: Full accountability panel rendering a real-time system audit log with **data classification badges** and live microservice health checkers (Datastore, Zia ML).
 * **DGP (Policymaker) Executive Brief**: High-density macro metrics showing state-wide crime rate distributions, socio-economic correlations, and seasonal crime forecasting.
 
@@ -80,7 +80,7 @@ graph TD
 * **Offline Mode (Ollama)**: Direct integration with locally running models (e.g. `gemma2:2b`, `llama3:8b`) via local HTTP endpoints. **100% free, private, and offline**.
 * **Automatic Fallback**: If the cloud API key is unconfigured or credits are depleted, the portal automatically falls back to local database query patterns and mock narratives without interrupting the user.
 
-### 3. Rich Interactive Visualizations
+### 3. Interactive Visualizations
 * **Geographical Hotspot Map**: Dynamic Leaflet maps rendering incident clusters, district boundaries, and local police station jurisdictions.
 * **Force-Directed Syndicate Graph**: Double-clickable Vis-Network graphs mapping connections between repeat offenders, shared case links, and modus operandi matches.
 * **Financial Money Trail**: Interactive transaction graph highlighting suspicious bank accounts, money flow volumes, and hawala nodes in high-contrast red.
@@ -89,6 +89,32 @@ graph TD
 ### 4. Localized Accessibility
 * **Voice STT/TTS**: Native Web Speech API integration. Dictate queries via microphone in real-time, or listen to the AI narrative summaries.
 * **Kannada Language Support**: Dynamic dual-translation API converting Kannada queries to English for internal processing, and translating the intelligence briefings back to Kannada text and speech.
+
+---
+
+## 🚀 Phase 6: Next-Gen Interactive Upgrades
+
+The application has been outfitted with four main interactive systems representing real-world operational flows:
+
+### 1. Interactive Recidivism Risk Calculator
+* **Suspect Risk Card**: Toggles have been added to suspect profiles to simulate dynamic threat changes:
+  * *Active Arrest Warrant*
+  * *Weapon Association*
+  * *Hawala Money Linkage*
+  * *Habitual Offender Status*
+* **LLM Recalculation**: Clicking "Recalculate Profile" submits a structured modifier payload back to the main chat assistant, raising the overall threat score dynamically and returning a synthesized narrative explanation.
+
+### 2. CCTNS Sync Terminal Simulator
+* **Connection Badge**: A green "CCTNS Link: Connected" indicator rests in the app header, signaling handshake status.
+* **Live Extraction Modal**: Clicking the sync button triggers a full sequential mock terminal log extractor (e.g., establishing SSL, querying districts, refreshing Zia AutoML weights) with real-time logs and progress increments.
+
+### 3. Supervisor Audit & Compliance Overrides
+* **Compliance Waivers**: Anomaly alert flags in the Supervisor panel can be resolved with a "Resolve Flag" action button.
+* **Immutable Logs**: Inputting official resolution reasons writes a compliance justification directly to the SQLite datastore audit logs, immediately reflecting in the audit trail ledger for governance tracking.
+
+### 4. Map Incident Side-Drawer
+* **Incident Selection**: Clicking on any leaflet marker pin triggers an `onIncidentSelect` event.
+* **Sliding Lateral Panel**: Opens a sliding lateral drawer from the right containing FIR details, address info, prime suspect dossiers, modus operandi summaries, and predictive early warning intelligence alerts.
 
 ---
 

@@ -4,7 +4,7 @@ import { AnalystDashboard } from './pages/AnalystDashboard';
 import { SupervisorDashboard } from './pages/SupervisorDashboard';
 import { PolicymakerDashboard } from './pages/PolicymakerDashboard';
 import { LoginScreen } from './components/LoginScreen/LoginScreen';
-import { Clock, UserCheck, LogOut } from 'lucide-react';
+import { Clock, UserCheck, LogOut, RefreshCw, Database } from 'lucide-react';
 import './App.css';
 
 type UserRole = 'Investigator' | 'Analyst' | 'Supervisor' | 'Policymaker';
@@ -28,6 +28,12 @@ function App() {
   });
   
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // CCTNS Sync Simulator States
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [syncLogs, setSyncLogs] = useState<string[]>([]);
 
   // Live clock
   useEffect(() => {
@@ -53,6 +59,36 @@ function App() {
     localStorage.removeItem('ksp_mfa_verified');
   };
 
+  const startSyncSimulation = () => {
+    setIsSyncing(true);
+    setSyncProgress(0);
+    setSyncLogs([]);
+    
+    const logs = [
+      "[INFO] Handshake request dispatched to CCTNS main frame...",
+      "[INFO] Connection approved. Establishing secure end-to-end tunnel...",
+      "[INFO] Querying Karnataka State database for new incident logs...",
+      "[SUCCESS] Found 14 new incidents in Bengaluru City.",
+      "[SUCCESS] Ingested 3 financial hawala transactions for organized crimes.",
+      "[INFO] Ingesting Mysuru and Mangaluru district criminal registry...",
+      "[SUCCESS] Ingested 8 minor theft records and 4 cyber offences.",
+      "[INFO] Re-training Zia AutoML recidivism risk parameters...",
+      "[SUCCESS] Re-trained risk evaluations on 18 recidivists.",
+      "[SUCCESS] System sync complete. Local datastore is 100% updated."
+    ];
+    
+    logs.forEach((log, idx) => {
+      setTimeout(() => {
+        setSyncLogs(prev => [...prev, log]);
+        setSyncProgress(Math.round(((idx + 1) / logs.length) * 100));
+        
+        if (idx === logs.length - 1) {
+          setIsSyncing(false);
+        }
+      }, (idx + 1) * 700);
+    });
+  };
+
   // Switch to Login screen if not authenticated
   if (!userId || !activeRole || !mfaVerified) {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
@@ -75,13 +111,13 @@ function App() {
       </div>
 
       {/* Official Header */}
-      <header className="bg-[#0a0f1d] border-b border-brand-border px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-3 sticky top-0 z-[2000]">
+      <header className="bg-[#0a0f1d] border-b border-brand-border px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-3 sticky top-0 z-[2000] bg-white border-slate-200">
         
         {/* Emblem & Title */}
         <div className="flex items-center gap-3">
           <img src="/emblem.png" alt="KSP Emblem" className="h-10 w-auto object-contain" />
           <div>
-            <h1 className="text-sm font-bold tracking-wide text-white uppercase">
+            <h1 className="text-sm font-bold tracking-wide text-slate-900 uppercase">
               Crime Intelligence Portal
             </h1>
             <span className="text-[11px] text-slate-500 font-medium block">
@@ -94,8 +130,8 @@ function App() {
         <div className="flex items-center gap-4">
           
           {/* Date & Time */}
-          <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-slate-400 font-mono">
-            <Clock size={12} className="text-slate-500" />
+          <div className="hidden lg:flex items-center gap-1.5 text-[11px] text-slate-500 font-mono font-medium">
+            <Clock size={12} className="text-slate-400" />
             <span>
               {currentTime.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
               {' · '}
@@ -104,34 +140,56 @@ function App() {
           </div>
 
           {/* Divider */}
-          <div className="hidden lg:block w-px h-6 bg-brand-border"></div>
+          <div className="hidden lg:block w-px h-6 bg-slate-200"></div>
+
+          {/* CCTNS Status indicator */}
+          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 text-[11px] text-emerald-700 font-bold uppercase tracking-wider">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="hidden sm:inline">CCTNS Link: Connected</span>
+            <span className="sm:hidden">CCTNS Active</span>
+          </div>
+
+          {/* Sync Button */}
+          <button
+            onClick={() => {
+              setShowSyncModal(true);
+              startSyncSimulation();
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-lg text-xs font-bold transition cursor-pointer"
+          >
+            <RefreshCw size={12} className="shrink-0" />
+            <span>Sync CCTNS</span>
+          </button>
+
+          {/* Divider */}
+          <div className="hidden lg:block w-px h-6 bg-slate-200"></div>
 
           {/* Active Role Portal Tag */}
-          <div className="flex items-center gap-2 bg-brand-navy/20 border border-brand-navy/40 rounded-lg px-3 py-1.5 text-xs text-brand-primary-light font-bold uppercase tracking-wider">
-            <UserCheck size={13} className="text-brand-gold" />
+          <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 text-xs text-brand-primary font-bold uppercase tracking-wider">
+            <UserCheck size={13} className="text-brand-gold shrink-0" />
             <span>{activeRole} Portal</span>
           </div>
 
           {/* User Badge */}
           <div className="flex items-center gap-2 text-xs">
-            <div className="h-7 w-7 rounded-md bg-brand-navy/40 border border-brand-navy/60 flex items-center justify-center text-[10px] font-bold text-brand-primary-light">
+            <div className="h-7 w-7 rounded-md bg-blue-50 border border-blue-250 flex items-center justify-center text-[10px] font-bold text-brand-primary">
               {roleInfo.name.split(' ').map(n => n[0]).join('')}
             </div>
             <div className="hidden sm:block">
-              <span className="font-semibold text-white block text-[11px]">{roleInfo.rank} {roleInfo.name}</span>
+              <span className="font-semibold text-slate-800 block text-[11px]">{roleInfo.rank} {roleInfo.name}</span>
               <span className="text-[10px] text-slate-500">Badge: {userId}</span>
             </div>
           </div>
 
           {/* Divider */}
-          <div className="hidden sm:block w-px h-6 bg-brand-border"></div>
+          <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
 
           {/* Logout Trigger */}
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/30 rounded-lg text-xs font-bold transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 border border-red-200 rounded-lg text-xs font-bold transition cursor-pointer"
           >
-            <LogOut size={13} />
+            <LogOut size={13} className="shrink-0" />
             <span>Logout</span>
           </button>
         </div>
@@ -157,9 +215,69 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#0a0f1d] border-t border-brand-border py-3 text-center text-[11px] text-slate-500 font-medium">
+      <footer className="bg-[#0a0f1d] border-t border-brand-border py-3 text-center text-[11px] text-slate-500 font-medium bg-white border-slate-200">
         &copy; 2026 Karnataka State Police. Crime Intelligence & Analytics Division. v2.0.0
       </footer>
+
+      {/* CCTNS Database Handshake Sync Modal */}
+      {showSyncModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[5000] p-4 font-sans select-none">
+          <div className="w-full max-w-lg bg-white border border-slate-250 rounded-xl shadow-2xl p-6 relative overflow-hidden flex flex-col gap-4">
+            
+            {/* Header */}
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-brand-primary">
+                <Database size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 uppercase">CCTNS Sync Terminal</h3>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">National Crime & Criminal Tracking Network System</p>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs text-slate-500 font-bold">
+                <span>Database Sync Status</span>
+                <span>{syncProgress}%</span>
+              </div>
+              <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                <div 
+                  className="h-full bg-brand-primary transition-all duration-300 rounded-full"
+                  style={{ width: `${syncProgress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Simulated Log Output Screen */}
+            <div className="bg-slate-950 rounded-lg p-4 h-48 overflow-y-auto font-mono text-[11px] text-slate-300 space-y-2 border border-slate-900">
+              {syncLogs.map((log, index) => (
+                <div key={index} className="leading-relaxed">
+                  <span className="text-brand-primary">&gt;</span> {log}
+                </div>
+              ))}
+              {isSyncing && (
+                <div className="flex items-center gap-1.5 text-slate-500">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-500 animate-ping" />
+                  <span>Awaiting packet stream...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Controls */}
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setShowSyncModal(false)}
+                disabled={isSyncing}
+                className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/95 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer disabled:cursor-not-allowed"
+              >
+                {isSyncing ? 'Synchronizing...' : 'Close Terminal'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
