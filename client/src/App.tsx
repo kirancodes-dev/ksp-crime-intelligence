@@ -4,7 +4,7 @@ import { AnalystDashboard } from './pages/AnalystDashboard';
 import { SupervisorDashboard } from './pages/SupervisorDashboard';
 import { PolicymakerDashboard } from './pages/PolicymakerDashboard';
 import { LoginScreen } from './components/LoginScreen/LoginScreen';
-import { Shield, Clock, UserCheck, LogOut } from 'lucide-react';
+import { Clock, UserCheck, LogOut } from 'lucide-react';
 import './App.css';
 
 type UserRole = 'Investigator' | 'Analyst' | 'Supervisor' | 'Policymaker';
@@ -79,9 +79,7 @@ function App() {
         
         {/* Emblem & Title */}
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-brand-navy/30 border border-brand-navy/50 flex items-center justify-center text-brand-gold">
-            <Shield size={20} />
-          </div>
+          <img src="/emblem.png" alt="KSP Emblem" className="h-10 w-auto object-contain" />
           <div>
             <h1 className="text-sm font-bold tracking-wide text-white uppercase">
               Crime Intelligence Portal

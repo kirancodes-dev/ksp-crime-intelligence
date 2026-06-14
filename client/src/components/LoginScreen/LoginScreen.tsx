@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, ShieldAlert, Lock, UserCheck, KeyRound, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, Lock, UserCheck, KeyRound, AlertTriangle } from 'lucide-react';
 
 interface LoginUser {
   userId: string;
@@ -131,9 +131,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         
         {/* Header section */}
         <div className="text-center space-y-2.5 mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-brand-navy/30 border border-brand-navy/60 text-brand-gold shadow-accent-blue animate-pulse">
-            <Shield size={28} />
-          </div>
+          <img src="/emblem.png" alt="Karnataka State Police Emblem" className="h-24 w-auto mx-auto object-contain mb-2 hover:scale-105 transition duration-300" />
           <div>
             <h2 className="text-[15px] font-extrabold tracking-widest text-white uppercase">
               ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪೊಲೀಸ್
