@@ -12,6 +12,36 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma2:2b';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 /**
+ * Safely parses JSON response from LLM, stripping markdown wrappers or extracting
+ * the outermost JSON object if conversational padding is present.
+ */
+function parseJsonResponse(rawText) {
+  if (!rawText) throw new Error('Response text is empty');
+  
+  let cleaned = rawText.trim();
+  // Remove markdown code block wraps (e.g. ```json ... ```)
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  }
+  
+  // Try direct parse
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // If it fails, let's try to extract the first matching JSON object pattern { ... }
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch (innerErr) {
+        throw new Error(`Failed to parse extracted JSON block: ${innerErr.message}`);
+      }
+    }
+    throw new Error(`Invalid JSON syntax in text: ${e.message}`);
+  }
+}
+
+/**
  * Helper to make POST requests to Ollama API
  */
 function makeOllamaRequest(payload) {
@@ -113,19 +143,19 @@ function makeGeminiRequest(payload) {
  * Route schema for structured classification output
  */
 const routingSchema = {
-  type: 'OBJECT',
+  type: 'object',
   properties: {
     tool: {
-      type: 'STRING',
+      type: 'string',
       description: 'The classified tool to query the database. Must be one of: risk, network, map, chart, finance, socio, similar, forecast, text.'
     },
     parameters: {
-      type: 'OBJECT',
+      type: 'object',
       properties: {
-        accused_name: { type: 'STRING', description: 'Name of any accused person mentioned.' },
-        district: { type: 'STRING', description: 'District name. One of: Bengaluru City, Mysuru, Hubballi-Dharwad, Mangaluru, Belagavi.' },
-        crime_type: { type: 'STRING', description: 'Category of crime. One of: Cyber Crime, Theft, Organized Crime, Financial Fraud.' },
-        fir_number: { type: 'STRING', description: 'Specific case or FIR ID if mentioned, e.g. FIR-2026-003.' }
+        accused_name: { type: 'string', description: 'Name of any accused person mentioned.' },
+        district: { type: 'string', description: 'District name. One of: Bengaluru City, Mysuru, Hubballi-Dharwad, Mangaluru, Belagavi.' },
+        crime_type: { type: 'string', description: 'Category of crime. One of: Cyber Crime, Theft, Organized Crime, Financial Fraud.' },
+        fir_number: { type: 'string', description: 'Specific case or FIR ID if mentioned, e.g. FIR-2026-003.' }
       }
     }
   },
@@ -185,7 +215,10 @@ async function routeQuery(queryText) {
   if (USE_OLLAMA) {
     const payload = {
       model: OLLAMA_MODEL,
-      messages: [{ role: 'user', content: `${routingSystemPrompt}\n\nUser Query: "${queryText}"` }],
+      messages: [
+        { role: 'system', content: routingSystemPrompt },
+        { role: 'user', content: `User Query: "${queryText}"` }
+      ],
       stream: false,
       format: 'json',
       options: { temperature: 0.1 }
@@ -194,20 +227,39 @@ async function routeQuery(queryText) {
       const result = await makeOllamaRequest(payload);
       const content = result.message?.content;
       if (!content) throw new Error('Empty response from Ollama');
-      return { success: true, classification: JSON.parse(content.trim()) };
+      
+      const classification = parseJsonResponse(content);
+      if (!classification || !classification.tool) {
+        throw new Error('Invalid classification format: missing tool');
+      }
+      if (!classification.parameters) {
+        classification.parameters = { accused_name: null, district: null, crime_type: null, fir_number: null };
+      }
+      return { success: true, classification };
     } catch (error) {
       return { success: false, error: error.message };
     }
   } else {
     const payload = {
-      contents: [{ role: 'user', parts: [{ text: routingSystemPrompt }, { text: `User Query: "${queryText}"` }] }],
+      contents: [{ role: 'user', parts: [{ text: `User Query: "${queryText}"` }] }],
+      systemInstruction: {
+        parts: [{ text: routingSystemPrompt }]
+      },
       generationConfig: { responseMimeType: 'application/json', responseSchema: routingSchema, temperature: 0.1 }
     };
     try {
       const result = await makeGeminiRequest(payload);
       const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) throw new Error('Empty response from Gemini');
-      return { success: true, classification: JSON.parse(text) };
+      
+      const classification = parseJsonResponse(text);
+      if (!classification || !classification.tool) {
+        throw new Error('Invalid classification format: missing tool');
+      }
+      if (!classification.parameters) {
+        classification.parameters = { accused_name: null, district: null, crime_type: null, fir_number: null };
+      }
+      return { success: true, classification };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -228,7 +280,10 @@ async function generateNarrative(queryText, toolName, retrievedData) {
   if (USE_OLLAMA) {
     const payload = {
       model: OLLAMA_MODEL,
-      messages: [{ role: 'user', content: `${narrativeSystemPrompt}\n\n${inputContext}` }],
+      messages: [
+        { role: 'system', content: narrativeSystemPrompt },
+        { role: 'user', content: inputContext }
+      ],
       stream: false,
       options: { temperature: 0.3 }
     };
@@ -242,7 +297,10 @@ async function generateNarrative(queryText, toolName, retrievedData) {
     }
   } else {
     const payload = {
-      contents: [{ role: 'user', parts: [{ text: narrativeSystemPrompt }, { text: inputContext }] }],
+      contents: [{ role: 'user', parts: [{ text: inputContext }] }],
+      systemInstruction: {
+        parts: [{ text: narrativeSystemPrompt }]
+      },
       generationConfig: { temperature: 0.3 }
     };
     try {
