@@ -4,10 +4,29 @@ const financialAnalysis = require('../financial-analysis/index');
 const similarCases = require('../similar-cases/index');
 const gemini = require('../shared/gemini');
 
-module.exports = async (queryText) => {
+module.exports = async (queryText, userId, role) => {
   try {
     const db = catalyst.datastore();
     const query = queryText.toLowerCase();
+
+    // Row-Level Security (RLS) jurisdiction scopes
+    const rlsScopes = {
+      'INV-1002': { type: 'station', value: 'Majestic Bus Terminus', label: 'police station Majestic Bus Terminus' },
+      'ANA-2041': { type: 'district', value: 'Bengaluru City', label: 'district Bengaluru City' },
+      'SUP-3001': { type: 'district', value: 'Bengaluru City', label: 'district Bengaluru City' },
+      'POL-4001': { type: 'statewide', label: 'state-wide Karnataka' }
+    };
+
+    let scope = rlsScopes[userId];
+    if (!scope) {
+      if (role === 'Policymaker') {
+        scope = rlsScopes['POL-4001'];
+      } else if (role === 'Supervisor' || role === 'Analyst') {
+        scope = rlsScopes['SUP-3001'];
+      } else {
+        scope = rlsScopes['INV-1002'];
+      }
+    }
 
     // 1. Classification & Parameter Extraction (Gemini with Legacy Keyword Fallback)
     let tool = null;
@@ -128,7 +147,7 @@ module.exports = async (queryText) => {
           hawala: query.includes("hawala") || query.includes("bank") || query.includes("financial"),
           history: query.includes("history") || query.includes("repeat") || query.includes("prior")
         };
-        const scoreResult = await riskScoring(targetName, riskModifiers);
+        const scoreResult = await riskScoring(targetName, riskModifiers, scope);
         if (scoreResult.success) {
           data = scoreResult.profile;
           narrative = `Retrieved the intelligence risk profile for accused '${data.name}'. Calculated recidivism threat score: ${(data.overall_score * 100).toFixed(0)}%. ${data.recommendation}`;
@@ -145,7 +164,8 @@ module.exports = async (queryText) => {
     // -------------------------------------------------------------
     if (tool === "network") {
       const links = await db.execute(`
-        SELECT cl.source_fir_id, f1.fir_number as source_fir, cl.target_fir_id, f2.fir_number as target_fir, 
+        SELECT cl.source_fir_id, f1.fir_number as source_fir, f1.district as source_district, f1.police_station as source_station,
+               cl.target_fir_id, f2.fir_number as target_fir, f2.district as target_district, f2.police_station as target_station, 
                cl.link_type, cl.confidence_score, cl.description
         FROM CaseLinks cl
         JOIN FIR f1 ON cl.source_fir_id = f1.id
@@ -155,7 +175,7 @@ module.exports = async (queryText) => {
       `);
 
       const accusedWithFirs = await db.execute(`
-        SELECT a.name, a.gang_affiliation, a.prior_convictions, a.risk_score, f.fir_number, f.crime_type
+        SELECT a.name, a.gang_affiliation, a.prior_convictions, a.risk_score, f.fir_number, f.crime_type, f.district, f.police_station
         FROM Accused a
         JOIN FIR f ON a.fir_id = f.id
         WHERE a.name IN (SELECT name FROM Accused GROUP BY name HAVING COUNT(fir_id) > 1) 
@@ -174,7 +194,18 @@ module.exports = async (queryText) => {
         }
       };
 
+      const isCaseInScope = (district, station) => {
+        if (!scope || scope.type === 'statewide') return true;
+        if (scope.type === 'station') return station === scope.value;
+        if (scope.type === 'district') return district === scope.value;
+        return true;
+      };
+
       accusedWithFirs.forEach(row => {
+        if (!isCaseInScope(row.district, row.police_station)) {
+          return;
+        }
+
         const accId = `acc_${row.name.replace(/\s+/g, '_')}`;
         addNode(accId, row.name, "person", row.gang_affiliation ? "gang" : "accused", {
           score: row.risk_score,
@@ -196,6 +227,11 @@ module.exports = async (queryText) => {
       });
 
       links.forEach(link => {
+        if (!isCaseInScope(link.source_district, link.source_station) || 
+            !isCaseInScope(link.target_district, link.target_station)) {
+          return;
+        }
+
         const c1 = `case_${link.source_fir}`;
         const c2 = `case_${link.target_fir}`;
         addNode(c1, link.source_fir, "case", "case");
@@ -219,7 +255,7 @@ module.exports = async (queryText) => {
     // -------------------------------------------------------------
     if (tool === "map") {
       let sql = `
-        SELECT f.id, f.fir_number, f.crime_type, f.district, f.status, f.date_reported,
+        SELECT f.id, f.fir_number, f.crime_type, f.district, f.police_station, f.status, f.date_reported,
                l.latitude, l.longitude, l.address, l.area_type
         FROM FIR f
         JOIN Location l ON f.id = l.fir_id
@@ -242,7 +278,17 @@ module.exports = async (queryText) => {
       
       sql += " ORDER BY f.date_reported DESC LIMIT 40";
       
-      const locations = await db.execute(sql, params);
+      let locations = await db.execute(sql, params);
+      
+      // Apply RLS bounds
+      if (scope && scope.type !== 'statewide') {
+        locations = locations.filter(loc => {
+          if (scope.type === 'station') return loc.police_station === scope.value;
+          if (scope.type === 'district') return loc.district === scope.value;
+          return true;
+        });
+      }
+      
       data = locations;
       
       const filterDesc = filters.length > 0 ? "with specified search parameters" : "overall cases";
@@ -253,7 +299,7 @@ module.exports = async (queryText) => {
     // TOOL: TREND CHART
     // -------------------------------------------------------------
     if (tool === "chart") {
-      const monthlyTrends = await db.execute(`
+      let monthlySql = `
         SELECT strftime('%Y-%m', date_reported) as month, 
                SUM(CASE WHEN crime_type = 'Cyber Crime' THEN 1 ELSE 0 END) as cyber,
                SUM(CASE WHEN crime_type = 'Theft' THEN 1 ELSE 0 END) as theft,
@@ -261,11 +307,20 @@ module.exports = async (queryText) => {
                SUM(CASE WHEN crime_type = 'Financial Fraud' THEN 1 ELSE 0 END) as fraud,
                COUNT(id) as total
         FROM FIR
-        GROUP BY month
-        ORDER BY month ASC
-      `);
+      `;
+      let monthlyParams = [];
+      if (scope && scope.type === 'district') {
+        monthlySql += " WHERE district = ? ";
+        monthlyParams.push(scope.value);
+      } else if (scope && scope.type === 'station') {
+        monthlySql += " WHERE police_station = ? ";
+        monthlyParams.push(scope.value);
+      }
+      
+      monthlySql += " GROUP BY month ORDER BY month ASC ";
+      const monthlyTrends = await db.execute(monthlySql, monthlyParams);
 
-      const districtCrime = await db.execute(`
+      let districtCrime = await db.execute(`
         SELECT district, 
                SUM(CASE WHEN crime_type = 'Cyber Crime' THEN 1 ELSE 0 END) as cyber,
                SUM(CASE WHEN crime_type = 'Theft' THEN 1 ELSE 0 END) as theft,
@@ -276,6 +331,14 @@ module.exports = async (queryText) => {
         GROUP BY district
         ORDER BY total DESC
       `);
+
+      if (scope && scope.type !== 'statewide') {
+        districtCrime = districtCrime.filter(d => {
+          if (scope.type === 'district') return d.district === scope.value;
+          if (scope.type === 'station') return d.district === 'Bengaluru City';
+          return true;
+        });
+      }
 
       data = {
         monthly: monthlyTrends,
@@ -289,10 +352,29 @@ module.exports = async (queryText) => {
     // -------------------------------------------------------------
     if (tool === "finance") {
       let firId = null;
+      let targetFirRecord = null;
 
       if (extractedParams.fir_number) {
-        const firRows = await db.execute('SELECT id FROM FIR WHERE fir_number = ?', [extractedParams.fir_number]);
-        if (firRows.length > 0) firId = firRows[0].id;
+        const firRows = await db.execute('SELECT id, district, police_station FROM FIR WHERE fir_number = ?', [extractedParams.fir_number]);
+        if (firRows.length > 0) {
+          targetFirRecord = firRows[0];
+          // Enforce RLS access check
+          if (scope && scope.type !== 'statewide') {
+            const inScope = (scope.type === 'station' && targetFirRecord.police_station === scope.value) ||
+                            (scope.type === 'district' && targetFirRecord.district === scope.value);
+            if (!inScope) {
+              data = { nodes: [], edges: [], overview: [] };
+              narrative = `🛡️ **Access Denied: Case ${extractedParams.fir_number} is outside your authorized jurisdiction: ${scope.label}.**`;
+              return {
+                success: true,
+                tool,
+                data,
+                narrative
+              };
+            }
+          }
+          firId = targetFirRecord.id;
+        }
       }
 
       if (firId) {
@@ -301,7 +383,7 @@ module.exports = async (queryText) => {
         narrative = result.summary || `Financial trail analysis completed for FIR ID ${firId}.`;
       } else {
         const overview = await db.execute(`
-          SELECT ft.fir_id, f.fir_number, f.crime_type,
+          SELECT ft.fir_id, f.fir_number, f.crime_type, f.district, f.police_station,
                  COUNT(ft.id) as txn_count,
                  SUM(ft.amount) as total_amount,
                  SUM(CASE WHEN ft.is_suspicious = 1 THEN 1 ELSE 0 END) as suspicious_count
@@ -312,9 +394,18 @@ module.exports = async (queryText) => {
           LIMIT 20
         `);
 
+        let filteredOverview = overview;
+        if (scope && scope.type !== 'statewide') {
+          filteredOverview = overview.filter(row => {
+            if (scope.type === 'station') return row.police_station === scope.value;
+            if (scope.type === 'district') return row.district === scope.value;
+            return true;
+          });
+        }
+
         const nodes = [];
         const edges = [];
-        overview.forEach(row => {
+        filteredOverview.forEach(row => {
           nodes.push({
             id: `fir_${row.fir_id}`,
             label: row.fir_number,
@@ -329,8 +420,8 @@ module.exports = async (queryText) => {
           });
         });
 
-        data = { nodes, edges, overview };
-        narrative = `Financial overview across ${overview.length} FIRs with transaction data. Total suspicious transactions flagged. Specify a FIR number for detailed money-flow graph.`;
+        data = { nodes, edges, overview: filteredOverview };
+        narrative = `Financial overview across ${filteredOverview.length} FIRs with transaction data. Total suspicious transactions flagged. Specify a FIR number for detailed money-flow graph.`;
       }
     }
 
@@ -338,44 +429,65 @@ module.exports = async (queryText) => {
     // TOOL: SOCIO-DEMOGRAPHIC ANALYSIS
     // -------------------------------------------------------------
     if (tool === "socio") {
+      let joinClause = "";
+      let whereClause = "";
+      let socioParams = [];
+
+      if (scope && scope.type !== 'statewide') {
+        joinClause = " JOIN FIR f ON a.fir_id = f.id ";
+        if (scope.type === 'station') {
+          whereClause = " WHERE f.police_station = ? ";
+          socioParams.push(scope.value);
+        } else if (scope.type === 'district') {
+          whereClause = " WHERE f.district = ? ";
+          socioParams.push(scope.value);
+        }
+      }
+
       const ageGroups = await db.execute(`
         SELECT 
           CASE 
-            WHEN age < 18 THEN 'Juvenile (<18)'
-            WHEN age BETWEEN 18 AND 25 THEN 'Young Adult (18-25)'
-            WHEN age BETWEEN 26 AND 35 THEN 'Adult (26-35)'
-            WHEN age BETWEEN 36 AND 50 THEN 'Middle-Aged (36-50)'
+            WHEN a.age < 18 THEN 'Juvenile (<18)'
+            WHEN a.age BETWEEN 18 AND 25 THEN 'Young Adult (18-25)'
+            WHEN a.age BETWEEN 26 AND 35 THEN 'Adult (26-35)'
+            WHEN a.age BETWEEN 36 AND 50 THEN 'Middle-Aged (36-50)'
             ELSE 'Senior (50+)'
           END as age_group,
           COUNT(*) as count
-        FROM Accused
+        FROM Accused a
+        ${joinClause}
+        ${whereClause}
         GROUP BY age_group
         ORDER BY count DESC
-      `);
+      `, socioParams);
 
       const genderSplit = await db.execute(`
-        SELECT gender, COUNT(*) as count
-        FROM Accused
-        GROUP BY gender
+        SELECT a.gender, COUNT(*) as count
+        FROM Accused a
+        ${joinClause}
+        ${whereClause}
+        GROUP BY a.gender
         ORDER BY count DESC
-      `);
+      `, socioParams);
 
       const educationLevels = await db.execute(`
-        SELECT education_level, COUNT(*) as count
-        FROM Accused
-        WHERE education_level IS NOT NULL
-        GROUP BY education_level
+        SELECT a.education_level, COUNT(*) as count
+        FROM Accused a
+        ${joinClause}
+        ${whereClause ? whereClause + " AND a.education_level IS NOT NULL " : " WHERE a.education_level IS NOT NULL "}
+        GROUP BY a.education_level
         ORDER BY count DESC
-      `);
+      `, socioParams);
 
       const migrationStatus = await db.execute(`
-        SELECT is_migrant, COUNT(*) as count
-        FROM Accused
-        WHERE is_migrant IS NOT NULL
-        GROUP BY is_migrant
-      `);
+        SELECT a.migration_status as status, COUNT(*) as count
+        FROM Accused a
+        ${joinClause}
+        ${whereClause}
+        GROUP BY status
+      `, socioParams);
 
-      const socioCorrelation = await db.execute(`
+      let socioCorrelation = await db.execute(`
         SELECT s.district, s.unemployment_rate, s.literacy_rate, s.poverty_index,
                COUNT(f.id) as crime_count
         FROM SocioEconomicIndicators s
@@ -383,6 +495,14 @@ module.exports = async (queryText) => {
         GROUP BY s.district
         ORDER BY crime_count DESC
       `);
+
+      if (scope && scope.type !== 'statewide') {
+        socioCorrelation = socioCorrelation.filter(s => {
+          if (scope.type === 'district') return s.district === scope.value;
+          if (scope.type === 'station') return s.district === 'Bengaluru City';
+          return true;
+        });
+      }
 
       data = {
         demographics: {
@@ -401,19 +521,71 @@ module.exports = async (queryText) => {
     // -------------------------------------------------------------
     if (tool === "similar") {
       let firId = null;
+      let targetFirRecord = null;
 
       if (extractedParams.fir_number) {
-        const firRows = await db.execute('SELECT id FROM FIR WHERE fir_number = ?', [extractedParams.fir_number]);
-        if (firRows.length > 0) firId = firRows[0].id;
+        const firRows = await db.execute('SELECT id, district, police_station FROM FIR WHERE fir_number = ?', [extractedParams.fir_number]);
+        if (firRows.length > 0) {
+          targetFirRecord = firRows[0];
+          // Check RLS bounds
+          if (scope && scope.type !== 'statewide') {
+            const inScope = (scope.type === 'station' && targetFirRecord.police_station === scope.value) ||
+                            (scope.type === 'district' && targetFirRecord.district === scope.value);
+            if (!inScope) {
+              data = { similarCases: [] };
+              narrative = `🛡️ **Access Denied: Target case ${extractedParams.fir_number} is outside your authorized jurisdiction: ${scope.label}.**`;
+              return {
+                success: true,
+                tool,
+                data,
+                narrative
+              };
+            }
+          }
+          firId = targetFirRecord.id;
+        }
       }
 
       if (!firId) {
-        const recentFirs = await db.execute('SELECT id FROM FIR ORDER BY date_reported DESC LIMIT 1');
+        // Find most recent in-scope case
+        let sql = 'SELECT id FROM FIR';
+        let params = [];
+        if (scope && scope.type !== 'statewide') {
+          if (scope.type === 'station') {
+            sql += ' WHERE police_station = ?';
+            params.push(scope.value);
+          } else if (scope.type === 'district') {
+            sql += ' WHERE district = ?';
+            params.push(scope.value);
+          }
+        }
+        sql += ' ORDER BY date_reported DESC LIMIT 1';
+        const recentFirs = await db.execute(sql, params);
         if (recentFirs.length > 0) firId = recentFirs[0].id;
       }
 
       if (firId) {
         const result = await similarCases(firId);
+        
+        // Post-filter matching cases and leads
+        if (result.success && scope && scope.type !== 'statewide') {
+          result.similarCases = result.similarCases.filter(c => {
+            if (scope.type === 'station') return c.police_station === scope.value;
+            if (scope.type === 'district') return c.district === scope.value;
+            return true;
+          });
+          
+          // Filter investigative leads
+          const visibleCaseNumbers = new Set([result.targetCase.fir_number, ...result.similarCases.map(c => c.fir_number)]);
+          result.investigativeLeads = result.investigativeLeads.filter(lead => {
+            const firMatch = lead.match(/(?:FIR|case)\s*([A-Z0-9\-\/]+)/i);
+            if (firMatch && !visibleCaseNumbers.has(firMatch[1])) {
+              return false;
+            }
+            return true;
+          });
+        }
+
         data = result;
         const matchCount = result.similarCases ? result.similarCases.length : 0;
         narrative = `Found ${matchCount} similar case(s) for FIR ${result.targetCase?.fir_number || firId}. Cases ranked by similarity score based on crime type, district, modus operandi overlap, and shared accused/gang affiliations.`;
@@ -427,9 +599,17 @@ module.exports = async (queryText) => {
     // TOOL: CRIME FORECAST / EARLY WARNING
     // -------------------------------------------------------------
     if (tool === "forecast") {
-      const forecasts = await db.execute(`
+      let forecasts = await db.execute(`
         SELECT * FROM CrimeForecast ORDER BY forecast_date ASC
       `);
+
+      if (scope && scope.type !== 'statewide') {
+        forecasts = forecasts.filter(f => {
+          if (scope.type === 'district') return f.district === scope.value;
+          if (scope.type === 'station') return f.district === 'Bengaluru City';
+          return true;
+        });
+      }
 
       data = forecasts;
       narrative = `Crime forecast intelligence retrieved: ${forecasts.length} predictive alerts generated. These include projected crime hotspots, seasonal patterns, and early warning indicators for proactive policing.`;
@@ -440,14 +620,24 @@ module.exports = async (queryText) => {
     // -------------------------------------------------------------
     if (tool === "text") {
       const qml = catalyst.quickML();
-      const records = await qml.rag.retrieve(queryText, 3);
+      let records = await qml.rag.retrieve(queryText, 5);
+
+      if (scope && scope.type !== 'statewide') {
+        records = records.filter(r => {
+          if (scope.type === 'station') return r.police_station === scope.value;
+          if (scope.type === 'district') return r.district === scope.value;
+          return true;
+        });
+      }
+
+      records = records.slice(0, 3);
       data = records;
 
       if (records.length > 0) {
         const topResult = records[0];
         narrative = `Based on natural language intelligence search (RAG retrieval), found matching case file: **${topResult.fir_number}** in ${topResult.district}. Details:\n- **Crime Category**: ${topResult.crime_type}\n- **Modus Operandi**: ${topResult.modus_operandi}\n- **Case Description**: ${topResult.description}`;
       } else {
-        narrative = `I scanned the intelligence database but could not find specific case documents matching your exact query. Please refine the case numbers or search keywords (e.g., district name, crime type, or accused moniker).`;
+        narrative = `I scanned the intelligence database but could not find specific case documents matching your exact query within your jurisdiction. Please refine the case numbers or search keywords.`;
       }
     }
 
@@ -467,6 +657,32 @@ module.exports = async (queryText) => {
     if (tool === "cdr") {
       const cdrAnalysis = require('../cdr/index');
       const targetSuspect = extractedParams.accused_name || "Rupa Naik";
+
+      // CDR Access Check: Verify suspect has at least one incident within scope
+      if (scope && scope.type !== 'statewide') {
+        const suspectCases = await db.execute(`
+          SELECT f.district, f.police_station 
+          FROM Accused a
+          JOIN FIR f ON a.fir_id = f.id
+          WHERE a.name LIKE ?
+        `, [`%${targetSuspect}%`]);
+        const hasVisibleCase = suspectCases.some(c => {
+          if (scope.type === 'station') return c.police_station === scope.value;
+          if (scope.type === 'district') return c.district === scope.value;
+          return true;
+        });
+        if (!hasVisibleCase) {
+          data = { breadcrumbs: [], collisionAlerts: [] };
+          narrative = `🛡️ **Access Denied: Suspect '${targetSuspect}' is outside your authorized jurisdiction: ${scope.label}.**`;
+          return {
+            success: true,
+            tool,
+            data,
+            narrative
+          };
+        }
+      }
+
       const result = await cdrAnalysis(targetSuspect);
       data = result;
       narrative = `Retrieved Call Detail Record (CDR) cell tower breadcrumbs for suspect ${result.suspect}. Carrier: ${result.carrier}. Chronology has ${result.breadcrumbs.length} pings. Collision analysis: ${result.collisionAlerts.length > 0 ? '⚠️ Proximity warning flagged near crime location' : 'No crime scene intersections found'}.`;
@@ -479,6 +695,29 @@ module.exports = async (queryText) => {
       const biometricSearch = require('../biometrics/index');
       const targetSuspect = extractedParams.accused_name || "";
       const result = await biometricSearch(targetSuspect);
+      
+      // Post-filter face candidates
+      if (result && result.matches && scope && scope.type !== 'statewide') {
+        const filteredMatches = [];
+        for (const candidateMatch of result.matches) {
+          const suspectCases = await db.execute(`
+            SELECT f.district, f.police_station 
+            FROM Accused a
+            JOIN FIR f ON a.fir_id = f.id
+            WHERE a.name LIKE ?
+          `, [`%${candidateMatch.name}%`]);
+          const hasVisibleCase = suspectCases.some(c => {
+            if (scope.type === 'station') return c.police_station === scope.value;
+            if (scope.type === 'district') return c.district === scope.value;
+            return true;
+          });
+          if (hasVisibleCase) {
+            filteredMatches.push(candidateMatch);
+          }
+        }
+        result.matches = filteredMatches;
+      }
+
       data = result;
       const count = result.matches ? result.matches.length : 0;
       narrative = `Zia Vision face biometrics registry search found ${count} candidate matches from datastore accused files. Top match is ${count > 0 ? result.matches[0].name + ' (' + result.matches[0].similarity + '% match)' : 'None'}.`;
@@ -500,8 +739,30 @@ module.exports = async (queryText) => {
         { id: 3852, time: "21:33", caller: "Store Manager", details: "Suspicious vehicle observed idling near Chamundi Hill, Mysuru.", status: "Pending", vehicle: "" },
         { id: 3853, time: "21:35", caller: "Bank Teller", details: "Credit card fraud report at Mangaluru Kadri PS.", status: "Pending", vehicle: "" }
       ];
-      data = { units, logs };
-      narrative = `Accessed live Emergency KSP 112 Dispatch desk logs. Loaded fleet status registry (${units.length} vehicles). Patrol units are on-standby for AI routing dispatch.`;
+
+      let filteredUnits = units;
+      let filteredLogs = logs;
+
+      if (scope && scope.type !== 'statewide') {
+        filteredUnits = units.filter(u => u.vehicle.includes("Bengaluru City"));
+        if (scope.type === 'station') {
+          filteredLogs = [
+            { id: 3901, time: "22:15", caller: "Duty Officer", details: `Patrol check required near ${scope.value}.`, status: "Active", vehicle: "PATROL-101" }
+          ];
+        } else if (scope.type === 'district') {
+          filteredLogs = [
+            { id: 3902, time: "22:20", caller: "Citizen Report", details: `Traffic monitoring alert in ${scope.value}.`, status: "Pending", vehicle: "" }
+          ];
+        }
+      }
+
+      data = { units: filteredUnits, logs: filteredLogs };
+      narrative = `Accessed live Emergency KSP 112 Dispatch desk logs. Loaded fleet status registry (${filteredUnits.length} vehicles). Patrol units are on-standby for AI routing dispatch.`;
+    }
+
+    // Append RLS warning badge if active
+    if (scope && scope.type !== 'statewide') {
+      narrative += `\n\n🛡️ **Row-Level Security (RLS) Active: Results filtered by jurisdiction: ${scope.label}.**`;
     }
 
     return {

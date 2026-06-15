@@ -59,7 +59,7 @@ module.exports = async (queryText, userId, role, ipAddress, sessionId) => {
     }
 
     // 4. Route query to matching tool
-    const routeResult = await toolRouter(workingQuery);
+    const routeResult = await toolRouter(workingQuery, userId, role);
     if (!routeResult.success) {
       throw new Error(routeResult.error || "Failed routing query");
     }

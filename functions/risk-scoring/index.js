@@ -1,12 +1,12 @@
 const catalyst = require('../shared/catalyst-sdk').getInitializer();
 
-module.exports = async (accusedName, modifiers = {}) => {
+module.exports = async (accusedName, modifiers = {}, scope = null) => {
   try {
     const db = catalyst.datastore();
     
-    // Find accused details
+    // Find accused details (selecting police_station for RLS checks)
     const accusedRecords = await db.execute(`
-      SELECT a.*, f.fir_number, f.crime_type, f.district, f.date_reported
+      SELECT a.*, f.fir_number, f.crime_type, f.district, f.police_station, f.date_reported
       FROM Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE a.name LIKE ?
@@ -14,6 +14,18 @@ module.exports = async (accusedName, modifiers = {}) => {
 
     if (accusedRecords.length === 0) {
       return { success: false, message: `No accused profile found matching '${accusedName}'` };
+    }
+
+    // Verify at least one incident is within the user's jurisdiction
+    if (scope && scope.type !== 'statewide') {
+      const hasInScopeIncident = accusedRecords.some(r => {
+        if (scope.type === 'station') return r.police_station === scope.value;
+        if (scope.type === 'district') return r.district === scope.value;
+        return true;
+      });
+      if (!hasInScopeIncident) {
+        return { success: false, message: `No accused profile found matching '${accusedName}' within your jurisdiction.` };
+      }
     }
 
     // Aggregate profile details (in case they have multiple cases)
@@ -129,13 +141,28 @@ module.exports = async (accusedName, modifiers = {}) => {
       threat_level: threatLevel,
       factors: factors,
       recommendation: recommendation,
-      incidents: accusedRecords.map(r => ({
-        fir_id: r.fir_id,
-        fir_number: r.fir_number,
-        crime_type: r.crime_type,
-        district: r.district,
-        date: r.date_reported
-      }))
+      incidents: accusedRecords.map(r => {
+        const inScope = !scope || scope.type === 'statewide' || 
+          (scope.type === 'station' && r.police_station === scope.value) ||
+          (scope.type === 'district' && r.district === scope.value);
+        if (inScope) {
+          return {
+            fir_id: r.fir_id,
+            fir_number: r.fir_number,
+            crime_type: r.crime_type,
+            district: r.district,
+            date: r.date_reported
+          };
+        } else {
+          return {
+            fir_id: null,
+            fir_number: "[RESTRICTED - JURISDICTION]",
+            crime_type: "[RESTRICTED - JURISDICTION]",
+            district: r.district,
+            date: "[RESTRICTED]"
+          };
+        }
+      })
     };
 
     return { success: true, profile };

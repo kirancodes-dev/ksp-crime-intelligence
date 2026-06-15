@@ -89,6 +89,7 @@ module.exports = async (firId) => {
           fir_number: candidate.fir_number,
           crime_type: candidate.crime_type,
           district: candidate.district,
+          police_station: candidate.police_station,
           similarity_score: Math.min(score, 1.0),
           status: candidate.status,
           date_reported: candidate.date_reported,
@@ -112,6 +113,7 @@ module.exports = async (firId) => {
         fir_number: targetFir.fir_number,
         crime_type: targetFir.crime_type,
         district: targetFir.district,
+        police_station: targetFir.police_station,
         modus_operandi: targetFir.modus_operandi
       },
       similarCases: topMatches,
