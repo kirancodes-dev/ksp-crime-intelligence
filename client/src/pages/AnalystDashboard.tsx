@@ -4,16 +4,23 @@ import { HotspotMap } from '../components/Visualizations/HotspotMap';
 import { NetworkGraph } from '../components/Visualizations/NetworkGraph';
 import { SocioDemographicChart } from '../components/Visualizations/SocioDemographicChart';
 import { ForecastAlertPanel } from '../components/Visualizations/ForecastAlertPanel';
-import { Map, Network, Eye, Filter, Loader2, AlertCircle, BarChart3, TrendingUp, X } from 'lucide-react';
+import { Map, Network, Eye, Filter, Loader2, AlertCircle, BarChart3, TrendingUp, X, Pin } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 interface AnalystDashboardProps {
   userId: string;
   role: string;
+  initialSubTab?: 'intel' | 'cdr';
+  initialSuspect?: string;
 }
 
-export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role }) => {
+export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ 
+  userId, 
+  role,
+  initialSubTab,
+  initialSuspect
+}) => {
   const [selectedDistrict, setSelectedDistrict] = useState<string>('All');
   const [selectedCrimeType, setSelectedCrimeType] = useState<string>('All');
   
@@ -41,6 +48,11 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
   const [cdrTimelineData, setCdrTimelineData] = useState<any | null>(null);
   const [cdrLoading, setCdrLoading] = useState(false);
   const [timelineIndex, setTimelineIndex] = useState(0);
+
+  useEffect(() => {
+    if (initialSubTab) setActiveSubTab(initialSubTab);
+    if (initialSuspect) setCdrSuspect(initialSuspect);
+  }, [initialSubTab, initialSuspect]);
 
   // Leaflet map refs for custom CDR drawing
   const cdrMapContainerRef = React.useRef<HTMLDivElement>(null);
@@ -171,6 +183,25 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
       console.error(err);
     } finally {
       setCdrLoading(false);
+    }
+  };
+
+  const handlePinCase = async () => {
+    if (!selectedIncident) return;
+    try {
+      const res = await api.pinWorkspaceAsset(
+        'fir', 
+        selectedIncident.fir_number, 
+        `Crime Type: ${selectedIncident.crime_type} in ${selectedIncident.district}. Status: ${selectedIncident.status}`, 
+        userId, 
+        role
+      );
+      if (res.success) {
+        alert(res.pinned ? 'Case successfully pinned to Collaborative Desk!' : 'Case unpinned from Collaborative Desk!');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to pin case.');
     }
   };
 
@@ -643,21 +674,29 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({ userId, role
             </div>
 
             {/* Action buttons footer */}
-            <div className="p-4 border-t border-slate-150 bg-slate-50 flex gap-2">
+            <div className="p-4 border-t border-slate-150 bg-slate-50 flex flex-col gap-2">
               <button 
-                onClick={() => {
-                  alert(`Initiated full forensic dossier download for ${selectedIncident.fir_number}`);
-                }}
-                className="flex-1 py-2 bg-brand-primary hover:bg-brand-primary-light text-white text-xs font-bold rounded-lg shadow cursor-pointer transition text-center"
+                onClick={handlePinCase}
+                className="w-full py-2 bg-blue-50 border border-blue-200 text-brand-primary text-xs font-bold rounded-lg shadow-sm cursor-pointer transition text-center flex items-center justify-center gap-1.5"
               >
-                Download dossier
+                <Pin size={13} className="rotate-45" /> Pin to Collaborative Workspace
               </button>
-              <button 
-                onClick={() => setSelectedIncident(null)}
-                className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-250 text-xs font-semibold rounded-lg cursor-pointer transition"
-              >
-                Close
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => {
+                    alert(`Initiated full forensic dossier download for ${selectedIncident.fir_number}`);
+                  }}
+                  className="flex-1 py-2 bg-brand-primary hover:bg-brand-primary-light text-white text-xs font-bold rounded-lg shadow cursor-pointer transition text-center"
+                >
+                  Download dossier
+                </button>
+                <button 
+                  onClick={() => setSelectedIncident(null)}
+                  className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-250 text-xs font-semibold rounded-lg cursor-pointer transition"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </>

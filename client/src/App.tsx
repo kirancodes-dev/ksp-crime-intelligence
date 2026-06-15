@@ -4,7 +4,8 @@ import { AnalystDashboard } from './pages/AnalystDashboard';
 import { SupervisorDashboard } from './pages/SupervisorDashboard';
 import { PolicymakerDashboard } from './pages/PolicymakerDashboard';
 import { LoginScreen } from './components/LoginScreen/LoginScreen';
-import { Clock, UserCheck, LogOut, RefreshCw, Database } from 'lucide-react';
+import { CollaborativeWorkspace } from './components/CollaborativeWorkspace/CollaborativeWorkspace';
+import { Clock, UserCheck, LogOut, RefreshCw, Database, ShieldAlert } from 'lucide-react';
 import './App.css';
 
 type UserRole = 'Investigator' | 'Analyst' | 'Supervisor' | 'Policymaker';
@@ -40,6 +41,54 @@ function App() {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'workspace'>('dashboard');
+  const [toastAlert, setToastAlert] = useState<{ show: boolean; suspect: string; tower: string; fir: string } | null>(null);
+  
+  // Geofence Navigation Helper States
+  const [analystSubTab, setAnalystSubTab] = useState<'intel' | 'cdr'>('intel');
+  const [analystSuspect, setAnalystSuspect] = useState<string>('Rupa Naik');
+
+  // Geofence simulation loop
+  useEffect(() => {
+    if (!userId || !activeRole) return;
+
+    const interval = setInterval(() => {
+      // 15% chance of alert trigger every 20 seconds
+      if (Math.random() > 0.85 && !toastAlert) {
+        const suspects = ['Rupa Naik', 'Ramesh Kumar', 'Amit Verma'];
+        const chosenSuspect = suspects[Math.floor(Math.random() * suspects.length)];
+        const towers: Record<string, { tower: string; fir: string }> = {
+          'Rupa Naik': { tower: 'MG Road Metro Station', fir: 'FIR-2026-003' },
+          'Ramesh Kumar': { tower: 'Keshwapur Tower B', fir: 'FIR-2026-004' },
+          'Amit Verma': { tower: 'Silk Board Crossing', fir: 'FIR-2026-001' }
+        };
+        const activeTower = towers[chosenSuspect];
+
+        setToastAlert({
+          show: true,
+          suspect: chosenSuspect,
+          tower: activeTower.tower,
+          fir: activeTower.fir
+        });
+
+        // Auto-dismiss after 10 seconds if not clicked
+        setTimeout(() => {
+          setToastAlert(null);
+        }, 10000);
+      }
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, [userId, activeRole, toastAlert]);
+
+  const handleInspectGeofence = (suspect: string) => {
+    setActiveRole('Analyst' as UserRole);
+    setAnalystSubTab('cdr');
+    setAnalystSuspect(suspect);
+    setActiveTab('dashboard'); // Switch back to Dashboard Desk
+    setToastAlert(null);
+  };
 
   const handleLoginSuccess = (uid: string, urole: string) => {
     setUserId(uid);
@@ -97,7 +146,41 @@ function App() {
   const roleInfo = ROLE_LABELS[activeRole];
 
   return (
-    <div className="min-h-screen bg-brand-dark text-slate-200 flex flex-col font-sans select-none">
+    <div className="min-h-screen bg-brand-dark text-slate-200 flex flex-col font-sans select-none relative">
+      
+      {/* Geofence sliding toast alert */}
+      {toastAlert && toastAlert.show && (
+        <div className="fixed top-20 right-6 z-[9999] max-w-sm w-full bg-red-650 border border-red-500 rounded-xl shadow-2xl text-white p-4 font-sans select-none animate-pulse">
+          <div className="flex gap-3 items-start">
+            <div className="bg-white/20 p-2 rounded-lg text-white">
+              <ShieldAlert size={20} className="animate-pulse" />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <div className="font-bold text-xs uppercase tracking-wider flex justify-between items-center">
+                <span>🚨 Critical Geofence breach</span>
+                <span className="text-[9px] bg-white text-red-650 font-extrabold px-1.5 py-0.5 rounded uppercase">Live Alert</span>
+              </div>
+              <p className="text-xs font-semibold leading-relaxed">
+                Suspect <strong>{toastAlert.suspect}</strong> just pinged near <strong>{toastAlert.tower}</strong> (associated with <strong>{toastAlert.fir}</strong>).
+              </p>
+              <div className="flex gap-2 pt-1.5 border-t border-white/20">
+                <button
+                  onClick={() => handleInspectGeofence(toastAlert.suspect)}
+                  className="px-2.5 py-1 bg-white text-red-650 hover:bg-slate-50 font-bold text-[10px] uppercase rounded-lg shadow-sm cursor-pointer transition"
+                >
+                  Inspect Trajectory
+                </button>
+                <button
+                  onClick={() => setToastAlert(null)}
+                  className="px-2.5 py-1 bg-transparent hover:bg-white/10 text-white font-bold text-[10px] uppercase rounded-lg cursor-pointer transition border border-white/20"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Classification Banner — always visible */}
       <div className="classification-banner">
@@ -197,19 +280,60 @@ function App() {
       </header>
 
       {/* Main Dashboard Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-4">
         
-        {activeRole === 'Investigator' && (
-          <InvestigatorDashboard userId={userId} role={activeRole} />
-        )}
-        {activeRole === 'Analyst' && (
-          <AnalystDashboard userId={userId} role={activeRole} />
-        )}
-        {activeRole === 'Supervisor' && (
-          <SupervisorDashboard userId={userId} role={activeRole} />
-        )}
-        {activeRole === 'Policymaker' && (
-          <PolicymakerDashboard userId={userId} role={activeRole} />
+        {/* Navigation Tabs between Dashboard and Shared Workspace */}
+        <div className="flex gap-2 border-b border-slate-200 pb-1.5 print:hidden">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`px-4 py-2 text-xs font-extrabold uppercase tracking-wider border-b-2 transition cursor-pointer ${
+              activeTab === 'dashboard'
+                ? 'border-brand-primary text-brand-primary'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            📊 Command Dashboard
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('workspace')}
+            className={`px-4 py-2 text-xs font-extrabold uppercase tracking-wider border-b-2 transition cursor-pointer ${
+              activeTab === 'workspace'
+                ? 'border-brand-primary text-brand-primary'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            🤝 Collaborative Station Workspace
+          </button>
+        </div>
+
+        {activeTab === 'workspace' ? (
+          <CollaborativeWorkspace 
+            userId={userId} 
+            role={activeRole} 
+            onFirSelect={() => setActiveTab('dashboard')}
+            onAccusedSelect={() => setActiveTab('dashboard')}
+          />
+        ) : (
+          <>
+            {activeRole === 'Investigator' && (
+              <InvestigatorDashboard userId={userId} role={activeRole} />
+            )}
+            {activeRole === 'Analyst' && (
+              <AnalystDashboard 
+                userId={userId} 
+                role={activeRole} 
+                initialSubTab={analystSubTab}
+                initialSuspect={analystSuspect}
+              />
+            )}
+            {activeRole === 'Supervisor' && (
+              <SupervisorDashboard userId={userId} role={activeRole} />
+            )}
+            {activeRole === 'Policymaker' && (
+              <PolicymakerDashboard userId={userId} role={activeRole} />
+            )}
+          </>
         )}
 
       </main>

@@ -364,5 +364,94 @@ export const api = {
       throw new Error('Failed to fetch dispatch patrol vehicles');
     }
     return response.json();
+  },
+
+  /**
+   * Fetches collaborative workspace state (pinned assets and notes)
+   */
+  async getWorkspaceState(userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/workspace`, {
+      headers: {
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch workspace state');
+    }
+    return response.json();
+  },
+
+  /**
+   * Pins or unpins a case asset to/from the collaborative workspace
+   */
+  async pinWorkspaceAsset(assetType: 'fir' | 'accused', assetId: string, details: string, userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/workspace/pin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+      body: JSON.stringify({ assetType, assetId, details }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to pin/unpin workspace asset');
+    }
+    return response.json();
+  },
+
+  /**
+   * Updates the shared notes on the collaborative workspace
+   */
+  async saveWorkspaceNotes(notes: string, userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/workspace/notes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+      body: JSON.stringify({ notes }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update workspace notes');
+    }
+    return response.json();
+  },
+
+  /**
+   * Fetches CCTNS sync execution job history runs
+   */
+  async getCctnsRuns(userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/cctns/runs`, {
+      headers: {
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch CCTNS sync history');
+    }
+    return response.json();
+  },
+
+  /**
+   * Triggers a CCTNS synchronization execution run
+   */
+  async triggerCctnsSync(triggerType: 'Manual' | 'Automatic', userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/cctns/sync`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+      body: JSON.stringify({ triggerType }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to trigger CCTNS sync job');
+    }
+    return response.json();
   }
 };

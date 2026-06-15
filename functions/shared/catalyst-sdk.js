@@ -38,6 +38,60 @@ class CatalystInstance {
     this.db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('Failed to open SQLite database in Catalyst SDK:', err);
+      } else {
+        // Initialize schema additions for collaborative workspaces and CCTNS scheduler
+        this.db.serialize(() => {
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS SharedWorkspace (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              asset_type TEXT NOT NULL,
+              asset_id TEXT NOT NULL,
+              details TEXT,
+              pinned_at TEXT NOT NULL
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS SharedNotes (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              notes TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CCTNS_SyncJobs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              timestamp TEXT NOT NULL,
+              trigger_type TEXT NOT NULL,
+              status TEXT NOT NULL,
+              latency_ms INTEGER NOT NULL,
+              records_ingested INTEGER NOT NULL
+            )
+          `);
+          
+          // Seed initial notes if empty
+          this.db.get("SELECT COUNT(*) as count FROM SharedNotes", (err, row) => {
+            if (!err && row && row.count === 0) {
+              this.db.run("INSERT INTO SharedNotes (notes, updated_at) VALUES (?, ?)", [
+                "Collaborative Notes: Active focus on Rupa Naik and associated Hawala money trail...",
+                new Date().toISOString()
+              ]);
+            }
+          });
+
+          // Seed historical sync jobs if empty
+          this.db.get("SELECT COUNT(*) as count FROM CCTNS_SyncJobs", (err, row) => {
+            if (!err && row && row.count === 0) {
+              this.db.run(`
+                INSERT INTO CCTNS_SyncJobs (timestamp, trigger_type, status, latency_ms, records_ingested)
+                VALUES 
+                (datetime('now', '-2 hours'), 'Automatic', 'SUCCESS', 1240, 14),
+                (datetime('now', '-4 hours'), 'Automatic', 'SUCCESS', 980, 8),
+                (datetime('now', '-6 hours'), 'Manual', 'SUCCESS', 1450, 22),
+                (datetime('now', '-8 hours'), 'Automatic', 'FAILED', 3200, 0)
+              `);
+            }
+          });
+        });
       }
     });
   }
@@ -147,29 +201,49 @@ class CatalystInstance {
     return {
       rag: {
         retrieve: async (queryText, limit = 5) => {
-          // Simple token search in description / modus_operandi / crime_type
-          const tokens = queryText.toLowerCase().replace(/[?,.!-]/g, '').split(/\s+/).filter(t => t.length > 2);
+          // Concept vector simulation: 7 concept dimensions
+          // [Cyber, Theft, Organized Crime, Financial Fraud, Bengaluru, Mysuru, Hubballi]
+          const getConceptVector = (text) => {
+            const t = text.toLowerCase();
+            const vector = [0, 0, 0, 0, 0, 0, 0];
+            const keywords = [
+              [/online|phishing|cyber|hack|otp|email|fraud|digital|compromise|credential/g, 0],
+              [/theft|steal|stole|robbery|break|gold|lock|house|shop|loot|burglary/g, 1],
+              [/gang|syndicate|extortion|threat|weapon|assault|homicide|kidnap|murder|accomplice/g, 2],
+              [/transaction|money|bank|account|hawala|transfer|cash|card|audit|invoice|lakh|crore/g, 3],
+              [/bengaluru|bangalore|majestic|indiranagar|soudha|koramangala/g, 4],
+              [/mysuru|mysore|chamundi/g, 5],
+              [/hubli|hubballi|keshwapur|gokul/g, 6]
+            ];
+            keywords.forEach(([regex, index]) => {
+              const matches = t.match(regex);
+              if (matches) {
+                vector[index] = matches.length;
+              }
+            });
+            const mag = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+            if (mag === 0) return [1/Math.sqrt(7), 1/Math.sqrt(7), 1/Math.sqrt(7), 1/Math.sqrt(7), 1/Math.sqrt(7), 1/Math.sqrt(7), 1/Math.sqrt(7)];
+            return vector.map(v => v / mag);
+          };
+
           const db = this.datastore();
+          const allFirs = await db.execute("SELECT * FROM FIR");
+          const queryVector = getConceptVector(queryText);
           
-          if (tokens.length === 0) {
-            return await db.execute("SELECT * FROM FIR ORDER BY date_reported DESC LIMIT ?", [limit]);
-          }
-
-          let sql = "SELECT * FROM FIR";
-          let clauses = [];
-          let params = [];
-
-          tokens.forEach(token => {
-            clauses.push("(description LIKE ? OR modus_operandi LIKE ? OR crime_type LIKE ? OR district LIKE ?)");
-            const paramVal = `%${token}%`;
-            params.push(paramVal, paramVal, paramVal, paramVal);
+          const results = allFirs.map(fir => {
+            const docText = `${fir.crime_type} ${fir.description} ${fir.modus_operandi} ${fir.district}`;
+            const docVector = getConceptVector(docText);
+            // Dot product gives cosine similarity since vectors are pre-normalized
+            const similarity = queryVector.reduce((sum, val, idx) => sum + val * docVector[idx], 0);
+            return {
+              ...fir,
+              similarity_score: parseFloat(similarity.toFixed(3))
+            };
           });
 
-          sql += " WHERE " + clauses.join(" OR ");
-          sql += " ORDER BY date_reported DESC LIMIT ?";
-          params.push(limit);
-
-          return await db.execute(sql, params);
+          // Sort descending by similarity
+          results.sort((a, b) => b.similarity_score - a.similarity_score);
+          return results.slice(0, limit);
         }
       }
     };

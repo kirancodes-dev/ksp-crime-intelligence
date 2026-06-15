@@ -319,6 +319,127 @@ app.get('/api/dispatch/units', async (req, res) => {
   }
 });
 
+// 16. Collaborative Workspace Get state
+app.get('/api/workspace', async (req, res) => {
+  try {
+    const db = catalyst.datastore();
+    const pinned = await db.execute("SELECT * FROM SharedWorkspace ORDER BY pinned_at DESC");
+    const notesResult = await db.execute("SELECT * FROM SharedNotes ORDER BY updated_at DESC LIMIT 1");
+    res.json({
+      success: true,
+      pinned,
+      notes: notesResult.length > 0 ? notesResult[0].notes : ""
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 17. Collaborative Workspace Pin Action
+app.post('/api/workspace/pin', async (req, res) => {
+  try {
+    const { assetType, assetId, details } = req.body;
+    if (!assetType || !assetId) {
+      return res.status(400).json({ success: false, error: "Missing assetType or assetId." });
+    }
+
+    const db = catalyst.datastore();
+    
+    // Check if already pinned
+    const existing = await db.execute(
+      "SELECT * FROM SharedWorkspace WHERE asset_type = ? AND asset_id = ?",
+      [assetType, assetId]
+    );
+
+    if (existing.length > 0) {
+      // Unpin
+      await db.execute(
+        "DELETE FROM SharedWorkspace WHERE asset_type = ? AND asset_id = ?",
+        [assetType, assetId]
+      );
+      res.json({ success: true, pinned: false });
+    } else {
+      // Pin
+      await db.execute(
+        "INSERT INTO SharedWorkspace (asset_type, asset_id, details, pinned_at) VALUES (?, ?, ?, datetime('now'))",
+        [assetType, assetId, details || ""]
+      );
+      res.json({ success: true, pinned: true });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 18. Collaborative Workspace Notes updater
+app.post('/api/workspace/notes', async (req, res) => {
+  try {
+    const { notes } = req.body;
+    if (notes === undefined) {
+      return res.status(400).json({ success: false, error: "Missing notes field." });
+    }
+
+    const db = catalyst.datastore();
+    const existing = await db.execute("SELECT * FROM SharedNotes ORDER BY id ASC LIMIT 1");
+    if (existing.length > 0) {
+      await db.execute(
+        "UPDATE SharedNotes SET notes = ?, updated_at = datetime('now') WHERE id = ?",
+        [notes, existing[0].id]
+      );
+    } else {
+      await db.execute(
+        "INSERT INTO SharedNotes (notes, updated_at) VALUES (?, datetime('now'))",
+        [notes]
+      );
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 19. CCTNS Scheduler Logs Fetcher
+app.get('/api/cctns/runs', async (req, res) => {
+  try {
+    const db = catalyst.datastore();
+    const runs = await db.execute("SELECT * FROM CCTNS_SyncJobs ORDER BY timestamp DESC LIMIT 40");
+    res.json({ success: true, runs });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 20. CCTNS Manual Sync trigger
+app.post('/api/cctns/sync', async (req, res) => {
+  try {
+    const { triggerType } = req.body; // 'Manual' or 'Automatic'
+    const db = catalyst.datastore();
+    
+    const delay = 1000 + Math.floor(Math.random() * 1000);
+    const records = Math.floor(Math.random() * 25);
+    const successStatus = Math.random() > 0.15 ? 'SUCCESS' : 'FAILED';
+    const finalRecords = successStatus === 'SUCCESS' ? records : 0;
+    
+    await db.execute(
+      "INSERT INTO CCTNS_SyncJobs (timestamp, trigger_type, status, latency_ms, records_ingested) VALUES (datetime('now'), ?, ?, ?, ?)",
+      [triggerType || 'Manual', successStatus, delay, finalRecords]
+    );
+
+    res.json({
+      success: true,
+      job: {
+        timestamp: new Date().toISOString(),
+        trigger_type: triggerType || 'Manual',
+        status: successStatus,
+        latency_ms: delay,
+        records_ingested: finalRecords
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`========================================================`);

@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { ChatInterface } from '../components/ChatInterface/ChatInterface';
 import { FinancialFlowGraph } from '../components/Visualizations/FinancialFlowGraph';
 import { SimilarCasesCard } from '../components/Visualizations/SimilarCasesCard';
-import { FileText, Search, User, ShieldAlert, CheckCircle, Clock, AlertTriangle, Landmark, Layers, Printer, Download, Shield, UploadCloud, Fingerprint, Languages } from 'lucide-react';
+import { FileText, Search, User, ShieldAlert, CheckCircle, Clock, AlertTriangle, Landmark, Layers, Printer, Download, Shield, UploadCloud, Fingerprint, Languages, Pin } from 'lucide-react';
 
 interface InvestigatorDashboardProps {
   userId: string;
@@ -156,6 +156,43 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
       alert("Biometric analysis failed.");
     } finally {
       setBiometricScanning(false);
+    }
+  };
+
+  const handlePinCase = async () => {
+    if (!caseDetails) return;
+    try {
+      const res = await api.pinWorkspaceAsset(
+        'fir', 
+        caseDetails.fir_number, 
+        `Crime Type: ${caseDetails.crime_type} in ${caseDetails.district}. Status: ${caseDetails.status}`, 
+        userId, 
+        role
+      );
+      if (res.success) {
+        alert(res.pinned ? 'Case successfully pinned to Collaborative Desk!' : 'Case unpinned from Collaborative Desk!');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to pin case.');
+    }
+  };
+
+  const handlePinAccused = async (name: string) => {
+    try {
+      const res = await api.pinWorkspaceAsset(
+        'accused',
+        name,
+        `Offender records for ${name} linked to FIR ${caseDetails?.fir_number || 'N/A'}.`,
+        userId,
+        role
+      );
+      if (res.success) {
+        alert(res.pinned ? 'Accused successfully pinned to Collaborative Desk!' : 'Accused unpinned from Collaborative Desk!');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to pin suspect.');
     }
   };
 
@@ -312,6 +349,12 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                     {/* Actions Toolbar */}
                     <div className="flex justify-end gap-2 border-b border-slate-900 pb-4 print:hidden">
                       <button
+                        onClick={handlePinCase}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg text-xs font-semibold cursor-pointer transition"
+                      >
+                        <Pin size={13} className="text-blue-400 rotate-45" /> Pin to Desk
+                      </button>
+                      <button
                         onClick={() => window.print()}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg text-xs font-semibold cursor-pointer transition"
                       >
@@ -460,12 +503,21 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                                   </span>
                                 </div>
                                 
-                                <button
-                                  onClick={() => handleInvestigateAccused(acc.name)}
-                                  className="flex items-center gap-1 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 text-red-400 rounded-md text-[10px] font-semibold transition cursor-pointer print:hidden"
-                                >
-                                  <ShieldAlert size={10} /> Profile Risk
-                                </button>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handlePinAccused(acc.name)}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/25 border border-blue-500/20 text-blue-400 rounded-md text-[10px] font-semibold transition cursor-pointer print:hidden"
+                                    title="Pin Accused to Workspace"
+                                  >
+                                    <Pin size={10} className="rotate-45" /> Pin
+                                  </button>
+                                  <button
+                                    onClick={() => handleInvestigateAccused(acc.name)}
+                                    className="flex items-center gap-1 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 text-red-400 rounded-md text-[10px] font-semibold transition cursor-pointer print:hidden"
+                                  >
+                                    <ShieldAlert size={10} /> Profile Risk
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>
