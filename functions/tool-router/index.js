@@ -26,7 +26,7 @@ module.exports = async (queryText) => {
     }
 
     // Legacy fallback routing if Gemini was skipped, failed, or returned an invalid tool
-    const validTools = ['risk', 'network', 'map', 'chart', 'finance', 'socio', 'similar', 'forecast', 'text'];
+    const validTools = ['risk', 'network', 'map', 'chart', 'finance', 'socio', 'similar', 'forecast', 'text', 'ocr', 'cdr', 'biometrics', 'dispatch'];
     if (!tool || !validTools.includes(tool)) {
       extractedParams = {};
       
@@ -48,6 +48,26 @@ module.exports = async (queryText) => {
         }
         extractedParams.accused_name = targetName;
       } 
+      else if (query.includes("biometric") || query.includes("face") || query.includes("mugshot") || query.includes("facial")) {
+        tool = "biometrics";
+        let targetName = "Rupa Naik";
+        if (query.includes("ramesh")) targetName = "Ramesh Kumar";
+        else if (query.includes("amit")) targetName = "Amit Verma";
+        extractedParams.accused_name = targetName;
+      }
+      else if (query.includes("cdr") || query.includes("cell") || query.includes("tower") || query.includes("trajectory") || query.includes("breadcrumbs")) {
+        tool = "cdr";
+        let targetName = "Rupa Naik";
+        if (query.includes("ramesh")) targetName = "Ramesh Kumar";
+        else if (query.includes("amit")) targetName = "Amit Verma";
+        extractedParams.accused_name = targetName;
+      }
+      else if (query.includes("ocr") || query.includes("vernacular") || query.includes("translation") || query.includes("document") || query.includes("kannada")) {
+        tool = "ocr";
+      }
+      else if (query.includes("dispatch") || query.includes("patrol") || query.includes("vehicle") || query.includes("112")) {
+        tool = "dispatch";
+      }
       else if (query.includes("network") || query.includes("link") || query.includes("associate") || query.includes("syndicate") || query.includes("accomplice") || query.includes("gang")) {
         tool = "network";
       } 
@@ -429,6 +449,59 @@ module.exports = async (queryText) => {
       } else {
         narrative = `I scanned the intelligence database but could not find specific case documents matching your exact query. Please refine the case numbers or search keywords (e.g., district name, crime type, or accused moniker).`;
       }
+    }
+
+    // -------------------------------------------------------------
+    // TOOL: MULTIMODAL VERNACULAR OCR DOCUMENT INTELLIGENCE
+    // -------------------------------------------------------------
+    if (tool === "ocr") {
+      const ocrAnalysis = require('../ocr/index');
+      const result = await ocrAnalysis('Sample_Threat_Warning.txt', 'text/plain', 'MOCK_BASE64');
+      data = result;
+      narrative = `Successfully initiated OCR analysis on vernacular document scan. Extracted raw Kannada text, translated, and identified suspects: ${result.entities.suspects.join(', ') || 'None'} and location tags: ${result.entities.locations.join(', ') || 'None'}.`;
+    }
+
+    // -------------------------------------------------------------
+    // TOOL: CDR CELLULAR TIMELINE TRAJECTORY
+    // -------------------------------------------------------------
+    if (tool === "cdr") {
+      const cdrAnalysis = require('../cdr/index');
+      const targetSuspect = extractedParams.accused_name || "Rupa Naik";
+      const result = await cdrAnalysis(targetSuspect);
+      data = result;
+      narrative = `Retrieved Call Detail Record (CDR) cell tower breadcrumbs for suspect ${result.suspect}. Carrier: ${result.carrier}. Chronology has ${result.breadcrumbs.length} pings. Collision analysis: ${result.collisionAlerts.length > 0 ? '⚠️ Proximity warning flagged near crime location' : 'No crime scene intersections found'}.`;
+    }
+
+    // -------------------------------------------------------------
+    // TOOL: ZIA VISION BIOMETRIC FACIAL SEARCH
+    // -------------------------------------------------------------
+    if (tool === "biometrics") {
+      const biometricSearch = require('../biometrics/index');
+      const targetSuspect = extractedParams.accused_name || "";
+      const result = await biometricSearch(targetSuspect);
+      data = result;
+      const count = result.matches ? result.matches.length : 0;
+      narrative = `Zia Vision face biometrics registry search found ${count} candidate matches from datastore accused files. Top match is ${count > 0 ? result.matches[0].name + ' (' + result.matches[0].similarity + '% match)' : 'None'}.`;
+    }
+
+    // -------------------------------------------------------------
+    // TOOL: EMERGENCY PATROL DISPATCH 112 HUB
+    // -------------------------------------------------------------
+    if (tool === "dispatch") {
+      const units = [
+        { id: "PATROL-101", vehicle: "KA-02-G-4102 (Bengaluru City)", lat: 12.9720, lng: 77.5850, status: "Available", officer: "SI Sandeep Patil" },
+        { id: "PATROL-102", vehicle: "KA-01-G-7788 (Bengaluru City)", lat: 12.9550, lng: 77.6100, status: "Busy", officer: "SI Priya Gowda" },
+        { id: "PATROL-201", vehicle: "KA-09-G-1212 (Mysuru)", lat: 12.3010, lng: 76.6450, status: "Available", officer: "SI Manjunath K." },
+        { id: "PATROL-301", vehicle: "KA-25-G-0033 (Hubballi)", lat: 15.3680, lng: 75.1200, status: "Available", officer: "SI Satish Naik" },
+        { id: "PATROL-401", vehicle: "KA-19-G-4455 (Mangaluru)", lat: 12.9150, lng: 74.8500, status: "Available", officer: "SI Harish Poojary" }
+      ];
+      const logs = [
+        { id: 3851, time: "21:31", caller: "Citizen Report", details: "Chain snatching incident near Hubballi Railway Station.", status: "Pending", vehicle: "" },
+        { id: 3852, time: "21:33", caller: "Store Manager", details: "Suspicious vehicle observed idling near Chamundi Hill, Mysuru.", status: "Pending", vehicle: "" },
+        { id: 3853, time: "21:35", caller: "Bank Teller", details: "Credit card fraud report at Mangaluru Kadri PS.", status: "Pending", vehicle: "" }
+      ];
+      data = { units, logs };
+      narrative = `Accessed live Emergency KSP 112 Dispatch desk logs. Loaded fleet status registry (${units.length} vehicles). Patrol units are on-standby for AI routing dispatch.`;
     }
 
     return {

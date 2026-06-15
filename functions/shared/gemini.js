@@ -147,7 +147,7 @@ const routingSchema = {
   properties: {
     tool: {
       type: 'string',
-      description: 'The classified tool to query the database. Must be one of: risk, network, map, chart, finance, socio, similar, forecast, text.'
+      description: 'The classified tool to query the database. Must be one of: risk, network, map, chart, finance, socio, similar, forecast, text, ocr, cdr, biometrics, dispatch.'
     },
     parameters: {
       type: 'object',
@@ -173,6 +173,10 @@ Analyze the user's natural language query and classify it into one of the follow
 7. "similar" - Similar past cases matching target case.
 8. "forecast" - Early warnings or predicted hotspots.
 9. "text" - General queries, descriptions, modus operandi search, or text lookup.
+10. "ocr" - Vernacular document OCR scanning, translation, or entity analysis.
+11. "cdr" - Call Detail Record cell tower trajectory timeline or spatial collision analysis.
+12. "biometrics" - Facial recognition, mugshot similarity searches, or biometric matching.
+13. "dispatch" - Emergency 112 dispatch logs, patrol status, or vehicle routing.
 
 Extract any specific parameters:
 - "accused_name": Accused name.
@@ -182,7 +186,7 @@ Extract any specific parameters:
 
 You MUST respond strictly in valid JSON format matching this schema:
 {
-  "tool": "risk" | "network" | "map" | "chart" | "finance" | "socio" | "similar" | "forecast" | "text",
+  "tool": "risk" | "network" | "map" | "chart" | "finance" | "socio" | "similar" | "forecast" | "text" | "ocr" | "cdr" | "biometrics" | "dispatch",
   "parameters": {
     "accused_name": "extracted_name_or_null",
     "district": "extracted_district_or_null",

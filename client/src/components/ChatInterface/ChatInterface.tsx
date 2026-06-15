@@ -10,10 +10,14 @@ import { FinancialFlowGraph } from '../Visualizations/FinancialFlowGraph';
 import { SocioDemographicChart } from '../Visualizations/SocioDemographicChart';
 import { SimilarCasesCard } from '../Visualizations/SimilarCasesCard';
 import { ForecastAlertPanel } from '../Visualizations/ForecastAlertPanel';
+import { OcrAnalysisCard } from '../Visualizations/OcrAnalysisCard';
+import { BiometricMatchesCard } from '../Visualizations/BiometricMatchesCard';
+import { DispatchConsoleCard } from '../Visualizations/DispatchConsoleCard';
+import { CdrTimelineMap } from '../Visualizations/CdrTimelineMap';
 import { EvidenceTrail } from './EvidenceTrail';
 import { Send, Bot, User as UserIcon, Loader2, Download, AlertCircle, MessageSquare } from 'lucide-react';
 
-type ToolType = 'map' | 'chart' | 'network' | 'risk' | 'text' | 'finance' | 'socio' | 'similar' | 'forecast';
+type ToolType = 'map' | 'chart' | 'network' | 'risk' | 'text' | 'finance' | 'socio' | 'similar' | 'forecast' | 'ocr' | 'cdr' | 'biometrics' | 'dispatch';
 
 interface Message {
   id: string;
@@ -124,7 +128,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           finance: 'Financial Trail',
           socio: 'Demographic Insights',
           similar: 'Case Matching',
-          forecast: 'Predictive Intelligence'
+          forecast: 'Predictive Intelligence',
+          ocr: 'Vernacular OCR',
+          cdr: 'CDR Spatial Timeline',
+          biometrics: 'Biometric Search',
+          dispatch: 'Dispatch Operations'
         };
         setContextIndicator(toolLabels[result.tool] || null);
       }
@@ -332,6 +340,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 )}
                 {msg.toolResult.tool === 'forecast' && (
                   <ForecastAlertPanel forecasts={msg.toolResult.data} />
+                )}
+                {msg.toolResult.tool === 'ocr' && (
+                  <OcrAnalysisCard data={msg.toolResult.data} />
+                )}
+                {msg.toolResult.tool === 'cdr' && (
+                  <CdrTimelineMap data={msg.toolResult.data} mapId={`cdr-map-${msg.id}`} />
+                )}
+                {msg.toolResult.tool === 'biometrics' && (
+                  <BiometricMatchesCard data={msg.toolResult.data} onAccusedSelect={onAccusedSelect} onFirSelect={onFirSelect} />
+                )}
+                {msg.toolResult.tool === 'dispatch' && (
+                  <DispatchConsoleCard data={msg.toolResult.data} />
                 )}
               </div>
             )}
