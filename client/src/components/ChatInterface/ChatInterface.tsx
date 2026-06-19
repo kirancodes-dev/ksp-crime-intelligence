@@ -15,7 +15,7 @@ import { BiometricMatchesCard } from '../Visualizations/BiometricMatchesCard';
 import { DispatchConsoleCard } from '../Visualizations/DispatchConsoleCard';
 import { CdrTimelineMap } from '../Visualizations/CdrTimelineMap';
 import { EvidenceTrail } from './EvidenceTrail';
-import { Send, Bot, User as UserIcon, Loader2, Download, AlertCircle, MessageSquare } from 'lucide-react';
+import { Send, Bot, User as UserIcon, Loader2, Download, AlertCircle, MessageSquare, Sparkles, History, ChevronRight, X } from 'lucide-react';
 
 type ToolType = 'map' | 'chart' | 'network' | 'risk' | 'text' | 'finance' | 'socio' | 'similar' | 'forecast' | 'ocr' | 'cdr' | 'biometrics' | 'dispatch';
 
@@ -29,6 +29,7 @@ interface Message {
     data: any;
   };
   evidenceSources?: EvidenceSource;
+  followUpSuggestions?: string[];
 }
 
 interface ChatInterfaceProps {
@@ -60,6 +61,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substring(7)}`);
   const [contextIndicator, setContextIndicator] = useState<string | null>(null);
   const [llmMode, setLlmMode] = useState<'mock' | 'fallback' | 'live'>('mock');
+  // Session memory: last 5 queries for context
+  const [sessionHistory, setSessionHistory] = useState<Array<{query: string; tool: string; ts: Date}>>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -104,6 +108,28 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setLlmMode(result.llmMode);
       }
 
+      // Update session memory
+      const memEntry = { query: trimmed, tool: result.tool || 'text', ts: new Date() };
+      setSessionHistory(prev => [...prev.slice(-4), memEntry]);
+
+      // Generate contextual follow-up suggestions based on the tool used
+      const followUpMap: Record<string, string[]> = {
+        map:        ['Show crime trend chart for this area', 'Identify syndicate networks in this zone', 'Predict future hotspots here'],
+        chart:      ['Socio-demographic breakdown of offenders', 'Map the top crime locations', 'Forecast crime for next 30 days'],
+        network:    ['Show financial trail for this case', 'Risk profile of top node', 'Find similar past cases'],
+        risk:       ['Show offender network connections', 'Financial transaction trail', 'Find similar cases with same MO'],
+        finance:    ['Show network graph of all suspects', 'Risk profile of the primary accused', 'Map transaction origin locations'],
+        socio:      ['Crime trend over 6 months', 'Predict high-risk districts', 'Network analysis for organized crime'],
+        similar:    ['Risk score for the accused in this case', 'Show network graph', 'Financial trail for FIR'],
+        forecast:   ['Show current hotspot map', 'View socio-demographic risk factors', 'Network of known recidivists'],
+        ocr:        ['Risk profile of extracted suspect names', 'Search similar cases with this MO', 'Map location mentioned in document'],
+        cdr:        ['Show network connections for this suspect', 'Risk profile analysis', 'Map recent crime hotspots'],
+        biometrics: ['Risk profile of matched suspect', 'Show network connections', 'Financial trail for matched FIR'],
+        dispatch:   ['Show current crime hotspot map', 'Forecast upcoming incidents', 'Review recent anomaly alerts'],
+        text:       ['Show crime hotspot map', 'Crime trend analysis for this month', 'Identify syndicate networks'],
+      };
+      const suggestions = followUpMap[result.tool] || followUpMap['text'];
+
       const systemMessage: Message = {
         id: Math.random().toString(36).substring(7),
         sender: 'system',
@@ -113,7 +139,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           tool: result.tool as ToolType,
           data: result.data
         } : undefined,
-        evidenceSources: result.evidenceSources
+        evidenceSources: result.evidenceSources,
+        followUpSuggestions: suggestions
       };
 
       setMessages(prev => [...prev, systemMessage]);
@@ -240,6 +267,45 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div className="flex flex-col h-[600px] bg-slate-950 border border-slate-900 rounded-lg overflow-hidden shadow-2xl relative">
       
+      {/* Session History Sidebar */}
+      {showHistory && (
+        <div className="absolute inset-0 z-50 flex">
+          <div className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col h-full">
+            <div className="flex justify-between items-center px-4 py-3 border-b border-slate-800">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <History size={14} className="text-brand-primary" /> Session History
+              </h4>
+              <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-white cursor-pointer transition">
+                <X size={14} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {sessionHistory.length === 0 ? (
+                <p className="text-xs text-slate-500 text-center mt-6">No queries yet in this session.</p>
+              ) : (
+                sessionHistory.map((h, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setShowHistory(false); handleSend(h.query); }}
+                    className="w-full text-left px-3 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-lg group transition cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xs text-slate-200 font-medium leading-relaxed line-clamp-2">{h.query}</span>
+                      <ChevronRight size={12} className="text-slate-500 group-hover:text-brand-primary shrink-0 mt-0.5 transition" />
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary rounded border border-brand-primary/20 font-semibold uppercase">{h.tool}</span>
+                      <span className="text-[10px] text-slate-500">{h.ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+          <div className="flex-1 bg-slate-950/70 backdrop-blur-sm" onClick={() => setShowHistory(false)} />
+        </div>
+      )}
+      
       {/* Header bar */}
       <div className="flex justify-between items-center bg-slate-900 px-6 py-4 border-b border-slate-850">
         <div className="flex items-center gap-3">
@@ -269,6 +335,20 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <span>Context: {contextIndicator}</span>
             </div>
           )}
+
+          {/* History toggle */}
+          <button
+            onClick={() => setShowHistory(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold transition cursor-pointer ${
+              sessionHistory.length > 0
+                ? 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-750'
+            }`}
+            title="Session History"
+          >
+            <History size={12} />
+            {sessionHistory.length > 0 && <span className="text-[10px] bg-brand-primary text-white rounded-full px-1.5 py-0.5">{sessionHistory.length}</span>}
+          </button>
           
           {/* PDF Export action */}
           <button
@@ -306,6 +386,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 {/* Evidence Trail - shown under system messages */}
                 {msg.sender === 'system' && msg.evidenceSources && (
                   <EvidenceTrail sources={msg.evidenceSources} />
+                )}
+
+                {/* Follow-up suggestion chips */}
+                {msg.sender === 'system' && msg.followUpSuggestions && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <div className="w-full flex items-center gap-1 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
+                      <Sparkles size={9} className="text-brand-primary" /> You might ask
+                    </div>
+                    {msg.followUpSuggestions.map((suggestion, si) => (
+                      <button
+                        key={si}
+                        onClick={() => !isLoading && handleSend(suggestion)}
+                        disabled={isLoading}
+                        className="text-[11px] px-2.5 py-1 bg-slate-800 hover:bg-brand-primary/10 border border-slate-700 hover:border-brand-primary/30 text-slate-300 hover:text-brand-primary rounded-full transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
                 )}
                 
                 <span className="text-[11px] text-slate-500 mt-1 block px-1">

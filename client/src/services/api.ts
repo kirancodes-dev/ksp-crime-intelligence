@@ -453,5 +453,48 @@ export const api = {
       throw new Error('Failed to trigger CCTNS sync job');
     }
     return response.json();
-  }
+  },
+
+  /**
+   * Fetches all FIR cases with metadata for the Warrant Desk
+   */
+  async getWarrants(userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/warrants`, {
+      headers: {
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch warrant data');
+    }
+    return response.json();
+  },
+
+  /**
+   * Bulk-updates the status and assignment of multiple FIR cases
+   */
+  async bulkUpdateWarrants(
+    firIds: number[],
+    newStatus: string,
+    assignedOfficer: string,
+    urgencyNote: string,
+    userId: string,
+    role: string
+  ): Promise<any> {
+    const response = await fetch(`${BASE_URL}/warrants/bulk`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+      body: JSON.stringify({ firIds, newStatus, assignedOfficer, urgencyNote }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to bulk-update warrants');
+    }
+    return response.json();
+  },
 };
+

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import type { AuditLogEntry, AnomalyAlert } from '../services/api';
-import { ShieldCheck, AlertOctagon, Terminal, Search, RefreshCcw, RefreshCw, Loader2, ShieldAlert, Database } from 'lucide-react';
+import { WarrantDesk } from '../components/WarrantDesk/WarrantDesk';
+import { IntelligenceBrief } from '../components/IntelligenceBrief/IntelligenceBrief';
+import { ShieldCheck, AlertOctagon, Terminal, Search, RefreshCcw, RefreshCw, Loader2, ShieldAlert, Database, Scale } from 'lucide-react';
 
 interface SupervisorDashboardProps {
   userId: string;
@@ -13,6 +15,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
   const [alerts, setAlerts] = useState<AnomalyAlert[]>([]);
   const [logFilter, setLogFilter] = useState('');
   const [loading, setLoading] = useState(false);
+  const [supervisorTab, setSupervisorTab] = useState<'audit' | 'warrants'>('audit');
   
   // Client-side pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -279,15 +282,44 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
           <p className="text-xs text-slate-500 mt-0.5 font-medium">System audit logs, anomaly alerts, and operational health monitoring</p>
         </div>
 
+        <div className="flex items-center gap-2">
+          <IntelligenceBrief userId={userId} role={role} />
+          <button
+            onClick={fetchSupervisorData}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 disabled:bg-slate-200 text-slate-650 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer shrink-0 transition"
+          >
+            {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
+            <span>Sync Dashboard</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex border-b border-slate-200">
         <button
-          onClick={fetchSupervisorData}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 disabled:bg-slate-200 text-slate-650 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer shrink-0 transition"
+          onClick={() => setSupervisorTab('audit')}
+          className={`flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold transition cursor-pointer border-b-2 ${
+            supervisorTab === 'audit' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-slate-500 hover:text-slate-700'
+          }`}
         >
-          {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
-          <span>Sync Dashboard</span>
+          <ShieldCheck size={13} /> Audit &amp; Anomaly
+        </button>
+        <button
+          onClick={() => setSupervisorTab('warrants')}
+          className={`flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold transition cursor-pointer border-b-2 ${
+            supervisorTab === 'warrants' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Scale size={13} /> Warrant Desk
         </button>
       </div>
+
+      {/* Tab content */}
+      {supervisorTab === 'warrants' ? (
+        <WarrantDesk userId={userId} role={role} />
+      ) : (
+      <>
 
       {/* System Health Status Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -859,6 +891,9 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
           </form>
         </div>
       )}
+
+      </> /* end audit tab */
+      )} /* end supervisorTab ternary */
 
     </div>
   );

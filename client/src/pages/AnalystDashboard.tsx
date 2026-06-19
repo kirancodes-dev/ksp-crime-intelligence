@@ -48,6 +48,8 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
   const [cdrTimelineData, setCdrTimelineData] = useState<any | null>(null);
   const [cdrLoading, setCdrLoading] = useState(false);
   const [timelineIndex, setTimelineIndex] = useState(0);
+  // Heatmap state
+  const [heatmapEnabled, setHeatmapEnabled] = useState(false);
 
   useEffect(() => {
     if (initialSubTab) setActiveSubTab(initialSubTab);
@@ -382,13 +384,62 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
       {/* Spatial Map and Network Graph split */}
       {activeSubTab === 'intel' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Geographic Hotspot panel */}
+        {/* Geographic Hotspot panel */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 px-1">
-              <Map size={16} className="text-brand-primary" />
-              <span className="text-sm font-bold text-white uppercase tracking-wider">Geographic Hotspot Map</span>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <Map size={16} className="text-brand-primary" />
+                <span className="text-sm font-bold text-white uppercase tracking-wider">Geographic Hotspot Map</span>
+              </div>
+              <button
+                onClick={() => setHeatmapEnabled(v => !v)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                  heatmapEnabled
+                    ? 'bg-brand-primary text-white border-brand-primary'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                }`}
+              >
+                🔥 {heatmapEnabled ? 'Heatmap ON' : 'Heatmap OFF'}
+              </button>
             </div>
             <HotspotMap incidents={incidents} onIncidentSelect={setSelectedIncident} />
+            
+            {/* Heatmap District Intensity Panel */}
+            {heatmapEnabled && (() => {
+              // Compute per-district counts from incidents
+              const districtCounts: Record<string, number> = {};
+              incidents.forEach((inc: any) => {
+                const d = inc.district || 'Unknown';
+                districtCounts[d] = (districtCounts[d] || 0) + 1;
+              });
+              const maxCount = Math.max(1, ...Object.values(districtCounts));
+              const sorted = Object.entries(districtCounts).sort((a, b) => b[1] - a[1]);
+              return (
+                <div className="mt-2 space-y-2">
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider px-1 flex items-center gap-1">
+                    🔥 Incident Density by District
+                  </div>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {sorted.map(([district, count]) => {
+                      const pct = Math.round((count / maxCount) * 100);
+                      const color = pct >= 80 ? '#ef4444' : pct >= 60 ? '#f97316' : pct >= 40 ? '#eab308' : '#22c55e';
+                      return (
+                        <div key={district} className="flex items-center gap-2 px-1">
+                          <span className="text-[11px] text-slate-400 w-28 truncate font-medium">{district}</span>
+                          <div className="flex-1 h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{ width: `${pct}%`, background: color }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-bold w-6 text-right" style={{ color }}>{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Association Network panel */}

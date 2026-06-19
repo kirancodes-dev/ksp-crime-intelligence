@@ -440,6 +440,71 @@ app.post('/api/cctns/sync', async (req, res) => {
   }
 });
 
+// 21. Warrant Desk — List all FIRs with case metadata and risk scores
+app.get('/api/warrants', async (req, res) => {
+  try {
+    const db = catalyst.datastore();
+    const rows = await db.execute(`
+      SELECT 
+        f.id,
+        f.fir_number,
+        f.district,
+        f.police_station,
+        f.crime_type,
+        f.status,
+        f.date_of_offence,
+        f.complainant_name,
+        julianday('now') - julianday(f.date_of_offence) AS days_open,
+        COUNT(DISTINCT fa.accused_id) AS accused_count,
+        COALESCE(
+          (SELECT MAX(rp.overall_risk_score) FROM RiskProfile rp
+           JOIN FIR_Accused fa2 ON rp.accused_id = fa2.accused_id
+           WHERE fa2.fir_id = f.id), 0
+        ) AS max_risk_score
+      FROM FIR f
+      LEFT JOIN FIR_Accused fa ON fa.fir_id = f.id
+      GROUP BY f.id
+      ORDER BY days_open DESC
+      LIMIT 200
+    `);
+    res.json({ success: true, warrants: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 22. Warrant Desk — Bulk status update
+app.patch('/api/warrants/bulk', async (req, res) => {
+  try {
+    const { firIds, newStatus, assignedOfficer, urgencyNote } = req.body;
+    const { userId, role } = req.user;
+    if (!firIds || !Array.isArray(firIds) || firIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'firIds array is required.' });
+    }
+    const db = catalyst.datastore();
+    // Update each FIR status
+    for (const firId of firIds) {
+      await db.execute(
+        "UPDATE FIR SET status = ? WHERE id = ?",
+        [newStatus || 'Under Review', firId]
+      );
+      // Audit log the action
+      await db.execute(
+        "INSERT INTO AuditLog (user_id, role, query_text, action_taken, ip_address, data_classification) VALUES (?, ?, ?, ?, ?, ?)",
+        [
+          userId, role,
+          `BULK_WARRANT_UPDATE fir_id=${firId}`,
+          `Status changed to '${newStatus}'${assignedOfficer ? ` | Assigned: ${assignedOfficer}` : ''}${urgencyNote ? ` | Note: ${urgencyNote}` : ''}`,
+          'system', 'SENSITIVE'
+        ]
+      );
+    }
+    res.json({ success: true, updated: firIds.length, newStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`========================================================`);

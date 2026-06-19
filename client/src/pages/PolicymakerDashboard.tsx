@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { TrendChart } from '../components/Visualizations/TrendChart';
 import { SocioDemographicChart } from '../components/Visualizations/SocioDemographicChart';
 import { ForecastAlertPanel } from '../components/Visualizations/ForecastAlertPanel';
+import { IntelligenceBrief } from '../components/IntelligenceBrief/IntelligenceBrief';
 import { ShieldAlert, TrendingUp, Loader2, AlertCircle, Users, Landmark } from 'lucide-react';
 
 interface PolicymakerDashboardProps {
@@ -102,12 +103,17 @@ export const PolicymakerDashboard: React.FC<PolicymakerDashboardProps> = ({ user
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-slate-900/40 border border-slate-850 rounded-lg p-4">
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <Landmark className="text-brand-primary" /> Executive Intelligence Brief
-        </h1>
-        <p className="text-xs text-slate-400 mt-0.5">
-          State-wide crime analytics, demographic insights, and predictive threat assessment
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+              <Landmark className="text-brand-primary" /> Executive Intelligence Brief
+            </h1>
+            <p className="text-xs text-slate-400 mt-0.5">
+              State-wide crime analytics, demographic insights, and predictive threat assessment
+            </p>
+          </div>
+          <IntelligenceBrief userId={userId} role={role} />
+        </div>
       </div>
 
       {/* Statewide KPI Cards */}
