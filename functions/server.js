@@ -239,10 +239,7 @@ app.get('/api/socio-demographics', async (req, res) => {
 
     const migrationStatus = await db.execute(`
       SELECT 
-        CASE 
-          WHEN is_migrant = 1 OR is_migrant = 'true' THEN 'Migrant'
-          ELSE 'Local'
-        END as status,
+        migration_status as status,
         COUNT(*) as count
       FROM Accused
       GROUP BY status
@@ -267,6 +264,11 @@ app.get('/api/socio-demographics', async (req, res) => {
       },
       socioCorrelation
     });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 12. Multimodal Vernacular OCR Direct Analyzer
 app.post('/api/ocr/analyze', async (req, res) => {
   try {
@@ -452,18 +454,14 @@ app.get('/api/warrants', async (req, res) => {
         f.police_station,
         f.crime_type,
         f.status,
-        f.date_of_offence,
-        f.complainant_name,
-        julianday('now') - julianday(f.date_of_offence) AS days_open,
-        COUNT(DISTINCT fa.accused_id) AS accused_count,
+        f.date_occurrence,
+        (SELECT name FROM Victim WHERE fir_id = f.id LIMIT 1) AS complainant_name,
+        CAST(julianday('now') - julianday(f.date_occurrence) AS INTEGER) AS days_open,
+        (SELECT COUNT(*) FROM Accused WHERE fir_id = f.id) AS accused_count,
         COALESCE(
-          (SELECT MAX(rp.overall_risk_score) FROM RiskProfile rp
-           JOIN FIR_Accused fa2 ON rp.accused_id = fa2.accused_id
-           WHERE fa2.fir_id = f.id), 0
+          (SELECT MAX(a.risk_score) FROM Accused a WHERE a.fir_id = f.id), 0
         ) AS max_risk_score
       FROM FIR f
-      LEFT JOIN FIR_Accused fa ON fa.fir_id = f.id
-      GROUP BY f.id
       ORDER BY days_open DESC
       LIMIT 200
     `);
