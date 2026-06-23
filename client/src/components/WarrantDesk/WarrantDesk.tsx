@@ -144,7 +144,7 @@ export const WarrantDesk: React.FC<WarrantDeskProps> = ({ userId, role }) => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="bg-slate-900/40 border border-slate-850 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-slate-900/40 border border-slate-800 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <Scale size={18} className="text-brand-primary" /> Warrant &amp; Case Management Desk

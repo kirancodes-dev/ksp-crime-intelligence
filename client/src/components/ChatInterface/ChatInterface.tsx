@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '../../services/api';
 import type { EvidenceSource } from '../../services/api';
 import { VoiceInput } from '../VoiceInput/VoiceInput';
@@ -15,9 +15,12 @@ import { BiometricMatchesCard } from '../Visualizations/BiometricMatchesCard';
 import { DispatchConsoleCard } from '../Visualizations/DispatchConsoleCard';
 import { CdrTimelineMap } from '../Visualizations/CdrTimelineMap';
 import { EvidenceTrail } from './EvidenceTrail';
+import { InvestigationTimeline } from '../Visualizations/InvestigationTimeline';
+import { EarlyWarningPanel } from '../Visualizations/EarlyWarningPanel';
+import { CaseSummaryCard } from '../Visualizations/CaseSummaryCard';
 import { Send, Bot, User as UserIcon, Loader2, Download, AlertCircle, MessageSquare, Sparkles, History, ChevronRight, X } from 'lucide-react';
 
-type ToolType = 'map' | 'chart' | 'network' | 'risk' | 'text' | 'finance' | 'socio' | 'similar' | 'forecast' | 'ocr' | 'cdr' | 'biometrics' | 'dispatch';
+type ToolType = 'map' | 'chart' | 'network' | 'risk' | 'text' | 'finance' | 'socio' | 'similar' | 'forecast' | 'ocr' | 'cdr' | 'biometrics' | 'dispatch' | 'timeline' | 'early_warning' | 'case_summary' | 'general';
 
 interface Message {
   id: string;
@@ -30,6 +33,7 @@ interface Message {
   };
   evidenceSources?: EvidenceSource;
   followUpSuggestions?: string[];
+  llmMode?: string;
 }
 
 interface ChatInterfaceProps {
@@ -60,12 +64,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substring(7)}`);
   const [contextIndicator, setContextIndicator] = useState<string | null>(null);
-  const [llmMode, setLlmMode] = useState<'mock' | 'fallback' | 'live'>('mock');
+  const [llmMode, setLlmMode] = useState<string>('mock');
   // Session memory: last 5 queries for context
   const [sessionHistory, setSessionHistory] = useState<Array<{query: string; tool: string; ts: Date}>>([]);
   const [showHistory, setShowHistory] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const handleSendRef = useRef<(query: string) => void>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -75,14 +80,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     scrollToBottom();
   }, [messages, isLoading]);
 
-  // Execute initial query if passed
-  useEffect(() => {
-    if (initialQuery) {
-      handleSend(initialQuery);
-    }
-  }, [initialQuery]);
-
-  const handleSend = async (queryText: string) => {
+  const handleSend = useCallback(async (queryText: string) => {
     const trimmed = queryText.trim();
     if (!trimmed) return;
 
@@ -100,76 +98,170 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setIsLoading(true);
     setError(null);
 
+    const followUpMap: Record<string, string[]> = {
+      map:        ['Show crime trend chart for this area', 'Identify syndicate networks in this zone', 'Predict future hotspots here'],
+      chart:      ['Socio-demographic breakdown of offenders', 'Map the top crime locations', 'Forecast crime for next 30 days'],
+      network:    ['Show financial trail for this case', 'Risk profile of top node', 'Find similar past cases'],
+      risk:       ['Show offender network connections', 'Financial transaction trail', 'Find similar cases with same MO'],
+      finance:    ['Show network graph of all suspects', 'Risk profile of the primary accused', 'Map transaction origin locations'],
+      socio:      ['Crime trend over 6 months', 'Predict high-risk districts', 'Network analysis for organized crime'],
+      similar:    ['Risk score for the accused in this case', 'Show network graph', 'Financial trail for FIR'],
+      forecast:   ['Show current hotspot map', 'View socio-demographic risk factors', 'Network of known recidivists'],
+      ocr:        ['Risk profile of extracted suspect names', 'Search similar cases with this MO', 'Map location mentioned in document'],
+      cdr:        ['Show network connections for this suspect', 'Risk profile analysis', 'Map recent crime hotspots'],
+      biometrics: ['Risk profile of matched suspect', 'Show network connections', 'Financial trail for matched FIR'],
+      dispatch:   ['Show current crime hotspot map', 'Forecast upcoming incidents', 'Review recent anomaly alerts'],
+      timeline:   ['Show financial trail for this case', 'Risk profile of all suspects', 'Find similar past cases'],
+      early_warning: ['Show repeat offender profiles', 'Map gang activity networks', 'Forecast next 30 days'],
+      case_summary: ['Show investigation timeline', 'Risk profile of suspects', 'Show linked cases'],
+      text:       ['Show crime hotspot map', 'Crime trend analysis for this month', 'Identify syndicate networks'],
+      general:    ['Explain how recidivism is calculated', 'What are typical warning signs for cyber crime escalation?', 'Show recent crime trend chart'],
+    };
+
+    const systemMsgId = Math.random().toString(36).substring(7);
+    const initialSystemMessage: Message = {
+      id: systemMsgId,
+      sender: 'system',
+      text: 'Thinking...',
+      timestamp: new Date(),
+      llmMode: 'mock'
+    };
+
+    setMessages(prev => [...prev, initialSystemMessage]);
+
     try {
-      // Send to Express API with session ID for context tracking
-      const result = await api.submitChat(trimmed, userId, role, sessionId);
-      
-      if (result.llmMode) {
-        setLlmMode(result.llmMode);
+      const response = await fetch(`/api/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': userId,
+          'X-User-Role': role,
+        },
+        body: JSON.stringify({ query: trimmed, sessionId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to communicate with streaming service');
       }
 
-      // Update session memory
-      const memEntry = { query: trimmed, tool: result.tool || 'text', ts: new Date() };
-      setSessionHistory(prev => [...prev.slice(-4), memEntry]);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error('Streaming response body not readable');
 
-      // Generate contextual follow-up suggestions based on the tool used
-      const followUpMap: Record<string, string[]> = {
-        map:        ['Show crime trend chart for this area', 'Identify syndicate networks in this zone', 'Predict future hotspots here'],
-        chart:      ['Socio-demographic breakdown of offenders', 'Map the top crime locations', 'Forecast crime for next 30 days'],
-        network:    ['Show financial trail for this case', 'Risk profile of top node', 'Find similar past cases'],
-        risk:       ['Show offender network connections', 'Financial transaction trail', 'Find similar cases with same MO'],
-        finance:    ['Show network graph of all suspects', 'Risk profile of the primary accused', 'Map transaction origin locations'],
-        socio:      ['Crime trend over 6 months', 'Predict high-risk districts', 'Network analysis for organized crime'],
-        similar:    ['Risk score for the accused in this case', 'Show network graph', 'Financial trail for FIR'],
-        forecast:   ['Show current hotspot map', 'View socio-demographic risk factors', 'Network of known recidivists'],
-        ocr:        ['Risk profile of extracted suspect names', 'Search similar cases with this MO', 'Map location mentioned in document'],
-        cdr:        ['Show network connections for this suspect', 'Risk profile analysis', 'Map recent crime hotspots'],
-        biometrics: ['Risk profile of matched suspect', 'Show network connections', 'Financial trail for matched FIR'],
-        dispatch:   ['Show current crime hotspot map', 'Forecast upcoming incidents', 'Review recent anomaly alerts'],
-        text:       ['Show crime hotspot map', 'Crime trend analysis for this month', 'Identify syndicate networks'],
-      };
-      const suggestions = followUpMap[result.tool] || followUpMap['text'];
+      let accumulatedText = '';
+      let detectedTool = 'text';
+      let currentLlmMode = 'mock';
+      let buffer = '';
 
-      const systemMessage: Message = {
-        id: Math.random().toString(36).substring(7),
-        sender: 'system',
-        text: result.narrative,
-        timestamp: new Date(),
-        toolResult: result.tool !== 'text' ? {
-          tool: result.tool as ToolType,
-          data: result.data
-        } : undefined,
-        evidenceSources: result.evidenceSources,
-        followUpSuggestions: suggestions
-      };
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      setMessages(prev => [...prev, systemMessage]);
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
-      // Update context indicator
-      if (result.tool !== 'text') {
-        const toolLabels: Record<string, string> = {
-          map: 'Geographic Analysis',
-          chart: 'Trend Analytics',
-          network: 'Network Analysis',
-          risk: 'Risk Profiling',
-          finance: 'Financial Trail',
-          socio: 'Demographic Insights',
-          similar: 'Case Matching',
-          forecast: 'Predictive Intelligence',
-          ocr: 'Vernacular OCR',
-          cdr: 'CDR Spatial Timeline',
-          biometrics: 'Biometric Search',
-          dispatch: 'Dispatch Operations'
-        };
-        setContextIndicator(toolLabels[result.tool] || null);
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+
+          try {
+            const event = JSON.parse(trimmedLine.slice(6));
+
+            if (event.type === 'metadata') {
+              detectedTool = event.tool;
+
+              setMessages(prev => prev.map(m => m.id === systemMsgId ? {
+                ...m,
+                toolResult: event.tool !== 'text' ? {
+                  tool: event.tool as ToolType,
+                  data: event.data
+                } : undefined,
+                evidenceSources: event.evidenceSources
+              } : m));
+
+              if (event.tool !== 'text') {
+                const toolLabels: Record<string, string> = {
+                  map: 'Geographic Analysis',
+                  chart: 'Trend Analytics',
+                  network: 'Network Analysis',
+                  risk: 'Risk Profiling',
+                  finance: 'Financial Trail',
+                  socio: 'Demographic Insights',
+                  similar: 'Case Matching',
+                  forecast: 'Predictive Intelligence',
+                  ocr: 'Vernacular OCR',
+                  cdr: 'CDR Spatial Timeline',
+                  biometrics: 'Biometric Search',
+                  dispatch: 'Dispatch Operations',
+                  timeline: 'Investigation Timeline',
+                  early_warning: 'Early Warning Intelligence',
+                  case_summary: 'Case Summary',
+                  general: 'General Q&A'
+                };
+                setContextIndicator(toolLabels[event.tool] || null);
+              }
+            } else if (event.type === 'meta') {
+              currentLlmMode = event.provider || 'mock';
+              setLlmMode(currentLlmMode);
+              setMessages(prev => prev.map(m => m.id === systemMsgId ? {
+                ...m,
+                llmMode: currentLlmMode
+              } : m));
+            } else if (event.type === 'token') {
+              if (accumulatedText === '') {
+                accumulatedText = event.content;
+              } else {
+                accumulatedText += event.content;
+              }
+              setMessages(prev => prev.map(m => m.id === systemMsgId ? {
+                ...m,
+                text: accumulatedText
+              } : m));
+            } else if (event.type === 'translation') {
+              accumulatedText = event.content;
+              setMessages(prev => prev.map(m => m.id === systemMsgId ? {
+                ...m,
+                text: accumulatedText
+              } : m));
+            } else if (event.type === 'done') {
+              const finalNarrative = event.narrative || accumulatedText;
+              const suggestions = followUpMap[detectedTool] || followUpMap['text'];
+              
+              setMessages(prev => prev.map(m => m.id === systemMsgId ? {
+                ...m,
+                text: finalNarrative,
+                llmMode: event.llmMode || currentLlmMode,
+                followUpSuggestions: suggestions
+              } : m));
+
+              const memEntry = { query: trimmed, tool: detectedTool, ts: new Date() };
+              setSessionHistory(prev => [...prev.slice(-4), memEntry]);
+            } else if (event.type === 'error') {
+              setError(event.error);
+            }
+          } catch (e) {
+            console.warn('Failed parsing stream chunk:', e);
+          }
+        }
       }
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'An error occurred during query execution.');
+      setMessages(prev => prev.filter(m => m.id !== systemMsgId || m.text !== 'Thinking...'));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, role, sessionId]);
+
+  handleSendRef.current = handleSend;
+
+  // Execute initial query if passed
+  useEffect(() => {
+    if (initialQuery && handleSendRef.current) {
+      handleSendRef.current(initialQuery);
+    }
+  }, [initialQuery]);
 
   // Triggered when double-clicking nodes in vis-network graph
   const handleNodeSelect = (name: string, type: 'person' | 'case') => {
@@ -186,50 +278,84 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleExportPdf = async () => {
     try {
       setIsLoading(true);
+      const dateStr = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       let htmlContent = `
         <html>
         <head>
           <style>
-            body { font-family: sans-serif; color: #1e293b; padding: 30px; }
-            h1 { color: #0f172a; border-bottom: 2px solid #10b981; padding-bottom: 8px; }
-            .meta { color: #64748b; font-size: 12px; margin-bottom: 25px; }
-            .message { margin-bottom: 20px; padding: 15px; border-radius: 6px; }
-            .user { background: #f1f5f9; border-left: 4px solid #64748b; }
-            .system { background: #ecfdf5; border-left: 4px solid #10b981; }
-            .sender { font-weight: bold; font-size: 13px; margin-bottom: 5px; }
-            .text { font-size: 14px; white-space: pre-line; }
-            .evidence { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px; margin-top: 8px; font-size: 11px; color: #64748b; }
+            @page { margin: 20mm 15mm; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; padding: 0; font-size: 13px; position: relative; }
+            .watermark { position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 60px; color: rgba(220,38,38,0.06); font-weight: 900; letter-spacing: 8px; z-index: 0; pointer-events: none; white-space: nowrap; }
+            .header-bar { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 20px 24px; border-radius: 6px; margin-bottom: 20px; }
+            .header-bar h1 { margin: 0; font-size: 18px; letter-spacing: 1px; }
+            .header-bar .subtitle { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+            .classification { text-align: center; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 10px; font-weight: 800; letter-spacing: 2px; padding: 6px; margin-bottom: 16px; border-radius: 3px; text-transform: uppercase; }
+            .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; font-size: 11px; }
+            .meta-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px 12px; }
+            .meta-label { color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
+            .meta-value { color: #0f172a; font-weight: 700; margin-top: 2px; }
+            .message { margin-bottom: 16px; padding: 14px; border-radius: 6px; page-break-inside: avoid; }
+            .user { background: #f1f5f9; border-left: 4px solid #475569; }
+            .system { background: #f0fdf4; border-left: 4px solid #22c55e; }
+            .sender { font-weight: 700; font-size: 11px; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+            .text { font-size: 13px; white-space: pre-line; line-height: 1.6; color: #1e293b; }
+            .evidence { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 10px; margin-top: 10px; font-size: 10px; color: #64748b; }
+            .evidence strong { color: #475569; }
+            .evidence-row { display: flex; gap: 16px; margin-top: 4px; }
+            .evidence-item { display: flex; align-items: center; gap: 4px; }
+            .badge { display: inline-block; background: #e2e8f0; color: #475569; padding: 1px 6px; border-radius: 10px; font-size: 9px; font-weight: 600; margin: 0 2px; }
+            .footer { margin-top: 30px; padding-top: 12px; border-top: 2px solid #e2e8f0; text-align: center; font-size: 9px; color: #94a3b8; }
           </style>
         </head>
         <body>
-          <h1>KSP Crime Intelligence Report</h1>
-          <div class="meta">Generated by: ${userId} (${role}) | Date: ${new Date().toLocaleString()} | Session: ${sessionId}</div>
+          <div class="watermark">RESTRICTED</div>
+          <div class="classification">Restricted — For Official Use Only — Karnataka State Police</div>
+          <div class="header-bar">
+            <h1>\u2588 CRIME INTELLIGENCE REPORT</h1>
+            <div class="subtitle">Karnataka State Police — Crime Intelligence & Analytics Division</div>
+          </div>
+          <div class="meta-grid">
+            <div class="meta-item"><div class="meta-label">Generating Officer</div><div class="meta-value">${userId} (${role})</div></div>
+            <div class="meta-item"><div class="meta-label">Report Date</div><div class="meta-value">${dateStr}</div></div>
+            <div class="meta-item"><div class="meta-label">Session ID</div><div class="meta-value">${sessionId.substring(0, 20)}...</div></div>
+            <div class="meta-item"><div class="meta-label">AI Engine</div><div class="meta-value">${llmMode === 'glm' ? 'GLM-5.2 Agentic' : llmMode === 'groq' ? 'Groq LPU (Llama 3.3 70B)' : llmMode === 'live' ? 'Live LLM' : llmMode}</div></div>
+          </div>
       `;
 
       messages.forEach(msg => {
-        const senderLabel = msg.sender === 'user' ? 'Investigating Officer' : 'KSP Intelligence Assistant';
+        const senderLabel = msg.sender === 'user' ? '\u25B6 Investigating Officer' : '\u25C6 KSP Intelligence Assistant';
         const typeClass = msg.sender;
+        const evidenceSource = Array.isArray(msg.evidenceSources) ? msg.evidenceSources[0] : msg.evidenceSources;
         htmlContent += `
           <div class="message ${typeClass}">
-            <div class="sender">${senderLabel} (${msg.timestamp.toLocaleTimeString()})</div>
+            <div class="sender">${senderLabel} — ${msg.timestamp.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
             <div class="text">${msg.text}</div>
-            ${msg.evidenceSources ? `
+            ${evidenceSource ? `
               <div class="evidence">
-                <strong>Evidence Trail:</strong> Tool: ${msg.evidenceSources.tool} | 
-                Tables: ${msg.evidenceSources.tablesAccessed.join(', ')} | 
-                Confidence: ${msg.evidenceSources.confidence}
+                <strong>Evidence Trail</strong>
+                <div class="evidence-row">
+                  <div class="evidence-item"><strong>Tool:</strong> ${evidenceSource.tool}</div>
+                  <div class="evidence-item"><strong>Confidence:</strong> ${evidenceSource.confidence}</div>
+                  <div class="evidence-item"><strong>LLM:</strong> ${msg.llmMode || 'mock'}</div>
+                </div>
+                <div style="margin-top:4px;"><strong>Tables:</strong> ${(evidenceSource.tablesAccessed || []).map((t: string) => '<span class="badge">' + t + '</span>').join(' ')}</div>
               </div>
             ` : ''}
           </div>
         `;
       });
 
-      htmlContent += `</body></html>`;
+      htmlContent += `
+          <div class="footer">
+            \u00A9 ${new Date().getFullYear()} Karnataka State Police. This report was auto-generated by the Crime Intelligence Portal. 
+            Classification: RESTRICTED. Unauthorized distribution is prohibited under IT Act 2000.
+          </div>
+        </body></html>`;
       const blob = await api.exportPdfReport(htmlContent, userId, role);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `ksp-report-${Date.now()}.pdf`);
+      link.setAttribute('download', `ksp-intelligence-report-${Date.now()}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -253,14 +379,22 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const msgIsTextOnly = (m: Message) => m.sender === 'system' && !m.toolResult;
 
   const getStatusColor = () => {
+    if (llmMode === 'glm') return 'bg-pink-500';
+    if (llmMode === 'groq') return 'bg-orange-500';
+    if (llmMode === 'gemini') return 'bg-blue-500';
+    if (llmMode === 'ollama') return 'bg-purple-500';
     if (llmMode === 'live') return 'bg-emerald-500';
     if (llmMode === 'fallback') return 'bg-amber-500';
     return 'bg-brand-primary';
   };
 
   const getStatusLabel = () => {
+    if (llmMode === 'glm') return 'GLM-5.2 Agentic';
+    if (llmMode === 'groq') return 'Groq ⚡ Live';
+    if (llmMode === 'gemini') return 'Gemini Live';
+    if (llmMode === 'ollama') return 'Ollama Local';
     if (llmMode === 'live') return 'Live LLM';
-    if (llmMode === 'fallback') return 'LLM Fallback (Offline)';
+    if (llmMode === 'fallback') return 'LLM Fallback';
     return 'Local Mock';
   };
 
@@ -307,7 +441,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       )}
       
       {/* Header bar */}
-      <div className="flex justify-between items-center bg-slate-900 px-6 py-4 border-b border-slate-850">
+      <div className="flex justify-between items-center bg-slate-900 px-6 py-4 border-b border-slate-800">
         <div className="flex items-center gap-3">
           <span className={`h-2.5 w-2.5 rounded-full ${getStatusColor()}`} />
           <div>
@@ -342,7 +476,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold transition cursor-pointer ${
               sessionHistory.length > 0
                 ? 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-750'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-700'
             }`}
             title="Session History"
           >
@@ -353,7 +487,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           {/* PDF Export action */}
           <button
             onClick={handleExportPdf}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-750 rounded-lg text-xs font-semibold transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer"
             title="Download Chat Log PDF"
           >
             <Download size={12} /> Export Report
@@ -378,14 +512,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <div className={`rounded-lg p-4 text-sm leading-relaxed ${
                   msg.sender === 'user'
                     ? 'bg-slate-900 text-slate-100 border border-slate-800 rounded-tr-none'
-                    : 'bg-slate-900/40 text-slate-200 border border-slate-850 rounded-tl-none font-medium'
+                    : 'bg-slate-900/40 text-slate-200 border border-slate-800 rounded-tl-none font-medium'
                 }`}>
                   <p className="whitespace-pre-line">{msg.text}</p>
                 </div>
                 
                 {/* Evidence Trail - shown under system messages */}
                 {msg.sender === 'system' && msg.evidenceSources && (
-                  <EvidenceTrail sources={msg.evidenceSources} />
+                  <EvidenceTrail sources={msg.evidenceSources} llmMode={msg.llmMode} />
                 )}
 
                 {/* Follow-up suggestion chips */}
@@ -452,6 +586,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 {msg.toolResult.tool === 'dispatch' && (
                   <DispatchConsoleCard data={msg.toolResult.data} />
                 )}
+                {msg.toolResult.tool === 'timeline' && (
+                  <InvestigationTimeline data={msg.toolResult.data} />
+                )}
+                {msg.toolResult.tool === 'early_warning' && (
+                  <EarlyWarningPanel data={msg.toolResult.data} />
+                )}
+                {msg.toolResult.tool === 'case_summary' && (
+                  <CaseSummaryCard data={msg.toolResult.data} />
+                )}
               </div>
             )}
           </div>
@@ -462,7 +605,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <div className="h-8 w-8 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary flex items-center justify-center shrink-0">
               <Bot size={16} />
             </div>
-            <div className="flex items-center gap-2 bg-slate-900/40 border border-slate-850 rounded-lg px-4 py-3 text-slate-400 text-xs">
+            <div className="flex items-center gap-2 bg-slate-900/40 border border-slate-800 rounded-lg px-4 py-3 text-slate-400 text-xs">
               <Loader2 size={12} className="animate-spin text-brand-primary" />
               <span>Processing query...</span>
             </div>
@@ -478,10 +621,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Demo Presets Row */}
+      <div className="bg-slate-950 px-4 py-2 border-t border-slate-900/60 flex flex-wrap items-center gap-2">
+        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Demo Presets:</span>
+        <div className="flex flex-1 gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {[
+            { label: '👤 Risk of Jacky', query: 'Show risk profile of Jacky' },
+            { label: '🕸️ Offender Network: Sharief', query: 'Map offender network connections for Mohammad Sharief' },
+            { label: '💰 Financial Trail: FIR-2026-004', query: 'Show financial transaction trail for FIR-2026-004' },
+            { label: '📍 Hotspots: Bengaluru', query: 'Show crime hotspots in Bengaluru' },
+            { label: '🔮 Forecast hotspots', query: 'Predict upcoming crime hotspots' }
+          ].map((preset, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => !isLoading && handleSend(preset.query)}
+              disabled={isLoading}
+              className="text-[10px] whitespace-nowrap px-2.5 py-1 bg-slate-900/80 hover:bg-brand-primary/10 border border-slate-800 hover:border-brand-primary/30 text-slate-300 hover:text-brand-primary rounded transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Input bar */}
       <form 
         onSubmit={(e) => { e.preventDefault(); handleSend(inputText); }}
-        className="bg-slate-900 p-4 border-t border-slate-850 flex items-center gap-3"
+        className="bg-slate-900 p-4 border-t border-slate-800 flex items-center gap-3"
       >
         {/* Voice Dictation Panel */}
         <VoiceInput 
@@ -494,7 +661,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Enter your query..."
-          className="flex-1 bg-slate-950 border border-slate-850 focus:border-brand-primary focus:outline-none rounded-lg px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition"
+          className="flex-1 bg-slate-950 border border-slate-800 focus:border-brand-primary focus:outline-none rounded-lg px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition"
           disabled={isLoading}
         />
 

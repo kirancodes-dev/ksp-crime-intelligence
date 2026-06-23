@@ -93,29 +93,34 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
         setNetworkData(netRes.data);
       }
 
-      // 3. Populate statistics based on fetched incidents
-      const totalCount = mapRes.data?.length || 0;
-      const openCount = mapRes.data ? mapRes.data.filter((i: any) => i.status === 'Under Investigation').length : 0;
-      
-      // Look up unique gang associations from network data
-      const uniqueGangs = new Set(
-        netRes.data?.nodes
-          ? netRes.data.nodes
-            .filter((n: any) => n.group === 'gang')
-            .map((n: any) => n.label)
-          : []
-      );
-
-      const highRiskCount = netRes.data?.nodes
-        ? netRes.data.nodes.filter((n: any) => n.type === 'person' && n.score >= 0.7).length
-        : 0;
-
-      setStats({
-        total: totalCount || 60,
-        open: openCount || Math.round((totalCount || 60) * 0.6),
-        syndicates: uniqueGangs.size || 4,
-        highRisk: highRiskCount || 6
-      });
+      // 3. Fetch dashboard statistics from API
+      try {
+        const statsRes = await api.getDashboardStats(selectedDistrict, selectedCrimeType, userId, role);
+        if (statsRes.success) {
+          setStats(statsRes.stats);
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard stats:', err);
+        // Fallback to local counts if API fails
+        const totalCount = mapRes.data?.length || 0;
+        const openCount = mapRes.data ? mapRes.data.filter((i: any) => i.status === 'Under Investigation').length : 0;
+        const uniqueGangs = new Set(
+          netRes.data?.nodes
+            ? netRes.data.nodes
+              .filter((n: any) => n.group === 'gang')
+              .map((n: any) => n.label)
+            : []
+        );
+        const highRiskCount = netRes.data?.nodes
+          ? netRes.data.nodes.filter((n: any) => n.type === 'person' && n.score >= 0.7).length
+          : 0;
+        setStats({
+          total: totalCount || 60,
+          open: openCount || Math.round((totalCount || 60) * 0.6),
+          syndicates: uniqueGangs.size || 4,
+          highRisk: highRiskCount || 6
+        });
+      }
 
       // 4. Fetch socio-demographic statistics and map them
       try {
@@ -279,7 +284,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
   return (
     <div className="space-y-6">
       {/* Filters Header bar */}
-      <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-4 bg-slate-900/40 border border-slate-850 rounded-lg p-4">
+      <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-4 bg-slate-900/40 border border-slate-800 rounded-lg p-4">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <Eye className="text-brand-primary" /> Crime Analytics & Intelligence
@@ -297,7 +302,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           <select
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
-            className="bg-slate-950 border border-slate-850 text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer"
+            className="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer"
           >
             <option value="All">All Karnataka Districts</option>
             <option value="Bengaluru City">Bengaluru City</option>
@@ -311,7 +316,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           <select
             value={selectedCrimeType}
             onChange={(e) => setSelectedCrimeType(e.target.value)}
-            className="bg-slate-950 border border-slate-850 text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer"
+            className="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer"
           >
             <option value="All">All Crime Types</option>
             <option value="Cyber Crime">Cyber Crime</option>
@@ -358,13 +363,13 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
       )}
 
       {/* Visual Navigation Tabs */}
-      <div className="flex border-b border-slate-250 gap-6 print:hidden">
+      <div className="flex border-b border-slate-200 gap-6 print:hidden">
         <button
           onClick={() => setActiveSubTab('intel')}
           className={`pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
             activeSubTab === 'intel'
               ? 'border-brand-primary text-slate-800'
-              : 'border-transparent text-slate-400 hover:text-slate-650'
+              : 'border-transparent text-slate-400 hover:text-slate-600'
           }`}
         >
           Geo-Spatial & Syndicate Networks
@@ -374,7 +379,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           className={`pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
             activeSubTab === 'cdr'
               ? 'border-brand-primary text-slate-800'
-              : 'border-transparent text-slate-400 hover:text-slate-650'
+              : 'border-transparent text-slate-400 hover:text-slate-600'
           }`}
         >
           CDR Cellular Timeline Analysis
@@ -464,7 +469,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
                 <select
                   value={cdrSuspect}
                   onChange={(e) => setCdrSuspect(e.target.value)}
-                  className="bg-white border border-slate-250 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer flex-1"
+                  className="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer flex-1"
                 >
                   <option value="Rupa Naik">Rupa Naik (Organized Crime)</option>
                   <option value="Ramesh Kumar">Ramesh Kumar (Theft)</option>
@@ -514,7 +519,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
                         }`}
                       >
                         <span className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
-                          isActive ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-650'
+                          isActive ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'
                         }`}>
                           {b.id}
                         </span>
@@ -743,7 +748,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
                 </button>
                 <button 
                   onClick={() => setSelectedIncident(null)}
-                  className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-250 text-xs font-semibold rounded-lg cursor-pointer transition"
+                  className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold rounded-lg cursor-pointer transition"
                 >
                   Close
                 </button>

@@ -292,7 +292,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <div className="flex justify-between items-center text-[11px]">
               <span className="text-slate-500 font-medium">
                 {countdown > 0 ? (
-                  <span>Code expires in: <strong className="text-slate-350 font-mono">00:{countdown.toString().padStart(2, '0')}</strong></span>
+                  <span>Code expires in: <strong className="text-slate-300 font-mono">00:{countdown.toString().padStart(2, '0')}</strong></span>
                 ) : (
                   <span className="text-red-400">Code expired</span>
                 )}
@@ -302,7 +302,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 type="button"
                 onClick={handleResendOtp}
                 disabled={!canResend}
-                className="text-brand-primary hover:text-brand-primary-light font-bold uppercase disabled:text-slate-650 cursor-pointer disabled:cursor-not-allowed transition"
+                className="text-brand-primary hover:text-brand-primary-light font-bold uppercase disabled:text-slate-600 cursor-pointer disabled:cursor-not-allowed transition"
               >
                 Resend Code
               </button>

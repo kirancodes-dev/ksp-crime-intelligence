@@ -28,6 +28,19 @@ interface RiskProfile {
   factors: RiskFactor[];
   recommendation: string;
   incidents: IncidentLink[];
+  behavioral_profile?: {
+    crime_diversity: number;
+    crime_types: string[];
+    geographic_reach: number;
+    districts_active: string[];
+    active_period_days: number;
+    mo_patterns: Array<{ pattern: string; frequency: number }>;
+    escalation_detected: boolean;
+    cross_district_operations: boolean;
+    behavioral_classification: string;
+    spatial_pattern: string;
+    tempo_pattern: string;
+  };
 }
 
 interface RiskScoreCardProps {
@@ -270,6 +283,103 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
           "{profile.recommendation}"
         </p>
       </div>
+
+      {/* Behavioral Profile Insights */}
+      {profile.behavioral_profile && (
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-100 pb-1">
+            <Briefcase size={16} className="text-brand-primary" /> Behavioral & MO Profile
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
+            {/* Classification & Patterns */}
+            <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Classification:</span>
+                <span className="font-bold text-slate-900 bg-blue-100/50 text-blue-800 px-2 py-0.5 rounded">
+                  {profile.behavioral_profile.behavioral_classification}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Spatial Pattern:</span>
+                <span className={`font-bold px-2 py-0.5 rounded ${
+                  profile.behavioral_profile.cross_district_operations
+                    ? 'bg-red-100/50 text-red-800'
+                    : 'bg-emerald-100/50 text-emerald-800'
+                }`}>
+                  {profile.behavioral_profile.spatial_pattern}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Tempo Pattern:</span>
+                <span className="font-bold text-slate-900 bg-purple-100/50 text-purple-800 px-2 py-0.5 rounded">
+                  {profile.behavioral_profile.tempo_pattern}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Active Span:</span>
+                <span className="font-semibold text-slate-800">
+                  {profile.behavioral_profile.active_period_days} Days
+                </span>
+              </div>
+              {profile.behavioral_profile.escalation_detected && (
+                <div className="mt-2 text-[10px] bg-red-50 border border-red-100 text-red-700 px-2 py-1 rounded font-bold uppercase tracking-wider animate-pulse flex items-center gap-1">
+                  <ShieldAlert size={12} />
+                  Crime Severity Escalation Detected
+                </div>
+              )}
+            </div>
+
+            {/* Crime Diversity & Geographic Reach */}
+            <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-500">Crime Diversity:</span>
+                  <span className="font-bold text-slate-850">{profile.behavioral_profile.crime_diversity} Type(s)</span>
+                </div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {profile.behavioral_profile.crime_types?.map((type, idx) => (
+                    <span key={idx} className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-mono">
+                      {type}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="border-t border-slate-200 pt-2 mt-1">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-500">Jurisdiction Reach:</span>
+                  <span className="font-bold text-slate-850">{profile.behavioral_profile.geographic_reach} District(s)</span>
+                </div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {profile.behavioral_profile.districts_active?.map((dist, idx) => (
+                    <span key={idx} className="text-[10px] bg-amber-100/60 text-amber-800 px-1.5 py-0.5 rounded">
+                      {dist}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* MO Patterns (full width) */}
+            {profile.behavioral_profile.mo_patterns && profile.behavioral_profile.mo_patterns.length > 0 && (
+              <div className="col-span-1 sm:col-span-2 bg-slate-50 border border-slate-100 rounded-lg p-3">
+                <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Frequent Modus Operandi (MO) Patterns
+                </span>
+                <div className="space-y-1.5">
+                  {profile.behavioral_profile.mo_patterns?.map((mo, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-xs">
+                      <span className="text-slate-755 italic">"{mo.pattern}"</span>
+                      <span className="bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded font-semibold text-[10px]">
+                        {mo.frequency}x recurring
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Linked Incidents */}
       {profile.incidents && profile.incidents.length > 0 && (

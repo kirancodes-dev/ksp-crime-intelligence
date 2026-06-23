@@ -29,7 +29,7 @@ export const OcrAnalysisCard: React.FC<OcrAnalysisCardProps> = ({ data }) => {
             Vernacular OCR Intelligence
           </h4>
         </div>
-        <div className="flex items-center gap-2 bg-slate-850 px-2.5 py-1 rounded border border-slate-750 text-[11px]">
+        <div className="flex items-center gap-2 bg-slate-850 px-2.5 py-1 rounded border border-slate-700 text-[11px]">
           <Globe size={12} className="text-emerald-400" />
           <span className="text-slate-300 font-semibold uppercase">{data.detectedLanguage} (Kannada)</span>
           <span className="text-slate-500">•</span>
@@ -39,7 +39,7 @@ export const OcrAnalysisCard: React.FC<OcrAnalysisCardProps> = ({ data }) => {
 
       {/* Side-by-Side Text translation pane */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-        <div className="bg-slate-950 p-4 rounded-lg border border-slate-850">
+        <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
             Raw Kannada Source
@@ -49,7 +49,7 @@ export const OcrAnalysisCard: React.FC<OcrAnalysisCardProps> = ({ data }) => {
           </p>
         </div>
 
-        <div className="bg-slate-950 p-4 rounded-lg border border-slate-850">
+        <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             AI Translated English
@@ -61,7 +61,7 @@ export const OcrAnalysisCard: React.FC<OcrAnalysisCardProps> = ({ data }) => {
       </div>
 
       {/* Extracted Relational Entities */}
-      <div className="bg-slate-950/40 p-4 rounded-lg border border-slate-850">
+      <div className="bg-slate-950/40 p-4 rounded-lg border border-slate-800">
         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <Sparkles size={12} className="text-brand-primary" />
           Extracted Case Entities

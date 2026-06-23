@@ -105,6 +105,7 @@ CREATE TABLE IF NOT EXISTS FinancialTransaction (
     destination_account_type TEXT NOT NULL,
     amount REAL NOT NULL,
     transaction_type TEXT NOT NULL,
+    reference_id TEXT,
     is_suspicious INTEGER DEFAULT 0,
     suspicion_reason TEXT,
     FOREIGN KEY(fir_id) REFERENCES FIR(id) ON DELETE CASCADE

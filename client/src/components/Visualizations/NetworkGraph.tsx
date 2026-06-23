@@ -45,12 +45,9 @@ export const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect }
         return {
           id: node.id,
           label: node.label,
-          shape: 'circularImage', // Fallback to dot with border if no image
-          shapeProperties: {
-            useBorderWithImage: true
-          },
+          shape: 'dot',
           borderWidth: 3,
-          size: 25,
+          size: 20,
           color: {
             border: colorVal,
             background: '#111827',
@@ -192,7 +189,7 @@ export const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect }
       {/* Network Container */}
       <div 
         ref={containerRef} 
-        className="w-full h-96 min-h-[400px] rounded-lg border border-slate-850 bg-slate-950/60 overflow-hidden cursor-grab active:cursor-grabbing"
+        className="w-full h-96 min-h-[400px] rounded-lg border border-slate-800 bg-slate-950/60 overflow-hidden cursor-grab active:cursor-grabbing"
       />
 
       {/* Network Legend */}

@@ -2,6 +2,9 @@ const catalyst = require('../shared/catalyst-sdk').getInitializer();
 const riskScoring = require('../risk-scoring/index');
 const financialAnalysis = require('../financial-analysis/index');
 const similarCases = require('../similar-cases/index');
+const investigationTimeline = require('../investigation-timeline/index');
+const earlyWarning = require('../early-warning/index');
+const caseSummary = require('../case-summary/index');
 const gemini = require('../shared/gemini');
 
 module.exports = async (queryText, userId, role) => {
@@ -24,7 +27,7 @@ module.exports = async (queryText, userId, role) => {
       } else if (role === 'Supervisor' || role === 'Analyst') {
         scope = rlsScopes['SUP-3001'];
       } else {
-        scope = rlsScopes['INV-1002'];
+        scope = rlsScopes['POL-4001'];
       }
     }
 
@@ -32,20 +35,20 @@ module.exports = async (queryText, userId, role) => {
     let tool = null;
     let extractedParams = {};
 
-    if (process.env.GEMINI_API_KEY || process.env.USE_OLLAMA === 'true') {
+    if (process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.USE_OLLAMA === 'true') {
       console.log('Classifying query with LLM...');
-      const geminiResult = await gemini.routeQuery(queryText);
-      if (geminiResult.success) {
-        tool = geminiResult.classification.tool;
-        extractedParams = geminiResult.classification.parameters || {};
-        console.log(`LLM Classification result: Tool = ${tool}, Params =`, extractedParams);
+      const llmResult = await gemini.routeQuery(queryText);
+      if (llmResult.success) {
+        tool = llmResult.classification.tool;
+        extractedParams = llmResult.classification.parameters || {};
+        console.log(`LLM Classification result [${llmResult.provider}]: Tool = ${tool}, Params =`, extractedParams);
       } else {
-        console.warn('LLM query routing failed, falling back to legacy keywords:', geminiResult.error || geminiResult.reason);
+        console.warn('LLM query routing failed, falling back to legacy keywords:', llmResult.error || llmResult.reason);
       }
     }
 
     // Legacy fallback routing if Gemini was skipped, failed, or returned an invalid tool
-    const validTools = ['risk', 'network', 'map', 'chart', 'finance', 'socio', 'similar', 'forecast', 'text', 'ocr', 'cdr', 'biometrics', 'dispatch'];
+    const validTools = ['risk', 'network', 'map', 'chart', 'finance', 'socio', 'similar', 'forecast', 'text', 'ocr', 'cdr', 'biometrics', 'dispatch', 'timeline', 'early_warning', 'case_summary', 'general'];
     if (!tool || !validTools.includes(tool)) {
       extractedParams = {};
       
@@ -125,6 +128,19 @@ module.exports = async (queryText, userId, role) => {
       } 
       else if (query.includes("predict") || query.includes("forecast") || query.includes("early warning") || query.includes("future") || query.includes("prevent") || query.includes("alert")) {
         tool = "forecast";
+      } 
+      else if (query.includes("timeline") || query.includes("chronology") || query.includes("sequence of events") || query.includes("investigation progress")) {
+        tool = "timeline";
+        const firMatch = queryText.match(/(?:FIR|fir|case)\s*(?:no\.?|number|#)?\s*([A-Z0-9\-\/]+)/i);
+        if (firMatch) extractedParams.fir_number = firMatch[1];
+      }
+      else if (query.includes("repeat crime") || query.includes("early warning") || query.includes("gang activity") || query.includes("escalat") || query.includes("surge") || query.includes("spike")) {
+        tool = "early_warning";
+      }
+      else if (query.includes("case summary") || query.includes("brief") || query.includes("case file") || query.includes("dossier") || query.includes("case overview")) {
+        tool = "case_summary";
+        const firMatch = queryText.match(/(?:FIR|fir|case)\s*(?:no\.?|number|#)?\s*([A-Z0-9\-\/]+)/i);
+        if (firMatch) extractedParams.fir_number = firMatch[1];
       } 
       else {
         tool = "text";
@@ -342,9 +358,45 @@ module.exports = async (queryText, userId, role) => {
 
       data = {
         monthly: monthlyTrends,
-        district: districtCrime
+        district: districtCrime,
+        seasonal: {},
+        eventBased: []
       };
-      narrative = `Aggregated crime trends computed successfully. Trend chart provides comparative timelines over the last 120 days along with district-level volume breakdowns.`;
+
+      const seasonalData = await db.execute(`
+        SELECT 
+          CASE 
+            WHEN CAST(strftime('%m', date_reported) AS INTEGER) IN (6,7,8) THEN 'Monsoon (Jun-Aug)'
+            WHEN CAST(strftime('%m', date_reported) AS INTEGER) IN (9,10,11) THEN 'Post-Monsoon (Sep-Nov)'
+            WHEN CAST(strftime('%m', date_reported) AS INTEGER) IN (12,1,2) THEN 'Winter (Dec-Feb)'
+            ELSE 'Summer (Mar-May)'
+          END as season,
+          crime_type,
+          COUNT(*) as count
+        FROM FIR
+        GROUP BY season, crime_type
+        ORDER BY season, count DESC
+      `);
+
+      const seasonalMap = {};
+      seasonalData.forEach(row => {
+        if (!seasonalMap[row.season]) seasonalMap[row.season] = {};
+        seasonalMap[row.season][row.crime_type] = row.count;
+      });
+      data.seasonal = seasonalMap;
+
+      const eventBasedData = await db.execute(`
+        SELECT f.district, f.crime_type, COUNT(*) as incident_count,
+               MIN(f.date_reported) as start_date, MAX(f.date_reported) as end_date
+        FROM FIR f
+        GROUP BY f.district, f.crime_type, strftime('%Y-%m-%d', f.date_reported, '-3 days')
+        HAVING incident_count >= 2
+        ORDER BY incident_count DESC
+        LIMIT 10
+      `);
+      data.eventBased = eventBasedData;
+
+      narrative = `Aggregated crime trends computed successfully. Includes monthly timelines, district-level breakdowns, seasonal pattern analysis across ${Object.keys(seasonalMap).length} seasons, and ${eventBasedData.length} event-based cluster detections.`;
     }
 
     // -------------------------------------------------------------
@@ -619,8 +671,51 @@ module.exports = async (queryText, userId, role) => {
     // TOOL: TEXT RAG (DEFAULT FALLBACK)
     // -------------------------------------------------------------
     if (tool === "text") {
-      const qml = catalyst.quickML();
-      let records = await qml.rag.retrieve(queryText, 5);
+      let records = [];
+      const firMatch = queryText.match(/(FIR-\d{4}-\d{3,4})/i);
+      
+      if (firMatch) {
+        const targetFir = firMatch[1].toUpperCase();
+        const firRows = await db.execute(`
+          SELECT f.*, 
+                 (SELECT GROUP_CONCAT(name, ', ') FROM Accused WHERE fir_id = f.id) as accused_names,
+                 (SELECT GROUP_CONCAT(name, ', ') FROM Victim WHERE fir_id = f.id) as victim_names
+          FROM FIR f
+          WHERE f.fir_number = ?
+        `, [targetFir]);
+        
+        if (firRows.length > 0) {
+          records = firRows.map(row => ({
+            id: row.id,
+            fir_number: row.fir_number,
+            district: row.district,
+            police_station: row.police_station,
+            crime_type: row.crime_type,
+            status: row.status,
+            date_reported: row.date_reported,
+            description: row.description,
+            modus_operandi: row.modus_operandi,
+            accused: row.accused_names ? row.accused_names.split(', ') : [],
+            victims: row.victim_names ? row.victim_names.split(', ') : []
+          }));
+        }
+      }
+
+      if (records.length === 0) {
+        try {
+          const qml = catalyst.quickML();
+          const ragRecords = await qml.rag.retrieve(queryText, 5);
+          records = ragRecords || [];
+        } catch (e) {
+          console.warn("RAG retrieval failed, fallback to SQL search:", e.message);
+          records = await db.execute(`
+            SELECT id, fir_number, district, police_station, crime_type, status, date_reported, description, modus_operandi
+            FROM FIR
+            WHERE description LIKE ? OR modus_operandi LIKE ? OR fir_number LIKE ?
+            LIMIT 3
+          `, [`%${queryText}%`, `%${queryText}%`, `%${queryText}%`]);
+        }
+      }
 
       if (scope && scope.type !== 'statewide') {
         records = records.filter(r => {
@@ -635,7 +730,8 @@ module.exports = async (queryText, userId, role) => {
 
       if (records.length > 0) {
         const topResult = records[0];
-        narrative = `Based on natural language intelligence search (RAG retrieval), found matching case file: **${topResult.fir_number}** in ${topResult.district}. Details:\n- **Crime Category**: ${topResult.crime_type}\n- **Modus Operandi**: ${topResult.modus_operandi}\n- **Case Description**: ${topResult.description}`;
+        const accusedStr = topResult.accused && topResult.accused.length > 0 ? topResult.accused.join(', ') : 'None';
+        narrative = `Based on natural language intelligence search, found matching case file: **${topResult.fir_number}** in ${topResult.district}. Details:\n- **Crime Category**: ${topResult.crime_type}\n- **Accused Suspects**: ${accusedStr}\n- **Modus Operandi**: ${topResult.modus_operandi}\n- **Case Description**: ${topResult.description}`;
       } else {
         narrative = `I scanned the intelligence database but could not find specific case documents matching your exact query within your jurisdiction. Please refine the case numbers or search keywords.`;
       }
@@ -758,6 +854,90 @@ module.exports = async (queryText, userId, role) => {
 
       data = { units: filteredUnits, logs: filteredLogs };
       narrative = `Accessed live Emergency KSP 112 Dispatch desk logs. Loaded fleet status registry (${filteredUnits.length} vehicles). Patrol units are on-standby for AI routing dispatch.`;
+    }
+
+    // -------------------------------------------------------------
+    // TOOL: INVESTIGATION TIMELINE
+    // -------------------------------------------------------------
+    if (tool === "timeline") {
+      let firId = null;
+      if (extractedParams.fir_number) {
+        const firRows = await db.execute('SELECT id FROM FIR WHERE fir_number = ?', [extractedParams.fir_number]);
+        if (firRows.length > 0) firId = firRows[0].id;
+      }
+      if (!firId) {
+        let sql = 'SELECT id FROM FIR';
+        let params = [];
+        if (scope && scope.type !== 'statewide') {
+          if (scope.type === 'station') { sql += ' WHERE police_station = ?'; params.push(scope.value); }
+          else if (scope.type === 'district') { sql += ' WHERE district = ?'; params.push(scope.value); }
+        }
+        sql += ' ORDER BY date_reported DESC LIMIT 1';
+        const recent = await db.execute(sql, params);
+        if (recent.length > 0) firId = recent[0].id;
+      }
+      if (firId) {
+        const result = await investigationTimeline(firId);
+        if (result.success) {
+          data = result;
+          narrative = `Investigation timeline generated with ${result.timeline.length} events for ${result.summary.overview.fir_number}. Case involves ${result.suspects.length} suspects. ${result.leads.length} investigative leads identified. ${result.summary.escalations.length} escalation flags raised.`;
+        } else {
+          tool = "text";
+        }
+      } else {
+        tool = "text";
+      }
+    }
+
+    // -------------------------------------------------------------
+    // TOOL: EARLY WARNING / ENHANCED ALERTS
+    // -------------------------------------------------------------
+    if (tool === "early_warning") {
+      const result = await earlyWarning(scope);
+      if (result.success) {
+        data = result;
+        narrative = `Enhanced early warning intelligence: ${result.summary.total_alerts} alerts detected — ${result.summary.critical_count} Critical, ${result.summary.high_count} High. ${result.summary.repeat_offenders} repeat offenders, ${result.summary.active_gangs} active gangs, ${result.summary.escalations} escalation patterns, ${result.summary.temporal_surges} temporal surges.`;
+      } else {
+        tool = "text";
+      }
+    }
+
+    // -------------------------------------------------------------
+    // TOOL: CASE SUMMARY
+    // -------------------------------------------------------------
+    if (tool === "case_summary") {
+      let firId = null;
+      if (extractedParams.fir_number) {
+        const firRows = await db.execute('SELECT id FROM FIR WHERE fir_number = ?', [extractedParams.fir_number]);
+        if (firRows.length > 0) firId = firRows[0].id;
+      }
+      if (!firId) {
+        let sql = 'SELECT id FROM FIR';
+        let params = [];
+        if (scope && scope.type !== 'statewide') {
+          if (scope.type === 'station') { sql += ' WHERE police_station = ?'; params.push(scope.value); }
+          else if (scope.type === 'district') { sql += ' WHERE district = ?'; params.push(scope.value); }
+        }
+        sql += ' ORDER BY date_reported DESC LIMIT 1';
+        const recent = await db.execute(sql, params);
+        if (recent.length > 0) firId = recent[0].id;
+      }
+      if (firId) {
+        const result = await caseSummary(firId);
+        if (result.success) {
+          data = result;
+          narrative = result.summary.executive;
+        } else {
+          tool = "text";
+        }
+      }
+    }
+    // -------------------------------------------------------------
+    // TOOL: GENERAL Q&A
+    // -------------------------------------------------------------
+    if (tool === "general") {
+      data = null;
+      narrative = "Direct question processing...";
     }
 
     // Append RLS warning badge if active

@@ -102,7 +102,7 @@ export const PolicymakerDashboard: React.FC<PolicymakerDashboardProps> = ({ user
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-slate-900/40 border border-slate-850 rounded-lg p-4">
+      <div className="bg-slate-900/40 border border-slate-800 rounded-lg p-4">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-xl font-bold text-white flex items-center gap-2">

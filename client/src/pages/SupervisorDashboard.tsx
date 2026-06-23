@@ -128,7 +128,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
     }
     setSubmittingOverride(true);
     try {
-      const response = await fetch('http://localhost:3001/api/audit-logs/override', {
+      const response = await fetch('/api/audit-logs/override', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -274,7 +274,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
   return (
     <div className="space-y-6">
       {/* Header section */}
-      <div className="flex justify-between items-center bg-slate-900/40 border border-slate-850 rounded-lg p-4 bg-white border-slate-200">
+      <div className="flex justify-between items-center bg-slate-900/40 border border-slate-800 rounded-lg p-4 bg-white border-slate-200">
         <div>
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <ShieldCheck className="text-brand-primary" /> Supervision & Audit Management
@@ -287,7 +287,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
           <button
             onClick={fetchSupervisorData}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 disabled:bg-slate-200 text-slate-650 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer shrink-0 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 disabled:bg-slate-200 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold cursor-pointer shrink-0 transition"
           >
             {loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCcw size={12} />}
             <span>Sync Dashboard</span>
@@ -466,10 +466,14 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                             </span>
                           </td>
                           <td className="p-3 whitespace-nowrap text-center">
-                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${
-                              log.data_classification === 'Secret' || log.data_classification === 'Confidential'
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
+                              log.data_classification === 'Top Secret'
+                                ? 'bg-red-600 text-white border-red-700'
+                                : log.data_classification === 'Secret'
                                 ? 'bg-red-50 text-red-700 border-red-200'
-                                : 'bg-emerald-50 text-emerald-750 border-emerald-200'
+                                : log.data_classification === 'Confidential' || log.data_classification === 'SENSITIVE'
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-slate-50 text-slate-600 border-slate-200'
                             }`}>
                               {log.data_classification || 'Restricted'}
                             </span>
@@ -506,7 +510,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="px-2.5 py-1 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-white text-slate-650 border border-slate-200 rounded text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed transition"
+                      className="px-2.5 py-1 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-white text-slate-600 border border-slate-200 rounded text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed transition"
                     >
                       Prev
                     </button>
@@ -516,7 +520,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className="px-2.5 py-1 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-white text-slate-650 border border-slate-200 rounded text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed transition"
+                      className="px-2.5 py-1 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-white text-slate-600 border border-slate-200 rounded text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed transition"
                     >
                       Next
                     </button>
@@ -572,7 +576,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                         </span>
                       </div>
                       
-                      <p className="text-slate-650 mt-1.5 font-medium leading-relaxed">{log.details}</p>
+                      <p className="text-slate-600 mt-1.5 font-medium leading-relaxed">{log.details}</p>
                       
                       <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-slate-100 text-[10px] text-slate-400">
                         <span>Time: <strong>{log.time}</strong> • Caller: <strong>{log.caller}</strong></span>
@@ -631,7 +635,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                         </div>
                       </div>
 
-                      <div className="bg-white p-2.5 rounded border border-slate-250">
+                      <div className="bg-white p-2.5 rounded border border-slate-200">
                         <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Optimized Patrol Path</span>
                         <p className="text-slate-600 italic leading-relaxed">{dispatchRecommendation.routeDescription}</p>
                       </div>
@@ -858,7 +862,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
 
             {/* Justification Textarea */}
             <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-slate-455 uppercase tracking-wider">Justification Note</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Justification Note</label>
               <textarea
                 value={overrideJustification}
                 onChange={(e) => setOverrideJustification(e.target.value)}
@@ -875,7 +879,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                 type="button"
                 onClick={() => setShowOverrideModal(false)}
                 disabled={submittingOverride}
-                className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-650 font-bold text-xs uppercase tracking-wider py-2.5 rounded-lg border border-slate-200 transition cursor-pointer"
+                className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-xs uppercase tracking-wider py-2.5 rounded-lg border border-slate-200 transition cursor-pointer"
               >
                 Cancel
               </button>

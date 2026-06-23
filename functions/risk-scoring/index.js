@@ -5,12 +5,14 @@ module.exports = async (accusedName, modifiers = {}, scope = null) => {
     const db = catalyst.datastore();
     
     // Find accused details (selecting police_station for RLS checks)
+    // Use REPLACE to handle LLM-generated names that may differ from DB (e.g., quotes around aliases)
     const accusedRecords = await db.execute(`
       SELECT a.*, f.fir_number, f.crime_type, f.district, f.police_station, f.date_reported
       FROM Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE a.name LIKE ?
-    `, [`%${accusedName}%`]);
+         OR REPLACE(a.name, '''', '') LIKE ?
+    `, [`%${accusedName}%`, `%${accusedName}%`]);
 
     if (accusedRecords.length === 0) {
       return { success: false, message: `No accused profile found matching '${accusedName}'` };
@@ -141,6 +143,7 @@ module.exports = async (accusedName, modifiers = {}, scope = null) => {
       threat_level: threatLevel,
       factors: factors,
       recommendation: recommendation,
+      behavioral_profile: {},
       incidents: accusedRecords.map(r => {
         const inScope = !scope || scope.type === 'statewide' || 
           (scope.type === 'station' && r.police_station === scope.value) ||
@@ -163,6 +166,44 @@ module.exports = async (accusedName, modifiers = {}, scope = null) => {
           };
         }
       })
+    };
+
+    // Behavioral Analysis
+    const crimeTypes = [...new Set(accusedRecords.map(r => r.crime_type))];
+    const districts = [...new Set(accusedRecords.map(r => r.district))];
+    const dateRange = accusedRecords.map(r => new Date(r.date_reported)).sort((a, b) => a - b);
+    const firstOffense = dateRange[0];
+    const lastOffense = dateRange[dateRange.length - 1];
+    const activePeriodDays = firstOffense && lastOffense ? Math.ceil((lastOffense - firstOffense) / (1000 * 60 * 60 * 24)) : 0;
+
+    const moPatterns = await db.execute(`
+      SELECT f.modus_operandi, COUNT(*) as count
+      FROM Accused a JOIN FIR f ON a.fir_id = f.id
+      WHERE a.name LIKE ? OR REPLACE(a.name, '''', '') LIKE ?
+      GROUP BY f.modus_operandi ORDER BY count DESC
+    `, [`%${accusedName}%`, `%${accusedName}%`]);
+
+    const escalationDetected = accusedRecords.length >= 2 &&
+      accusedRecords[accusedRecords.length - 1].risk_score > accusedRecords[0].risk_score;
+
+    const crossDistrict = districts.length > 1;
+
+    profile.behavioral_profile = {
+      crime_diversity: crimeTypes.length,
+      crime_types: crimeTypes,
+      geographic_reach: districts.length,
+      districts_active: districts,
+      active_period_days: activePeriodDays,
+      mo_patterns: moPatterns.map(m => ({ pattern: m.modus_operandi, frequency: m.count })),
+      escalation_detected: escalationDetected,
+      cross_district_operations: crossDistrict,
+      behavioral_classification: priorConvictions >= 3 ? 'Habitual/Professional'
+        : priorConvictions >= 1 ? 'Repeat Offender'
+        : gangAffiliation ? 'Gang-Associated'
+        : crimeTypes.length > 2 ? 'Versatile Offender'
+        : 'First-time/Specialist',
+      spatial_pattern: crossDistrict ? 'Mobile/Jurisdiction-hopping' : districts.length === 1 ? 'Localized' : 'Multi-district',
+      tempo_pattern: activePeriodDays < 30 ? 'Rapid-fire' : activePeriodDays < 180 ? 'Sustained campaign' : 'Long-term pattern'
     };
 
     return { success: true, profile };

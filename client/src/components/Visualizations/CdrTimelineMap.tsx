@@ -142,14 +142,14 @@ export const CdrTimelineMap: React.FC<CdrTimelineMapProps> = ({ data, mapId }) =
             CDR Trajectory map & Proximity Timeline
           </h4>
         </div>
-        <div className="flex items-center gap-1.5 bg-slate-850 px-2 py-0.5 rounded border border-slate-750 text-[10px] text-slate-400 font-bold uppercase">
+        <div className="flex items-center gap-1.5 bg-slate-850 px-2 py-0.5 rounded border border-slate-700 text-[10px] text-slate-400 font-bold uppercase">
           <Phone size={10} className="text-brand-primary animate-pulse" />
           <span>{data.carrier}</span>
         </div>
       </div>
 
       {/* Trajectory Details */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 bg-slate-950/45 p-3 rounded-lg border border-slate-850 text-xs">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 bg-slate-950/45 p-3 rounded-lg border border-slate-800 text-xs">
         <div>
           <span className="text-[10px] text-slate-500 font-bold uppercase">Suspect Target</span>
           <div className="font-bold text-slate-200">{data.suspect}</div>
@@ -183,7 +183,7 @@ export const CdrTimelineMap: React.FC<CdrTimelineMapProps> = ({ data, mapId }) =
       <div 
         ref={mapContainerRef} 
         id={mapId}
-        className="w-full h-[250px] bg-slate-950 rounded-lg border border-slate-850 mb-4 overflow-hidden relative z-10" 
+        className="w-full h-[250px] bg-slate-950 rounded-lg border border-slate-800 mb-4 overflow-hidden relative z-10" 
       />
 
       {/* Breadcrumbs Interactive Slider Timeline */}
@@ -215,7 +215,7 @@ export const CdrTimelineMap: React.FC<CdrTimelineMapProps> = ({ data, mapId }) =
                 className={`py-1 rounded text-[10px] font-bold border transition ${
                   idx === activeIndex
                     ? 'bg-brand-primary text-white border-brand-primary'
-                    : 'bg-slate-950 text-slate-400 border-slate-850 hover:border-slate-800'
+                    : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-800'
                 }`}
               >
                 Ping #{idx + 1}

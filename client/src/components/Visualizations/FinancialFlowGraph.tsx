@@ -197,7 +197,7 @@ export const FinancialFlowGraph: React.FC<FinancialFlowGraphProps> = ({
       {/* Network Container */}
       <div
         ref={containerRef}
-        className="w-full h-96 min-h-[400px] rounded-lg border border-slate-850 bg-slate-950/60 overflow-hidden cursor-grab active:cursor-grabbing"
+        className="w-full h-96 min-h-[400px] rounded-lg border border-slate-800 bg-slate-950/60 overflow-hidden cursor-grab active:cursor-grabbing"
       />
 
       {/* Legend */}

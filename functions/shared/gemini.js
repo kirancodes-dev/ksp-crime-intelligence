@@ -4,12 +4,31 @@ const https = require('https');
 // Initialize environment variables
 require('./dotenv').config();
 
+// --- Provider Configuration ---
+const USE_GROQ = process.env.USE_GROQ === 'true';
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+
 const USE_OLLAMA = process.env.USE_OLLAMA === 'true';
 const OLLAMA_HOST = '127.0.0.1';
 const OLLAMA_PORT = 11434;
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'gemma2:2b';
 
+const USE_GLM = process.env.USE_GLM === 'true';
+const GLM_API_KEY = process.env.GLM_API_KEY;
+const GLM_API_BASE = process.env.GLM_API_BASE || 'https://api.z.ai/api/paas/v4';
+const GLM_MODEL = process.env.GLM_MODEL || 'glm-5.2';
+const GLM_REASONING_EFFORT = process.env.GLM_REASONING_EFFORT || 'max';
+const GLM_ENABLE_THINKING = process.env.GLM_ENABLE_THINKING !== 'false';
+
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+// Log active LLM provider on startup
+const activeProvider = USE_GLM && (GLM_API_KEY || !GLM_API_BASE.includes('api.z.ai')) ? `GLM-5 (${GLM_MODEL})` :
+                       USE_GROQ && GROQ_API_KEY ? 'Groq (Llama 3.3 70B)' :
+                       process.env.GEMINI_API_KEY ? 'Google Gemini' :
+                       USE_OLLAMA ? 'Ollama (local)' : 'Mock (no LLM)';
+console.log(`🧠 LLM Provider: ${activeProvider}`);
 
 /**
  * Safely parses JSON response from LLM, stripping markdown wrappers or extracting
@@ -39,6 +58,67 @@ function parseJsonResponse(rawText) {
     }
     throw new Error(`Invalid JSON syntax in text: ${e.message}`);
   }
+}
+
+// ============================================================================
+//  HTTP Request Helpers
+// ============================================================================
+
+/**
+ * Helper to make POST requests to Groq API (OpenAI-compatible)
+ */
+function makeGroqRequest(payload) {
+  return new Promise((resolve, reject) => {
+    if (!GROQ_API_KEY) {
+      return reject(new Error('GROQ_API_KEY is not defined in environment'));
+    }
+
+    const dataString = JSON.stringify(payload);
+    const options = {
+      hostname: 'api.groq.com',
+      port: 443,
+      path: '/openai/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Length': Buffer.byteLength(dataString)
+      },
+      timeout: 30000 // 30s — Groq is usually sub-second
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.setEncoding('utf-8');
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(body));
+          } catch (e) {
+            reject(new Error('Failed to parse Groq response JSON'));
+          }
+        } else if (res.statusCode === 429) {
+          reject(new Error('GROQ_RATE_LIMITED'));
+        } else {
+          try {
+            const errorObj = JSON.parse(body);
+            reject(new Error(errorObj.error?.message || `Groq API returned status ${res.statusCode}`));
+          } catch (e) {
+            reject(new Error(`Groq API returned status ${res.statusCode}: ${body}`));
+          }
+        }
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Groq request timed out'));
+    });
+    req.write(dataString);
+    req.end();
+  });
 }
 
 /**
@@ -139,6 +219,10 @@ function makeGeminiRequest(payload) {
   });
 }
 
+// ============================================================================
+//  Prompts & Schema
+// ============================================================================
+
 /**
  * Route schema for structured classification output
  */
@@ -147,7 +231,7 @@ const routingSchema = {
   properties: {
     tool: {
       type: 'string',
-      description: 'The classified tool to query the database. Must be one of: risk, network, map, chart, finance, socio, similar, forecast, text, ocr, cdr, biometrics, dispatch.'
+      description: 'The classified tool to query the database. Must be one of: risk, network, map, chart, finance, socio, similar, forecast, text, ocr, cdr, biometrics, dispatch, timeline, early_warning, case_summary, general.'
     },
     parameters: {
       type: 'object',
@@ -172,11 +256,15 @@ Analyze the user's natural language query and classify it into one of the follow
 6. "socio" - Socio-demographic analysis, age groups, literacy rate, unemployment, or poverty.
 7. "similar" - Similar past cases matching target case.
 8. "forecast" - Early warnings or predicted hotspots.
-9. "text" - General queries, descriptions, modus operandi search, or text lookup.
+9. "text" - Search descriptions, modus operandi search, or text lookup.
 10. "ocr" - Vernacular document OCR scanning, translation, or entity analysis.
 11. "cdr" - Call Detail Record cell tower trajectory timeline or spatial collision analysis.
 12. "biometrics" - Facial recognition, mugshot similarity searches, or biometric matching.
 13. "dispatch" - Emergency 112 dispatch logs, patrol status, or vehicle routing.
+14. "timeline" - Investigation timeline, chronology of events, case progress, or sequence of events for a specific case.
+15. "early_warning" - Repeat crime alerts, gang activity detection, crime escalation patterns, temporal crime surges, or enhanced early warning intelligence.
+16. "case_summary" - Case summary, case brief, case dossier, automated case report, or case file overview.
+17. "general" - General questions, criminology definitions, explanations, standard Q&A, or general knowledge queries unrelated to a specific database record search.
 
 Extract any specific parameters:
 - "accused_name": Accused name.
@@ -186,7 +274,7 @@ Extract any specific parameters:
 
 You MUST respond strictly in valid JSON format matching this schema:
 {
-  "tool": "risk" | "network" | "map" | "chart" | "finance" | "socio" | "similar" | "forecast" | "text" | "ocr" | "cdr" | "biometrics" | "dispatch",
+  "tool": "risk" | "network" | "map" | "chart" | "finance" | "socio" | "similar" | "forecast" | "text" | "ocr" | "cdr" | "biometrics" | "dispatch" | "timeline" | "early_warning" | "case_summary" | "general",
   "parameters": {
     "accused_name": "extracted_name_or_null",
     "district": "extracted_district_or_null",
@@ -197,128 +285,598 @@ You MUST respond strictly in valid JSON format matching this schema:
 Do not include any other text, explanations, markdown formatting, or code blocks. Return ONLY the raw JSON object.`;
 
 const narrativeSystemPrompt = `You are the AI Intelligence Assistant for the Karnataka State Police (KSP) Crime Intelligence Portal.
-Your job is to synthesize a professional, formal narrative response based on the user's query, triggered database tool, and retrieved records.
 
-Rules:
-- Write in a highly professional, formal, and authoritative tone suitable for senior law enforcement officers.
-- Never use casual language or emojis.
-- Present highlights, summaries, or anomalies found in the data. Be specific with names, dates, FIR numbers, and amounts.
-- Keep the response concise but informative (1 to 3 paragraphs).
-- If the data is empty or indicates no records were found, politely state that no matching records exist in the KSP database.
-- Maintain data accuracy: do not invent or hallucinate data that is not in the JSON.`;
+Your task: Given a user query, the tool used, and the database records returned, write a brief intelligence briefing.
+
+STRICT RULES:
+- Write 2-4 sentences MAXIMUM. Be extremely concise.
+- Start with a direct answer to the user's question.
+- If the user query is a general, informational, or analytical question (e.g., asking for definitions, explanations, criminology concepts, or how a score is calculated), answer it directly using your internal knowledge.
+- If the tool is 'general', answer the question directly. No database records are provided.
+- If the provided database data is unrelated to the user's general question, ignore the unrelated data and answer the question directly.
+- For specific data lookups (e.g., searching for specific suspects, cases, or transactions), rely strictly on the provided data and mention specific numbers, names, FIR numbers, or amounts.
+- Use formal law enforcement tone. No casual language.
+- Do NOT describe the data structure or JSON format.
+- If it is a database record search query and no matching data is found, say "No matching records found in the KSP database for this query."`;
+
+// ============================================================================
+//  Provider-specific LLM call functions
+// ============================================================================
 
 /**
- * Route query to matching tool using selected LLM (Ollama or Gemini)
+ * Call Groq API (OpenAI-compatible chat completions)
  */
-async function routeQuery(queryText) {
-  const isLlmConfigured = USE_OLLAMA || process.env.GEMINI_API_KEY;
-  if (!isLlmConfigured) {
+async function callGroq(systemPrompt, userMessage, jsonMode = false) {
+  const payload = {
+    model: GROQ_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage }
+    ],
+    temperature: jsonMode ? 0.1 : 0.2,
+    max_tokens: jsonMode ? 300 : 500,
+    stream: false
+  };
+
+  if (jsonMode) {
+    payload.response_format = { type: 'json_object' };
+  }
+
+  const result = await makeGroqRequest(payload);
+  const content = result.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Empty response from Groq');
+  return content.trim();
+}
+
+/**
+ * Call Ollama API (local)
+ */
+async function callOllama(systemPrompt, userMessage, jsonMode = false) {
+  const payload = {
+    model: OLLAMA_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage }
+    ],
+    stream: false,
+    options: { temperature: jsonMode ? 0.1 : 0.2, num_predict: jsonMode ? 300 : 200, num_ctx: 2048 }
+  };
+
+  if (jsonMode) {
+    payload.format = 'json';
+  }
+
+  const result = await makeOllamaRequest(payload);
+  const content = result.message?.content;
+  if (!content) throw new Error('Empty response from Ollama');
+  return content.trim();
+}
+
+/**
+ * Call Gemini API
+ */
+async function callGemini(systemPrompt, userMessage, jsonMode = false) {
+  const payload = {
+    contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    generationConfig: { temperature: jsonMode ? 0.1 : 0.3 }
+  };
+
+  if (jsonMode) {
+    payload.generationConfig.responseMimeType = 'application/json';
+    payload.generationConfig.responseSchema = routingSchema;
+  }
+
+  const result = await makeGeminiRequest(payload);
+  const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Empty response from Gemini');
+  return text.trim();
+}
+
+/**
+ * Helper to make POST requests to GLM-5 API (OpenAI-compatible)
+ */
+function makeGLMRequest(payload) {
+  return new Promise((resolve, reject) => {
+    if (!GLM_API_KEY && GLM_API_BASE.includes('api.z.ai')) {
+      return reject(new Error('GLM_API_KEY is not defined in environment'));
+    }
+
+    const { URL } = require('url');
+    const dataString = JSON.stringify(payload);
+    const targetUrl = new URL(`${GLM_API_BASE}/chat/completions`);
+    const isHttps = targetUrl.protocol === 'https:';
+    const reqLib = isHttps ? https : http;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(dataString)
+    };
+
+    if (GLM_API_KEY) {
+      headers['Authorization'] = `Bearer ${GLM_API_KEY}`;
+    }
+
+    const options = {
+      method: 'POST',
+      headers: headers,
+      timeout: 60000 // 60s timeout
+    };
+
+    const req = reqLib.request(targetUrl, options, (res) => {
+      let body = '';
+      res.setEncoding('utf-8');
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(body));
+          } catch (e) {
+            reject(new Error('Failed to parse GLM response JSON'));
+          }
+        } else {
+          try {
+            const errorObj = JSON.parse(body);
+            reject(new Error(errorObj.error?.message || `GLM API returned status ${res.statusCode}`));
+          } catch (e) {
+            reject(new Error(`GLM API returned status ${res.statusCode}: ${body}`));
+          }
+        }
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('GLM request timed out'));
+    });
+    req.write(dataString);
+    req.end();
+  });
+}
+
+/**
+ * Helper to stream GLM response chunk-by-chunk
+ */
+function makeGLMStreamRequest(payload, onToken) {
+  return new Promise((resolve, reject) => {
+    if (!GLM_API_KEY && GLM_API_BASE.includes('api.z.ai')) {
+      return reject(new Error('GLM_API_KEY is not defined in environment'));
+    }
+
+    const { URL } = require('url');
+    const dataString = JSON.stringify({ ...payload, stream: true });
+    const targetUrl = new URL(`${GLM_API_BASE}/chat/completions`);
+    const isHttps = targetUrl.protocol === 'https:';
+    const reqLib = isHttps ? https : http;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(dataString)
+    };
+
+    if (GLM_API_KEY) {
+      headers['Authorization'] = `Bearer ${GLM_API_KEY}`;
+    }
+
+    const options = {
+      method: 'POST',
+      headers: headers,
+      timeout: 60000
+    };
+
+    const req = reqLib.request(targetUrl, options, (res) => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        let body = '';
+        res.on('data', (chunk) => body += chunk);
+        res.on('end', () => {
+          reject(new Error(`GLM API returned status ${res.statusCode}: ${body}`));
+        });
+        return;
+      }
+
+      res.setEncoding('utf-8');
+      let buffer = '';
+
+      res.on('data', (chunk) => {
+        buffer += chunk;
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Save partial line
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed === 'data: [DONE]') continue;
+
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              const content = data.choices?.[0]?.delta?.content;
+              if (content) {
+                onToken(content);
+              }
+            } catch (e) {
+              // Ignore parsing errors on partial streams
+            }
+          }
+        }
+      });
+
+      res.on('end', () => {
+        if (buffer && buffer.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(buffer.slice(6));
+            const content = data.choices?.[0]?.delta?.content;
+            if (content) {
+              onToken(content);
+            }
+          } catch (e) {}
+        }
+        resolve();
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('GLM request timed out'));
+    });
+    req.write(dataString);
+    req.end();
+  });
+}
+
+/**
+ * Call GLM API
+ */
+async function callGLM(systemPrompt, userMessage, jsonMode = false) {
+  const payload = {
+    model: GLM_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage }
+    ],
+    temperature: jsonMode ? 0.1 : 0.2,
+    max_tokens: jsonMode ? 300 : 500
+  };
+
+  // Add thinking control params if thinking is disabled or reasoning effort is custom
+  if (!GLM_ENABLE_THINKING) {
+    payload.enable_thinking = false;
+  } else if (GLM_REASONING_EFFORT === 'high') {
+    payload.reasoning_effort = 'high';
+  }
+
+  if (jsonMode) {
+    payload.response_format = { type: 'json_object' };
+  }
+
+  const result = await makeGLMRequest(payload);
+  const content = result.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Empty response from GLM');
+  return content.trim();
+}
+
+
+// ============================================================================
+//  Unified LLM call with automatic fallback chain
+// ============================================================================
+
+/**
+ * Calls the best available LLM with automatic fallback.
+ * Priority: Groq → Gemini → Ollama
+ * Returns: { success, content, provider }
+ */
+async function callLLM(systemPrompt, userMessage, jsonMode = false) {
+  const providers = [];
+
+  // Build the provider chain in priority order
+  if (USE_GLM && (GLM_API_KEY || !GLM_API_BASE.includes('api.z.ai'))) {
+    providers.push({ name: 'glm', fn: () => callGLM(systemPrompt, userMessage, jsonMode) });
+  }
+  if (USE_GROQ && GROQ_API_KEY) {
+    providers.push({ name: 'groq', fn: () => callGroq(systemPrompt, userMessage, jsonMode) });
+  }
+  if (process.env.GEMINI_API_KEY) {
+    providers.push({ name: 'gemini', fn: () => callGemini(systemPrompt, userMessage, jsonMode) });
+  }
+  if (USE_OLLAMA) {
+    providers.push({ name: 'ollama', fn: () => callOllama(systemPrompt, userMessage, jsonMode) });
+  }
+
+  if (providers.length === 0) {
     return { success: false, reason: 'missing_llm_config' };
   }
 
-  if (USE_OLLAMA) {
-    const payload = {
-      model: OLLAMA_MODEL,
-      messages: [
-        { role: 'system', content: routingSystemPrompt },
-        { role: 'user', content: `User Query: "${queryText}"` }
-      ],
-      stream: false,
-      format: 'json',
-      options: { temperature: 0.1 }
-    };
+  for (const provider of providers) {
     try {
-      const result = await makeOllamaRequest(payload);
-      const content = result.message?.content;
-      if (!content) throw new Error('Empty response from Ollama');
-      
-      const classification = parseJsonResponse(content);
-      if (!classification || !classification.tool) {
-        throw new Error('Invalid classification format: missing tool');
-      }
-      if (!classification.parameters) {
-        classification.parameters = { accused_name: null, district: null, crime_type: null, fir_number: null };
-      }
-      return { success: true, classification };
+      const content = await provider.fn();
+      return { success: true, content, provider: provider.name };
     } catch (error) {
-      return { success: false, error: error.message };
+      console.warn(`⚠️  ${provider.name} failed: ${error.message}`);
+      // If rate-limited or failed, try next provider
+      continue;
     }
-  } else {
-    const payload = {
-      contents: [{ role: 'user', parts: [{ text: `User Query: "${queryText}"` }] }],
-      systemInstruction: {
-        parts: [{ text: routingSystemPrompt }]
-      },
-      generationConfig: { responseMimeType: 'application/json', responseSchema: routingSchema, temperature: 0.1 }
-    };
-    try {
-      const result = await makeGeminiRequest(payload);
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error('Empty response from Gemini');
-      
-      const classification = parseJsonResponse(text);
-      if (!classification || !classification.tool) {
-        throw new Error('Invalid classification format: missing tool');
-      }
-      if (!classification.parameters) {
-        classification.parameters = { accused_name: null, district: null, crime_type: null, fir_number: null };
-      }
-      return { success: true, classification };
-    } catch (error) {
-      return { success: false, error: error.message };
+  }
+
+  return { success: false, error: 'All LLM providers failed' };
+}
+
+// ============================================================================
+//  Public API: routeQuery & generateNarrative
+// ============================================================================
+
+/**
+ * Route query to matching tool using the best available LLM
+ */
+async function routeQuery(queryText) {
+  const userMessage = `User Query: "${queryText}"`;
+  const result = await callLLM(routingSystemPrompt, userMessage, true);
+
+  if (!result.success) {
+    return { success: false, reason: result.reason || result.error };
+  }
+
+  try {
+    const classification = parseJsonResponse(result.content);
+    if (!classification || !classification.tool) {
+      throw new Error('Invalid classification format: missing tool');
     }
+    if (!classification.parameters) {
+      classification.parameters = { accused_name: null, district: null, crime_type: null, fir_number: null };
+    }
+    return { success: true, classification, provider: result.provider };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 }
 
 /**
- * Generate narrative response using selected LLM (Ollama or Gemini)
+ * Summarize retrieved data to reduce token count for LLMs
+ */
+function summarizeData(toolName, data) {
+  if (!data) return 'No data';
+  
+  if (toolName === 'map' && Array.isArray(data)) {
+    if (data.length === 0) return 'No location records found';
+    const districts = {};
+    data.forEach(d => { districts[d.district] = (districts[d.district] || 0) + 1; });
+    const types = {};
+    data.forEach(d => { types[d.crime_type] = (types[d.crime_type] || 0) + 1; });
+    return `${data.length} crime locations. Districts: ${JSON.stringify(districts)}. Crime types: ${JSON.stringify(types)}. Sample: ${data[0].fir_number} at ${data[0].address}`;
+  }
+  
+  if (toolName === 'network' && data && data.nodes) {
+    return `Network: ${data.nodes.length} nodes, ${data.edges?.length || 0} edges. Nodes: ${data.nodes.slice(0,5).map(n => n.label + '(' + n.type + ')').join(', ')}`;
+  }
+  
+  if (toolName === 'chart' && data && data.monthly) {
+    return `Trends: ${data.monthly.length} months. Districts: ${data.district?.length || 0}. Seasonal: ${Object.keys(data.seasonal || {}).join(', ')}`;
+  }
+  
+  if (toolName === 'risk' && data && data.name) {
+    return `Suspect: ${data.name}, Score: ${(data.overall_score*100).toFixed(0)}%, Threat: ${data.threat_level}. Factors: ${data.factors?.map(f=>f.factor).join(', ')}. Incidents: ${data.incidents?.length || 0}`;
+  }
+  
+  if (toolName === 'finance' && data) {
+    if (data.nodes) return `Financial: ${data.nodes.length} accounts, ${data.edges?.length || 0} transfers. Total: Rs ${data.totalAmount?.toLocaleString('en-IN') || 0}. Suspicious: ${data.suspiciousCount || 0}`;
+    if (data.overview) return `Financial overview: ${data.overview.length} FIRs with transactions`;
+  }
+  
+  if (toolName === 'socio' && data && data.demographics) {
+    return `Demographics: ${data.demographics.ageGroups?.length || 0} age groups, ${data.genderSplit?.length || 0} genders. Socio correlation: ${data.socioCorrelation?.length || 0} districts`;
+  }
+  
+  if (toolName === 'similar' && data && data.similarCases) {
+    return `Target: ${data.targetCase?.fir_number}. ${data.similarCases.length} similar cases found. Leads: ${data.investigativeLeads?.length || 0}`;
+  }
+  
+  if (toolName === 'forecast' && Array.isArray(data)) {
+    return `${data.length} forecasts. ${data.filter(f=>f.risk_level==='Critical').length} Critical, ${data.filter(f=>f.risk_level==='High').length} High risk predictions`;
+  }
+  
+  if (toolName === 'timeline' && data && data.timeline) {
+    return `Timeline: ${data.timeline.length} events for ${data.summary?.overview?.fir_number}. Leads: ${data.summary?.leads?.length || 0}. Escalations: ${data.summary?.escalations?.length || 0}`;
+  }
+  
+  if (toolName === 'early_warning' && data && data.alerts) {
+    return `Early Warning: ${data.summary?.total_alerts || 0} alerts. Critical: ${data.summary?.critical_count || 0}. Repeat offenders: ${data.summary?.repeat_offenders || 0}. Gangs: ${data.summary?.active_gangs || 0}`;
+  }
+  
+  if (toolName === 'case_summary' && data && data.summary) {
+    return `Case: ${data.summary.overview?.fir_number}. ${data.summary.executive?.substring(0, 200)}`;
+  }
+  
+  if (Array.isArray(data)) {
+    if (data.length === 0) return 'Empty result set';
+    return `Array of ${data.length} records. First: ${JSON.stringify(data[0]).substring(0, 300)}`;
+  }
+  if (typeof data === 'object') {
+    return JSON.stringify(data).substring(0, 800);
+  }
+  return String(data).substring(0, 500);
+}
+
+/**
+ * Generate narrative response using the best available LLM
+ */
+/**
+ * Generate narrative response using the best available LLM
  */
 async function generateNarrative(queryText, toolName, retrievedData) {
-  const isLlmConfigured = USE_OLLAMA || process.env.GEMINI_API_KEY;
-  if (!isLlmConfigured) {
-    return { success: false, reason: 'missing_llm_config' };
+  const summarized = summarizeData(toolName, retrievedData);
+  const inputContext = `Query: "${queryText}"\nTool: ${toolName}\nData: ${summarized}`;
+
+  const result = await callLLM(narrativeSystemPrompt, inputContext, false);
+
+  if (!result.success) {
+    return { success: false, reason: result.reason || result.error };
   }
 
-  const inputContext = `User Query: "${queryText}"\nTriggered Tool: ${toolName}\nDatabase Records: ${JSON.stringify(retrievedData, null, 2)}`;
+  return { success: true, narrative: result.content, provider: result.provider };
+}
 
-  if (USE_OLLAMA) {
-    const payload = {
-      model: OLLAMA_MODEL,
-      messages: [
-        { role: 'system', content: narrativeSystemPrompt },
-        { role: 'user', content: inputContext }
-      ],
-      stream: false,
-      options: { temperature: 0.3 }
-    };
-    try {
-      const result = await makeOllamaRequest(payload);
-      const narrative = result.message?.content;
-      if (!narrative) throw new Error('Empty response from Ollama');
-      return { success: true, narrative: narrative.trim() };
-    } catch (error) {
-      return { success: false, error: error.message };
+/**
+ * Helper to stream Groq response chunk-by-chunk
+ */
+function makeGroqStreamRequest(payload, onToken) {
+  return new Promise((resolve, reject) => {
+    if (!GROQ_API_KEY) {
+      return reject(new Error('GROQ_API_KEY is not defined in environment'));
     }
-  } else {
-    const payload = {
-      contents: [{ role: 'user', parts: [{ text: inputContext }] }],
-      systemInstruction: {
-        parts: [{ text: narrativeSystemPrompt }]
+
+    const dataString = JSON.stringify({ ...payload, stream: true });
+    const options = {
+      hostname: 'api.groq.com',
+      port: 443,
+      path: '/openai/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Length': Buffer.byteLength(dataString)
       },
-      generationConfig: { temperature: 0.3 }
+      timeout: 30000
     };
+
+    const req = https.request(options, (res) => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        let body = '';
+        res.on('data', (chunk) => body += chunk);
+        res.on('end', () => {
+          reject(new Error(`Groq API returned status ${res.statusCode}: ${body}`));
+        });
+        return;
+      }
+
+      res.setEncoding('utf-8');
+      let buffer = '';
+
+      res.on('data', (chunk) => {
+        buffer += chunk;
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Save partial line
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed === 'data: [DONE]') continue;
+
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              const content = data.choices?.[0]?.delta?.content;
+              if (content) {
+                onToken(content);
+              }
+            } catch (e) {
+              // Ignore parsing errors on partial streams
+            }
+          }
+        }
+      });
+
+      res.on('end', () => {
+        if (buffer && buffer.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(buffer.slice(6));
+            const content = data.choices?.[0]?.delta?.content;
+            if (content) {
+              onToken(content);
+            }
+          } catch (e) {}
+        }
+        resolve();
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Groq request timed out'));
+    });
+    req.write(dataString);
+    req.end();
+  });
+}
+
+/**
+ * Stream narrative response chunk-by-chunk with fallbacks
+ */
+async function generateNarrativeStream(queryText, toolName, retrievedData, onToken, onMeta) {
+  const summarized = summarizeData(toolName, retrievedData);
+  const inputContext = `Query: "${queryText}"\nTool: ${toolName}\nData: ${summarized}`;
+
+  if (USE_GLM && (GLM_API_KEY || !GLM_API_BASE.includes('api.z.ai'))) {
     try {
-      const result = await makeGeminiRequest(payload);
-      const narrative = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!narrative) throw new Error('Empty response from Gemini');
-      return { success: true, narrative: narrative.trim() };
+      const payload = {
+        model: GLM_MODEL,
+        messages: [
+          { role: 'system', content: narrativeSystemPrompt },
+          { role: 'user', content: inputContext }
+        ],
+        temperature: 0.2,
+        max_tokens: 500
+      };
+      if (!GLM_ENABLE_THINKING) {
+        payload.enable_thinking = false;
+      } else if (GLM_REASONING_EFFORT === 'high') {
+        payload.reasoning_effort = 'high';
+      }
+      onMeta({ provider: 'glm' });
+      await makeGLMStreamRequest(payload, onToken);
+      return { success: true, provider: 'glm' };
     } catch (error) {
-      return { success: false, error: error.message };
+      console.warn(`⚠️ GLM streaming failed: ${error.message}. Trying fallbacks...`);
     }
   }
+
+  if (USE_GROQ && GROQ_API_KEY) {
+    try {
+      const payload = {
+        model: GROQ_MODEL,
+        messages: [
+          { role: 'system', content: narrativeSystemPrompt },
+          { role: 'user', content: inputContext }
+        ],
+        temperature: 0.2,
+        max_tokens: 500
+      };
+      
+      onMeta({ provider: 'groq' });
+      await makeGroqStreamRequest(payload, onToken);
+      return { success: true, provider: 'groq' };
+    } catch (error) {
+      console.warn(`⚠️ Groq streaming failed: ${error.message}. Trying fallbacks...`);
+    }
+  }
+
+  // Fallback to non-streaming with simulated typing speed
+  const fallbackResult = await callLLM(narrativeSystemPrompt, inputContext, false);
+  if (fallbackResult.success) {
+    onMeta({ provider: fallbackResult.provider });
+    const content = fallbackResult.content;
+    const words = content.split(/(\s+)/);
+    for (const word of words) {
+      onToken(word);
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    return { success: true, provider: fallbackResult.provider };
+  }
+
+  // Final mock fallback
+  onMeta({ provider: 'mock' });
+  const mockText = `No dynamic narrative available. Sourced data from KSP database for ${toolName}.`;
+  const mockWords = mockText.split(/(\s+)/);
+  for (const word of mockWords) {
+    onToken(word);
+    await new Promise(resolve => setTimeout(resolve, 20));
+  }
+  return { success: true, provider: 'mock' };
 }
 
 module.exports = {
   routeQuery,
-  generateNarrative
+  generateNarrative,
+  generateNarrativeStream
 };

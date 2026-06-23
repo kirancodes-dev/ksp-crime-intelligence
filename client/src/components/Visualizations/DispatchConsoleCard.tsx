@@ -86,7 +86,7 @@ export const DispatchConsoleCard: React.FC<DispatchConsoleCardProps> = ({ data }
                 key={log.id} 
                 className={`p-3 rounded-lg border text-xs transition ${
                   log.status === 'Dispatched' 
-                    ? 'bg-slate-950/40 border-slate-850 opacity-75' 
+                    ? 'bg-slate-950/40 border-slate-800 opacity-75' 
                     : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                 }`}
               >
@@ -106,7 +106,7 @@ export const DispatchConsoleCard: React.FC<DispatchConsoleCardProps> = ({ data }
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleRecommend(log.id)}
-                      className="px-2.5 py-1 bg-slate-850 hover:bg-slate-800 border border-slate-750 text-slate-300 font-semibold rounded text-[10px] cursor-pointer flex items-center gap-1"
+                      className="px-2.5 py-1 bg-slate-850 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold rounded text-[10px] cursor-pointer flex items-center gap-1"
                     >
                       <Navigation size={10} className="text-brand-primary" />
                       Run AI Dispatch Router
@@ -145,7 +145,7 @@ export const DispatchConsoleCard: React.FC<DispatchConsoleCardProps> = ({ data }
             {data.units.map((unit) => (
               <div 
                 key={unit.id} 
-                className="flex items-center justify-between p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-xs"
+                className="flex items-center justify-between p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-xs"
               >
                 <div className="flex items-center gap-2">
                   <div className={`p-1.5 rounded bg-slate-900 border ${

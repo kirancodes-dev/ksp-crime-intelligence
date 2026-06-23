@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:3001/api';
+const BASE_URL = '/api';
 
 export interface ChatResponse {
   success: boolean;
@@ -119,6 +119,59 @@ export interface SocioDemographicResponse {
     literacyRate: number;
     povertyIndex: number;
   }>;
+}
+
+export interface SmartBrowzLog {
+  id: number;
+  timestamp: string;
+  category: string;
+  feature: string;
+  status: 'SUCCESS' | 'FAILED';
+  latency_ms: number;
+  size_kb: number | null;
+  details: string;
+}
+
+export interface SmartBrowzFeatureBreakdown {
+  category: string;
+  feature: string;
+  count: number;
+  successRate: number;
+}
+
+export interface SmartBrowzTrendPoint {
+  time: string;
+  requests: number;
+  success: number;
+  failed: number;
+}
+
+export interface SmartBrowzStatsResponse {
+  success: boolean;
+  stats: {
+    total: number;
+    successRate: number;
+    avgLatency: number;
+    totalSize: number;
+    features: SmartBrowzFeatureBreakdown[];
+    chartData: SmartBrowzTrendPoint[];
+    recentLogs: SmartBrowzLog[];
+  };
+  error?: string;
+}
+
+export interface SmartBrowzRunResponse {
+  success: boolean;
+  action: {
+    category: string;
+    feature: string;
+    status: 'SUCCESS' | 'FAILED';
+    latency: number;
+    sizeKb: number | null;
+    details: string;
+    timestamp: string;
+  };
+  logOutput: string[];
   error?: string;
 }
 
@@ -252,6 +305,22 @@ export const api = {
     });
     if (!response.ok) {
       throw new Error('Failed to fetch socio-demographic data');
+    }
+    return response.json();
+  },
+
+  /**
+   * Fetches real counts of database incidents for KPI statistics
+   */
+  async getDashboardStats(district: string, crimeType: string, userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/dashboard/stats?district=${encodeURIComponent(district)}&crimeType=${encodeURIComponent(crimeType)}`, {
+      headers: {
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch dashboard statistics');
     }
     return response.json();
   },
@@ -493,6 +562,65 @@ export const api = {
     });
     if (!response.ok) {
       throw new Error('Failed to bulk-update warrants');
+    }
+    return response.json();
+  },
+
+  async getInvestigationTimeline(firId: number, userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/timeline/${firId}`, {
+      headers: { 'X-User-Id': userId, 'X-User-Role': role },
+    });
+    if (!response.ok) throw new Error('Failed to fetch investigation timeline');
+    return response.json();
+  },
+
+  async getEarlyWarning(userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/early-warning`, {
+      headers: { 'X-User-Id': userId, 'X-User-Role': role },
+    });
+    if (!response.ok) throw new Error('Failed to fetch early warning intelligence');
+    return response.json();
+  },
+
+  async getCaseSummary(firId: number, userId: string, role: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/case-summary/${firId}`, {
+      headers: { 'X-User-Id': userId, 'X-User-Role': role },
+    });
+    if (!response.ok) throw new Error('Failed to fetch case summary');
+    return response.json();
+  },
+
+  /**
+   * Fetches aggregated SmartBrowz usage stats, breakdowns, and trend history.
+   */
+  async getSmartBrowzStats(timeFilter: string, userId: string, role: string): Promise<SmartBrowzStatsResponse> {
+    const response = await fetch(`${BASE_URL}/smartbrowz/stats?timeFilter=${timeFilter}`, {
+      headers: {
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch SmartBrowz statistics');
+    }
+    return response.json();
+  },
+
+  /**
+   * Triggers a simulated SmartBrowz browser control or convert task.
+   */
+  async triggerSmartBrowzAction(actionType: string, userId: string, role: string): Promise<SmartBrowzRunResponse> {
+    const response = await fetch(`${BASE_URL}/smartbrowz/run`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+        'X-User-Role': role,
+      },
+      body: JSON.stringify({ actionType }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to run SmartBrowz test action');
     }
     return response.json();
   },

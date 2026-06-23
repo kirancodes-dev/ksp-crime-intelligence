@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const authMiddleware = require('./auth-middleware/index');
 
 // Load function modules
@@ -9,6 +8,7 @@ const translate = require('./translate/index');
 const voice = require('./voice/index');
 const pdfExport = require('./pdf-export/index');
 const anomalyDetection = require('./anomaly-detection/index');
+const smartBrowz = require('./smartbrowz/index');
 const catalyst = require('./shared/catalyst-sdk').getInitializer();
 
 const app = express();
@@ -23,76 +23,134 @@ app.use(authMiddleware);
 
 // 1. Chat Conversation Orchestrator
 app.post('/api/chat', async (req, res) => {
-  const { query, sessionId } = req.body;
-  if (!query) {
-    return res.status(400).json({ success: false, error: "Missing 'query' in request body." });
-  }
+  try {
+    const { query, sessionId } = req.body;
+    if (!query) {
+      return res.status(400).json({ success: false, error: "Missing 'query' in request body." });
+    }
 
-  const { userId, role } = req.user;
-  const ipAddress = req.ip || req.headers['x-forwarded-for'];
-  
-  const result = await chatHandler(query, userId, role, ipAddress, sessionId);
-  if (result.success) {
-    res.json(result);
-  } else {
-    res.status(500).json(result);
+    const { userId, role } = req.user;
+    const ipAddress = req.ip || req.headers['x-forwarded-for'];
+    
+    const result = await chatHandler(query, userId, role, ipAddress, sessionId);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 1b. Chat Conversation Streaming Orchestrator (SSE)
+app.post('/api/chat/stream', async (req, res) => {
+  try {
+    const { query, sessionId } = req.body;
+    if (!query) {
+      return res.status(400).json({ success: false, error: "Missing 'query' in request body." });
+    }
+
+    const { userId, role } = req.user;
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+
+    // Set headers for Server-Sent Events (SSE)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    // Call chatHandler with onStream callback
+    const result = await chatHandler(query, userId, role, ipAddress, sessionId, (event) => {
+      res.write(`data: ${JSON.stringify(event)}\n\n`);
+    });
+
+    if (result.success) {
+      res.write(`data: ${JSON.stringify({ type: 'done', narrative: result.narrative, llmMode: result.llmMode })}\n\n`);
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: result.error })}\n\n`);
+    }
+    res.end();
+  } catch (err) {
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: err.message });
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: err.message })}\n\n`);
+      res.end();
+    }
   }
 });
 
 // 2. Zia Translation Direct Endpoint
 app.post('/api/translate', async (req, res) => {
-  const { text, fromLanguage, toLanguage } = req.body;
-  if (!text || !fromLanguage || !toLanguage) {
-    return res.status(400).json({ success: false, error: "Missing required translate parameters." });
-  }
+  try {
+    const { text, fromLanguage, toLanguage } = req.body;
+    if (!text || !fromLanguage || !toLanguage) {
+      return res.status(400).json({ success: false, error: "Missing required translate parameters." });
+    }
 
-  const result = await translate(text, fromLanguage, toLanguage);
-  if (result.success) {
-    res.json(result);
-  } else {
-    res.status(500).json(result);
+    const result = await translate(text, fromLanguage, toLanguage);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 // 3. Zia Voice Services (STT / TTS)
 app.post('/api/voice', async (req, res) => {
-  const { action, text } = req.body;
-  if (!action) {
-    return res.status(400).json({ success: false, error: "Missing action field." });
-  }
+  try {
+    const { action, text } = req.body;
+    if (!action) {
+      return res.status(400).json({ success: false, error: "Missing action field." });
+    }
 
-  const result = await voice(action, text);
-  if (result.success) {
-    res.json(result);
-  } else {
-    res.status(500).json(result);
+    const result = await voice(action, text);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 // 4. SmartBrowz PDF Generation
 app.post('/api/pdf-export', async (req, res) => {
-  const { htmlContent } = req.body;
-  if (!htmlContent) {
-    return res.status(400).json({ success: false, error: "Missing htmlContent." });
-  }
+  try {
+    const { htmlContent } = req.body;
+    if (!htmlContent) {
+      return res.status(400).json({ success: false, error: "Missing htmlContent." });
+    }
 
-  const result = await pdfExport(htmlContent);
-  if (result.success) {
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=ksp-report.pdf');
-    res.send(Buffer.from(result.pdfBase64, 'base64'));
-  } else {
-    res.status(500).json(result);
+    const result = await pdfExport(htmlContent);
+    if (result.success) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=ksp-report.pdf');
+      res.send(Buffer.from(result.pdfBase64, 'base64'));
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 // 5. Zia AutoML Anomaly Detection Endpoint
 app.get('/api/anomalies', async (req, res) => {
-  const result = await anomalyDetection();
-  if (result.success) {
-    res.json(result);
-  } else {
-    res.status(500).json(result);
+  try {
+    const result = await anomalyDetection();
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -501,6 +559,133 @@ app.patch('/api/warrants/bulk', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// 23. Investigation Timeline for a specific FIR
+app.get('/api/timeline/:firId', async (req, res) => {
+  try {
+    const { firId } = req.params;
+    const investigationTimeline = require('./investigation-timeline/index');
+    const result = await investigationTimeline(parseInt(firId));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 24. Enhanced Early Warning Intelligence
+app.get('/api/early-warning', async (req, res) => {
+  try {
+    const earlyWarning = require('./early-warning/index');
+    const { userId, role } = req.user;
+    let scope = null;
+    if (role === 'Policymaker') scope = { type: 'statewide' };
+    else if (role === 'Supervisor' || role === 'Analyst') scope = { type: 'district', value: 'Bengaluru City' };
+    else scope = { type: 'statewide' };
+    const result = await earlyWarning(scope);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 25. Automated Case Summary
+app.get('/api/case-summary/:firId', async (req, res) => {
+  try {
+    const { firId } = req.params;
+    const caseSummary = require('./case-summary/index');
+    const result = await caseSummary(parseInt(firId));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 26. Dashboard stats - count real rows in the SQLite DB
+app.get('/api/dashboard/stats', async (req, res) => {
+  try {
+    const { district, crimeType } = req.query;
+    const db = catalyst.datastore();
+    
+    let firFilter = "WHERE 1=1";
+    let accusedFilter = "WHERE 1=1";
+    let params = [];
+    let accusedParams = [];
+    
+    if (district && district !== 'All') {
+      firFilter += " AND district = ?";
+      accusedFilter += " AND f.district = ?";
+      params.push(district);
+      accusedParams.push(district);
+    }
+    if (crimeType && crimeType !== 'All') {
+      firFilter += " AND crime_type = ?";
+      params.push(crimeType);
+    }
+    
+    const totalRow = await db.execute(`SELECT COUNT(*) as count FROM FIR ${firFilter}`, params);
+    const openRow = await db.execute(`SELECT COUNT(*) as count FROM FIR ${firFilter} AND status = 'Under Investigation'`, params);
+    
+    const syndicateRow = await db.execute(`
+      SELECT COUNT(DISTINCT a.gang_affiliation) as count 
+      FROM Accused a
+      JOIN FIR f ON a.fir_id = f.id
+      ${accusedFilter} AND a.gang_affiliation IS NOT NULL
+    `, accusedParams);
+    
+    const highRiskRow = await db.execute(`
+      SELECT COUNT(DISTINCT a.name) as count 
+      FROM Accused a
+      JOIN FIR f ON a.fir_id = f.id
+      ${accusedFilter} AND a.risk_score >= 0.7
+    `, accusedParams);
+    
+    res.json({
+      success: true,
+      stats: {
+        total: totalRow[0]?.count || 0,
+        open: openRow[0]?.count || 0,
+        syndicates: syndicateRow[0]?.count || 0,
+        highRisk: highRiskRow[0]?.count || 0
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 27. SmartBrowz Analytics Stats
+app.get('/api/smartbrowz/stats', async (req, res) => {
+  try {
+    const { timeFilter } = req.query;
+    const result = await smartBrowz.getStats(timeFilter || '24h');
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 28. SmartBrowz Action Simulator
+app.post('/api/smartbrowz/run', async (req, res) => {
+  try {
+    const { actionType } = req.body;
+    if (!actionType) {
+      return res.status(400).json({ success: false, error: "Missing actionType." });
+    }
+    const result = await smartBrowz.runAction(actionType);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Root redirect
+app.get('/', (req, res) => {
+  res.redirect('http://localhost:5173');
 });
 
 // Start the server

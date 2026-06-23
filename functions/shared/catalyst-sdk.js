@@ -39,6 +39,8 @@ class CatalystInstance {
       if (err) {
         console.error('Failed to open SQLite database in Catalyst SDK:', err);
       } else {
+        this.db.run('PRAGMA journal_mode=WAL');
+        this.db.run('PRAGMA busy_timeout=5000');
         // Initialize schema additions for collaborative workspaces and CCTNS scheduler
         this.db.serialize(() => {
           this.db.run(`
@@ -67,6 +69,18 @@ class CatalystInstance {
               records_ingested INTEGER NOT NULL
             )
           `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS SmartBrowz_Logs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              timestamp TEXT NOT NULL,
+              category TEXT NOT NULL,
+              feature TEXT NOT NULL,
+              status TEXT NOT NULL,
+              latency_ms INTEGER NOT NULL,
+              size_kb INTEGER,
+              details TEXT
+            )
+          `);
           
           // Seed initial notes if empty
           this.db.get("SELECT COUNT(*) as count FROM SharedNotes", (err, row) => {
@@ -89,6 +103,70 @@ class CatalystInstance {
                 (datetime('now', '-6 hours'), 'Manual', 'SUCCESS', 1450, 22),
                 (datetime('now', '-8 hours'), 'Automatic', 'FAILED', 3200, 0)
               `);
+            }
+          });
+
+          // Seed SmartBrowz logs if empty
+          this.db.get("SELECT COUNT(*) as count FROM SmartBrowz_Logs", (err, row) => {
+            if (!err && row && row.count === 0) {
+              const features = [
+                { category: 'Browser Control', feature: 'Headless', details: 'Rendered crime analytics dashboard for automated archive' },
+                { category: 'Browser Control', feature: 'Browser Logic', details: 'Simulated supervisor verification script run' },
+                { category: 'Convert', feature: 'PDF & Screenshot', details: 'Exported intelligence brief PDF' },
+                { category: 'Convert', feature: 'Templates', details: 'Compiled vernacular translator template' },
+                { category: 'Data', feature: 'Dataverse', details: 'Synchronized CCTNS regional dataverse schema' }
+              ];
+              
+              // Seed historical logs spread over the last 30 days
+              const seedStmt = this.db.prepare(`
+                INSERT INTO SmartBrowz_Logs (timestamp, category, feature, status, latency_ms, size_kb, details)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+              `);
+
+              const now = new Date();
+              
+              // Helper to get ISO string modified by offset
+              const offsetDate = (hoursAgo) => {
+                const d = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
+                return d.toISOString().replace('T', ' ').substring(0, 19);
+              };
+
+              // Let's generate ~60 logs spanning 30 days
+              // We'll generate more logs in the last 24 hours (e.g. 25 logs)
+              for (let h = 0.5; h <= 24; h += 1) {
+                const feat = features[Math.floor(Math.random() * features.length)];
+                const status = Math.random() > 0.05 ? 'SUCCESS' : 'FAILED';
+                const latency = status === 'SUCCESS' ? 300 + Math.floor(Math.random() * 1200) : 2000 + Math.floor(Math.random() * 3000);
+                const size = feat.category === 'Convert' ? 20 + Math.floor(Math.random() * 150) : null;
+                seedStmt.run(offsetDate(h), feat.category, feat.feature, status, latency, size, feat.details);
+              }
+
+              // Days 2 to 7 (e.g., 20 logs)
+              for (let d = 2; d <= 7; d++) {
+                // 3 logs per day
+                for (let i = 0; i < 3; i++) {
+                  const feat = features[Math.floor(Math.random() * features.length)];
+                  const status = Math.random() > 0.08 ? 'SUCCESS' : 'FAILED';
+                  const latency = status === 'SUCCESS' ? 300 + Math.floor(Math.random() * 1200) : 2000 + Math.floor(Math.random() * 3000);
+                  const size = feat.category === 'Convert' ? 20 + Math.floor(Math.random() * 150) : null;
+                  const hoursAgo = d * 24 + i * 8 + Math.floor(Math.random() * 6);
+                  seedStmt.run(offsetDate(hoursAgo), feat.category, feat.feature, status, latency, size, feat.details);
+                }
+              }
+
+              // Days 8 to 30 (e.g., 23 logs)
+              for (let d = 8; d <= 30; d++) {
+                // 1 log per day
+                const feat = features[Math.floor(Math.random() * features.length)];
+                const status = Math.random() > 0.1 ? 'SUCCESS' : 'FAILED';
+                const latency = status === 'SUCCESS' ? 300 + Math.floor(Math.random() * 1200) : 2000 + Math.floor(Math.random() * 3000);
+                const size = feat.category === 'Convert' ? 20 + Math.floor(Math.random() * 150) : null;
+                const hoursAgo = d * 24 + Math.floor(Math.random() * 24);
+                seedStmt.run(offsetDate(hoursAgo), feat.category, feat.feature, status, latency, size, feat.details);
+              }
+
+              seedStmt.finalize();
+              console.log('SmartBrowz historical logs seeded successfully.');
             }
           });
         });
@@ -259,6 +337,13 @@ class CatalystInstance {
   }
 }
 
+let _instance = null;
+
 module.exports = {
-  getInitializer: () => new CatalystInstance()
+  getInitializer: () => {
+    if (!_instance) {
+      _instance = new CatalystInstance();
+    }
+    return _instance;
+  }
 };

@@ -11,7 +11,7 @@ interface InvestigatorDashboardProps {
 }
 
 export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ userId, role }) => {
-  const [selectedFirNumber, setSelectedFirNumber] = useState<string | null>(null);
+  const [selectedFirNumber, setSelectedFirNumber] = useState<string | null>('FIR-2026-001');
   const [caseDetails, setCaseDetails] = useState<any>(null);
   const [firInput, setFirInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -261,7 +261,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
   return (
     <div className="space-y-6">
       {/* Search Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/40 border border-slate-850 rounded-lg p-4 print:hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/40 border border-slate-800 rounded-lg p-4 print:hidden">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <FileText className="text-brand-primary" /> Case File Management
@@ -275,7 +275,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
             value={firInput}
             onChange={(e) => setFirInput(e.target.value)}
             placeholder="Search FIR (e.g., FIR-2026-003)"
-            className="bg-slate-950 border border-slate-850 focus:border-brand-primary focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 w-full md:w-60"
+            className="bg-slate-950 border border-slate-800 focus:border-brand-primary focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 w-full md:w-60"
           />
           <button 
             type="submit"
@@ -309,7 +309,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
           ) : caseDetails ? (
             <>
               {/* Tabs Bar */}
-              <div className="bg-slate-900 border-b border-slate-850 flex items-center print:hidden shrink-0">
+              <div className="bg-slate-900 border-b border-slate-800 flex items-center print:hidden shrink-0">
                 <button
                   onClick={() => setActiveTab('summary')}
                   className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
@@ -436,7 +436,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
 
                       {/* Section 1: Jurisdiction & Occurrence Details */}
                       <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
-                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-850 pb-1.5 print:border-black">I. Jurisdiction & Event Occurrence</h4>
+                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-800 pb-1.5 print:border-black">I. Jurisdiction & Event Occurrence</h4>
                         <div className="grid grid-cols-2 gap-4 text-xs">
                           <div>
                             <span className="block text-[10px] text-slate-500 uppercase font-semibold">FIR Registration Number</span>
@@ -457,7 +457,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                             <span className="block text-[10px] text-slate-500 uppercase font-semibold">Crime Classification</span>
                             <strong className="text-brand-primary print:text-black text-xs">{caseDetails.crime_type}</strong>
                           </div>
-                          <div className="col-span-2 border-t border-slate-850/60 pt-2 mt-1 flex justify-between print:text-black print:border-black">
+                          <div className="col-span-2 border-t border-slate-800/60 pt-2 mt-1 flex justify-between print:text-black print:border-black">
                             <span>Date & Time of Occurrence: <strong className="text-slate-200 print:text-black">{caseDetails.date_occurrence}</strong></span>
                             <span>Report Registered: <strong className="text-slate-200 print:text-black">{caseDetails.date_reported}</strong></span>
                           </div>
@@ -466,7 +466,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
 
                       {/* Section 2: Complainant / Victim Demographics */}
                       <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
-                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-850 pb-1.5 print:border-black">II. Complainants & Victim Register</h4>
+                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-800 pb-1.5 print:border-black">II. Complainants & Victim Register</h4>
                         {caseDetails.victims && caseDetails.victims.length > 0 ? (
                           <div className="space-y-3 divide-y divide-slate-850/40 print:divide-black">
                             {caseDetails.victims.map((vic: any, idx: number) => (
@@ -489,7 +489,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
 
                       {/* Section 3: Accused Details */}
                       <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
-                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-850 pb-1.5 print:border-black">III. Accused Suspects Directory</h4>
+                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-800 pb-1.5 print:border-black">III. Accused Suspects Directory</h4>
                         {caseDetails.accused && caseDetails.accused.length > 0 ? (
                           <div className="space-y-3">
                             {caseDetails.accused.map((acc: any) => (
@@ -528,7 +528,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
 
                       {/* Section 4: Modus Operandi & Narrative */}
                       <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
-                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-850 pb-1.5 print:border-black">IV. Modus Operandi & Crime Narrative</h4>
+                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-800 pb-1.5 print:border-black">IV. Modus Operandi & Crime Narrative</h4>
                         <div>
                           <span className="block text-[10px] text-slate-500 uppercase font-semibold mb-1">Modus Operandi Summary</span>
                           <p className="bg-slate-950/40 print:bg-transparent border border-slate-900 print:border-none rounded-lg p-3 text-slate-200 print:text-black text-xs italic">

@@ -56,7 +56,7 @@ export const BiometricMatchesCard: React.FC<BiometricMatchesCardProps> = ({ data
           {data.matches.map((match, idx) => (
             <div 
               key={idx} 
-              className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-950 border border-slate-850 p-4 rounded-lg text-xs hover:border-brand-primary/45 transition gap-3"
+              className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-950 border border-slate-800 p-4 rounded-lg text-xs hover:border-brand-primary/45 transition gap-3"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">

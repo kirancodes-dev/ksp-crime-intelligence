@@ -235,7 +235,7 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
                       <CheckCircle size={10} /> Saved
                     </span>
                   )}
-                  {saveStatus === 'error' && <span className="text-[10px] text-red-650 font-bold">Error saving</span>}
+                  {saveStatus === 'error' && <span className="text-[10px] text-red-600 font-bold">Error saving</span>}
                   
                   <button
                     onClick={handleSaveNotes}
@@ -344,7 +344,7 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
       {/* Progress Report Preview Modal */}
       {showReportModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[5000] p-4">
-          <div className="w-full max-w-2xl bg-white border border-slate-250 rounded-xl shadow-2xl p-6 relative flex flex-col gap-4 max-h-[85vh]">
+          <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-xl shadow-2xl p-6 relative flex flex-col gap-4 max-h-[85vh]">
             <div className="flex justify-between items-center border-b border-slate-150 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 uppercase">Case Progress Briefing Preview</h3>
               <span className="text-[10px] bg-blue-50 text-brand-primary px-2 rounded font-bold uppercase">SmartBrowz PDF</span>
@@ -360,7 +360,7 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
             <div className="flex justify-end gap-3 border-t border-slate-150 pt-3">
               <button
                 onClick={() => setShowReportModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-650 font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer"
               >
                 Close
               </button>

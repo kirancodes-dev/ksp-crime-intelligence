@@ -14,10 +14,15 @@ const TOOL_TABLE_MAP = {
   socio: ['Accused', 'SocioEconomicIndicators', 'FIR'],
   similar: ['FIR', 'Accused'],
   forecast: ['CrimeForecast'],
-  text: ['FIR']
+  text: ['FIR'],
+  ocr: ['FIR', 'Accused'],
+  cdr: ['FIR', 'Accused'],
+  biometrics: ['Accused', 'FIR'],
+  dispatch: ['FIR', 'Location'],
+  general: []
 };
 
-module.exports = async (queryText, userId, role, ipAddress, sessionId) => {
+module.exports = async (queryText, userId, role, ipAddress, sessionId, onStream = null) => {
   try {
     const db = catalyst.datastore();
     let language = "en";
@@ -66,24 +71,81 @@ module.exports = async (queryText, userId, role, ipAddress, sessionId) => {
 
     let finalNarrative = routeResult.narrative;
     let llmMode = "mock";
+    const evidenceSources = buildEvidenceSources(routeResult.tool, routeResult.data);
 
-    // 4b. Generate dynamic narrative using LLM if configured
-    if (process.env.GEMINI_API_KEY || process.env.USE_OLLAMA === 'true') {
-      const geminiResult = await gemini.generateNarrative(workingQuery, routeResult.tool, routeResult.data);
-      if (geminiResult.success) {
-        finalNarrative = geminiResult.narrative;
-        llmMode = "live";
+    // If streaming mode is active
+    if (onStream) {
+      // Send metadata immediately
+      onStream({
+        type: 'metadata',
+        tool: routeResult.tool,
+        data: routeResult.data,
+        evidenceSources
+      });
+
+      let accumulatedNarrative = '';
+      let detectedProvider = 'mock';
+
+      if (process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.USE_OLLAMA === 'true') {
+        const streamResult = await gemini.generateNarrativeStream(
+          workingQuery,
+          routeResult.tool,
+          routeResult.data,
+          (token) => {
+            accumulatedNarrative += token;
+            onStream({ type: 'token', content: token });
+          },
+          (meta) => {
+            detectedProvider = meta.provider;
+            onStream({ type: 'meta', provider: meta.provider });
+          }
+        );
+        if (streamResult.success) {
+          llmMode = detectedProvider;
+        } else {
+          llmMode = 'fallback';
+        }
       } else {
-        console.warn('Gemini narrative generation failed, falling back to mock:', geminiResult.error || geminiResult.reason);
-        llmMode = "fallback";
+        // Fallback simulation
+        const words = routeResult.narrative.split(/(\s+)/);
+        for (const word of words) {
+          accumulatedNarrative += word;
+          onStream({ type: 'token', content: word });
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
       }
-    }
 
-    // 5. If query was in Kannada, translate response back
-    if (language === "kn") {
-      const transBack = await translate(finalNarrative, "en", "kn");
-      if (transBack.success) {
-        finalNarrative = transBack.translation;
+      // Kannada translate back at the end of streaming
+      if (language === "kn") {
+        const transBack = await translate(accumulatedNarrative, "en", "kn");
+        if (transBack.success) {
+          finalNarrative = transBack.translation;
+          onStream({ type: 'translation', content: transBack.translation });
+        } else {
+          finalNarrative = accumulatedNarrative;
+        }
+      } else {
+        finalNarrative = accumulatedNarrative;
+      }
+    } else {
+      // Synchronous mode
+      if (process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.USE_OLLAMA === 'true') {
+        const llmResult = await gemini.generateNarrative(workingQuery, routeResult.tool, routeResult.data);
+        if (llmResult.success) {
+          finalNarrative = llmResult.narrative;
+          llmMode = llmResult.provider || "live";
+        } else {
+          console.warn('LLM narrative generation failed, falling back to mock:', llmResult.error || llmResult.reason);
+          llmMode = "fallback";
+        }
+      }
+
+      // If query was in Kannada, translate response back
+      if (language === "kn") {
+        const transBack = await translate(finalNarrative, "en", "kn");
+        if (transBack.success) {
+          finalNarrative = transBack.translation;
+        }
       }
     }
 
@@ -136,9 +198,6 @@ module.exports = async (queryText, userId, role, ipAddress, sessionId) => {
         console.warn('Session save skipped:', e.message);
       }
     }
-
-    // 8. Build evidence sources metadata
-    const evidenceSources = buildEvidenceSources(routeResult.tool, routeResult.data);
 
     return {
       success: true,
@@ -196,6 +255,14 @@ function resolveContextualReferences(query, session) {
  * Build evidence sources array describing data provenance for the response.
  */
 function buildEvidenceSources(toolName, data) {
+  if (toolName === 'general') {
+    return [{
+      tool: 'general',
+      tablesAccessed: [],
+      confidence: 'high',
+      description: 'Sourced from AI Knowledge Base (General Q&A)'
+    }];
+  }
   const tables = TOOL_TABLE_MAP[toolName] || ['FIR'];
   const hasData = data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0);
 

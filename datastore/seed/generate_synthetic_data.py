@@ -87,6 +87,7 @@ def generate_account_id(prefix="ACC"):
     return f"{prefix}-{random.randint(1000,9999)}-{random.randint(1000,9999)}"
 
 def main():
+    total_cases = 1000
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
     print("Initializing SQLite Database...")
@@ -111,7 +112,7 @@ def main():
     conn.commit()
 
     # Generate FIRs
-    print("Generating synthetic crime data (80 cases)...")
+    print(f"Generating synthetic crime data ({total_cases} cases)...")
     fir_records = []
     recurring_offenders = [
         {"name": "Jagadish alias 'Jacky'", "age": 29, "gender": "M", "occupation": "Driver",
@@ -135,7 +136,6 @@ def main():
     ]
 
     start_date = datetime.now() - timedelta(days=180)
-    total_cases = 80
 
     for i in range(1, total_cases + 1):
         fir_number = f"FIR-{2026:04d}-{i:03d}"
@@ -324,10 +324,10 @@ def main():
                 INSERT INTO FinancialTransaction
                 (fir_id, transaction_date, source_account, source_account_type,
                  destination_account, destination_account_type, amount,
-                 transaction_type, is_suspicious, suspicion_reason)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 transaction_type, reference_id, is_suspicious, suspicion_reason)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (fir["id"], txn_date, src, src_type, dst, dst_type, amount,
-                  random.choice(txn_types), is_suspicious, suspicion))
+                  random.choice(txn_types), f"TXN-{fir['id']:04d}-{t+1:03d}", is_suspicious, suspicion))
     conn.commit()
 
     # Crime Forecasts (Section 8)
@@ -396,7 +396,7 @@ def main():
     conn.commit()
     conn.close()
     print(f"Database seeded successfully at: {DB_PATH}")
-    print(f"  80 FIRs, ~120 accused, ~120 victims, financial transactions, 8 forecasts")
+    print(f"  {total_cases} FIRs, ~{len(accused_list)} accused, ~{total_cases * 1.35:.0f} victims, financial transactions, {len(forecasts)} forecasts")
 
 if __name__ == "__main__":
     main()

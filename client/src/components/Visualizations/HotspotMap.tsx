@@ -161,7 +161,7 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect, 
           <span>Theft</span>
         </div>
         <div className="flex items-center gap-2 font-medium">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-650" />
+          <span className="h-2.5 w-2.5 rounded-full bg-red-600" />
           <span>Organized Crime</span>
         </div>
         <div className="flex items-center gap-2 font-medium">
