@@ -383,12 +383,6 @@ class CatalystInstance {
               CrimeMinorHeadID INTEGER NOT NULL,
               CaseStatusID INTEGER NOT NULL,
               CourtID INTEGER NOT NULL,
-              IncidentFromDate TEXT NOT NULL,
-              IncidentToDate TEXT,
-              InfoReceivedPSDate TEXT NOT NULL,
-              latitude REAL,
-              longitude REAL,
-              BriefFacts TEXT NOT NULL,
               FOREIGN KEY(PolicePersonID) REFERENCES Employee(EmployeeID),
               FOREIGN KEY(PoliceStationID) REFERENCES Unit(UnitID),
               FOREIGN KEY(CaseCategoryID) REFERENCES CaseCategory(CaseCategoryID),
@@ -541,7 +535,7 @@ class CatalystInstance {
 
           // Indexes for CCTNS schema
           this.db.run("CREATE INDEX IF NOT EXISTS idx_casemaster_crime_no ON CaseMaster(CrimeNo)", () => {});
-          this.db.run("CREATE INDEX IF NOT EXISTS idx_casemaster_coords ON CaseMaster(latitude, longitude)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_casemaster_coords ON Inv_OccuranceLocation(latitude, longitude)", () => {});
           this.db.run("CREATE INDEX IF NOT EXISTS idx_complainant_case ON ComplainantDetails(CaseMasterID)", () => {});
           this.db.run("CREATE INDEX IF NOT EXISTS idx_actsection_case ON ActSectionAssociation(CaseMasterID)", () => {});
           this.db.run("CREATE INDEX IF NOT EXISTS idx_victim_case ON Victim(CaseMasterID)", () => {});

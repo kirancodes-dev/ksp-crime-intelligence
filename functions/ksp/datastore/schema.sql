@@ -466,12 +466,6 @@ CREATE TABLE IF NOT EXISTS CaseMaster (
     CrimeMinorHeadID INTEGER NOT NULL,
     CaseStatusID INTEGER NOT NULL,
     CourtID INTEGER NOT NULL,
-    IncidentFromDate TEXT NOT NULL,
-    IncidentToDate TEXT,
-    InfoReceivedPSDate TEXT NOT NULL,
-    latitude REAL,
-    longitude REAL,
-    BriefFacts TEXT NOT NULL,
     FOREIGN KEY(PolicePersonID) REFERENCES Employee(EmployeeID),
     FOREIGN KEY(PoliceStationID) REFERENCES Unit(UnitID),
     FOREIGN KEY(CaseCategoryID) REFERENCES CaseCategory(CaseCategoryID),
@@ -623,7 +617,7 @@ CREATE TABLE IF NOT EXISTS Inv_OccuranceLocation (
 
 -- Indexes for CCTNS schema
 CREATE INDEX IF NOT EXISTS idx_casemaster_crime_no ON CaseMaster(CrimeNo);
-CREATE INDEX IF NOT EXISTS idx_casemaster_coords ON CaseMaster(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_casemaster_coords ON Inv_OccuranceLocation(latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_complainant_case ON ComplainantDetails(CaseMasterID);
 CREATE INDEX IF NOT EXISTS idx_actsection_case ON ActSectionAssociation(CaseMasterID);
 CREATE INDEX IF NOT EXISTS idx_victim_case ON Victim(CaseMasterID);
