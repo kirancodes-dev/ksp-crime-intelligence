@@ -180,12 +180,12 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center border-b border-slate-150 pb-4 mb-5">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-blue-50 text-brand-primary border border-blue-100 rounded-lg flex items-center justify-center">
+          <div className="h-10 w-10 bg-blue-50 text-[#1e3a5f] border border-blue-100 rounded-lg flex items-center justify-center">
             <Pin size={20} className="rotate-45" />
           </div>
           <div>
             <h2 className="text-sm font-extrabold text-slate-900 uppercase">Collaborative Investigation Desk</h2>
-            <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Shared Station Workspace • Real-Time Synchronization</p>
+            <p className="text-[10px] text-[#6c757d] font-bold uppercase mt-0.5">Shared Station Workspace • Real-Time Synchronization</p>
           </div>
         </div>
 
@@ -193,7 +193,7 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
           <button
             onClick={fetchState}
             disabled={loading}
-            className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-500 rounded-lg transition cursor-pointer"
+            className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[#6c757d] rounded-lg transition cursor-pointer"
             title="Refresh Workspace"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -202,7 +202,7 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
           <button
             onClick={handleGenerateReport}
             disabled={loading || reportGenerating}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e3a5f] hover:bg-[#1e3a5f]/95 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer"
           >
             <FileText size={13} />
             <span>Compile Briefing</span>
@@ -211,8 +211,8 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-slate-400 gap-2 text-sm">
-          <RefreshCw className="animate-spin text-brand-primary" size={16} />
+        <div className="flex items-center justify-center py-20 text-[#6c757d] gap-2 text-sm">
+          <RefreshCw className="animate-spin text-[#1e3a5f]" size={16} />
           <span>Synchronizing collaborative desk...</span>
         </div>
       ) : (
@@ -223,13 +223,13 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
             {/* Notes Section */}
             <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[11px] uppercase font-extrabold text-slate-500 tracking-wider flex items-center gap-1.5">
-                  <Sparkles size={12} className="text-brand-primary" />
+                <span className="text-[11px] uppercase font-extrabold text-[#6c757d] tracking-wider flex items-center gap-1.5">
+                  <Sparkles size={12} className="text-[#1e3a5f]" />
                   Shared Investigation Notes
                 </span>
                 
                 <div className="flex items-center gap-2">
-                  {saveStatus === 'saving' && <span className="text-[10px] text-slate-400 italic">Saving...</span>}
+                  {saveStatus === 'saving' && <span className="text-[10px] text-[#6c757d] italic">Saving...</span>}
                   {saveStatus === 'saved' && (
                     <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
                       <CheckCircle size={10} /> Saved
@@ -250,14 +250,14 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Collaborative notes here... Type suspect MOs, transaction details, or case timelines. Everyone in this station shares this state."
-                className="w-full h-48 bg-white border border-slate-200 rounded-md p-3 text-xs leading-relaxed focus:border-brand-primary focus:outline-none text-slate-800 placeholder-slate-400 font-medium"
+                className="w-full h-48 bg-white border border-slate-200 rounded-md p-3 text-xs leading-relaxed focus:border-[#1e3a5f] focus:outline-none text-slate-800 placeholder-slate-400 font-medium"
               />
             </div>
 
             {/* Active Station Investigators Roster */}
             <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
-              <span className="text-[11px] uppercase font-extrabold text-slate-500 tracking-wider flex items-center gap-1.5 mb-3">
-                <Users size={12} className="text-brand-primary" />
+              <span className="text-[11px] uppercase font-extrabold text-[#6c757d] tracking-wider flex items-center gap-1.5 mb-3">
+                <Users size={12} className="text-[#1e3a5f]" />
                 Active Station Investigators
               </span>
 
@@ -266,13 +266,13 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
                   <div key={idx} className="flex justify-between items-center p-2.5 bg-white border border-slate-150 rounded-lg text-xs">
                     <div>
                       <strong className="text-slate-800 text-[12px]">{member.name}</strong>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block mt-0.5">{member.role} • {member.badge}</span>
+                      <span className="text-[10px] text-[#6c757d] font-bold uppercase block mt-0.5">{member.role} • {member.badge}</span>
                     </div>
                     
                     <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
                       member.status === 'Online'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                        : 'bg-slate-100 text-[#6c757d] border-slate-200'
                     }`}>
                       {member.status}
                     </span>
@@ -284,15 +284,15 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
 
           {/* Right: Pinned Investigation Assets */}
           <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 h-fit space-y-4">
-            <span className="text-[11px] uppercase font-extrabold text-slate-500 tracking-wider flex items-center gap-1.5 border-b border-slate-200 pb-2">
-              <Pin size={12} className="text-brand-primary" />
+            <span className="text-[11px] uppercase font-extrabold text-[#6c757d] tracking-wider flex items-center gap-1.5 border-b border-slate-200 pb-2">
+              <Pin size={12} className="text-[#1e3a5f]" />
               Pinned case assets ({pinnedAssets.length})
             </span>
 
             {pinnedAssets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-400 text-xs italic">
+              <div className="flex flex-col items-center justify-center py-12 text-[#6c757d] text-xs italic">
                 <span>No assets pinned to desk.</span>
-                <span className="text-[10px] text-slate-400 mt-1">Pin cases/suspects from their dockets to see them here.</span>
+                <span className="text-[10px] text-[#6c757d] mt-1">Pin cases/suspects from their dockets to see them here.</span>
               </div>
             ) : (
               <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
@@ -301,18 +301,18 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
                     
                     <button
                       onClick={() => handleUnpin(asset.asset_type, asset.asset_id)}
-                      className="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100 cursor-pointer p-1"
+                      className="absolute top-2 right-2 text-[#6c757d] hover:text-red-500 transition opacity-0 group-hover:opacity-100 cursor-pointer p-1"
                       title="Unpin Asset"
                     >
                       <Trash2 size={12} />
                     </button>
 
-                    <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                    <div className="text-[10px] uppercase font-bold text-[#6c757d] mb-1">
                       {asset.asset_type === 'fir' ? 'Case File' : 'Accused'}
                     </div>
 
                     <div 
-                      className="text-brand-primary font-extrabold text-[13px] hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-[#1e3a5f] font-extrabold text-[13px] hover:underline cursor-pointer flex items-center gap-1"
                       onClick={() => {
                         if (asset.asset_type === 'fir') {
                           if (onFirSelect) onFirSelect(asset.asset_id);
@@ -325,12 +325,12 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
                     </div>
 
                     {asset.details && (
-                      <p className="text-[10px] text-slate-500 mt-1 font-semibold leading-relaxed line-clamp-2">
+                      <p className="text-[10px] text-[#6c757d] mt-1 font-semibold leading-relaxed line-clamp-2">
                         {asset.details}
                       </p>
                     )}
 
-                    <div className="text-[9px] text-slate-400 font-bold mt-2">
+                    <div className="text-[9px] text-[#6c757d] font-bold mt-2">
                       Pinned: {new Date(asset.pinned_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -343,11 +343,11 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
 
       {/* Progress Report Preview Modal */}
       {showReportModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[5000] p-4">
+        <div className="fixed inset-0 bg-[#f0f4f8]/60 backdrop-blur-sm flex items-center justify-center z-[5000] p-4">
           <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-xl shadow-2xl p-6 relative flex flex-col gap-4 max-h-[85vh]">
             <div className="flex justify-between items-center border-b border-slate-150 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 uppercase">Case Progress Briefing Preview</h3>
-              <span className="text-[10px] bg-blue-50 text-brand-primary px-2 rounded font-bold uppercase">SmartBrowz PDF</span>
+              <span className="text-[10px] bg-blue-50 text-[#1e3a5f] px-2 rounded font-bold uppercase">SmartBrowz PDF</span>
             </div>
 
             <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg p-4 bg-slate-50">
@@ -368,7 +368,7 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
               <button
                 onClick={handleDownloadPdf}
                 disabled={reportGenerating}
-                className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#1e3a5f] hover:bg-[#1e3a5f]/95 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer"
               >
                 <Download size={13} />
                 {reportGenerating ? 'Generating PDF...' : 'Download Official PDF'}

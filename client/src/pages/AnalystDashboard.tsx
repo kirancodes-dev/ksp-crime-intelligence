@@ -284,17 +284,17 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
   return (
     <div className="space-y-6">
       {/* Filters Header bar */}
-      <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-4 bg-slate-900/40 border border-slate-800 rounded-lg p-4">
+      <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-4 bg-[#f0f4f8]/40 border border-[#d1d9e6] rounded-lg p-4">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Eye className="text-brand-primary" /> Crime Analytics & Intelligence
+          <h1 className="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+            <Eye className="text-[#1e3a5f]" /> Crime Analytics & Intelligence
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">District-level crime mapping, network analysis, and demographic profiling</p>
+          <p className="text-xs text-[#6c757d] mt-0.5">District-level crime mapping, network analysis, and demographic profiling</p>
         </div>
 
         {/* Filter Selection Controls */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+          <div className="flex items-center gap-1.5 text-xs text-[#6c757d]">
             <Filter size={12} /> Filter by:
           </div>
           
@@ -302,7 +302,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           <select
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
-            className="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer"
+            className="bg-white border border-[#d1d9e6] text-[#2d4a6f] text-xs rounded-lg px-3 py-1.5 focus:border-[#1e3a5f] focus:outline-none cursor-pointer"
           >
             <option value="All">All Karnataka Districts</option>
             <option value="Bengaluru City">Bengaluru City</option>
@@ -316,7 +316,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           <select
             value={selectedCrimeType}
             onChange={(e) => setSelectedCrimeType(e.target.value)}
-            className="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer"
+            className="bg-white border border-[#d1d9e6] text-[#2d4a6f] text-xs rounded-lg px-3 py-1.5 focus:border-[#1e3a5f] focus:outline-none cursor-pointer"
           >
             <option value="All">All Crime Types</option>
             <option value="Cyber Crime">Cyber Crime</option>
@@ -329,34 +329,34 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
 
       {/* KPI Cards row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card-panel border border-slate-800 rounded-lg p-4 text-center">
-          <span className="block text-[11px] text-slate-500 uppercase font-semibold">Active Incidents</span>
-          <strong className="text-2xl text-white block mt-1">{stats.total}</strong>
+        <div className="card-panel border border-[#d1d9e6] rounded-lg p-4 text-center">
+          <span className="block text-[11px] text-[#6c757d] uppercase font-semibold">Active Incidents</span>
+          <strong className="text-2xl text-[#1e3a5f] block mt-1">{stats.total}</strong>
         </div>
-        <div className="card-panel border border-slate-800 rounded-lg p-4 text-center">
-          <span className="block text-[11px] text-slate-500 uppercase font-semibold">Under Investigation</span>
-          <strong className="text-2xl text-amber-400 block mt-1">{stats.open}</strong>
+        <div className="card-panel border border-[#d1d9e6] rounded-lg p-4 text-center">
+          <span className="block text-[11px] text-[#6c757d] uppercase font-semibold">Under Investigation</span>
+          <strong className="text-2xl text-amber-700 block mt-1">{stats.open}</strong>
         </div>
-        <div className="card-panel border border-slate-800 rounded-lg p-4 text-center">
-          <span className="block text-[11px] text-slate-500 uppercase font-semibold">Identified Syndicates</span>
-          <strong className="text-2xl text-purple-400 block mt-1">{stats.syndicates}</strong>
+        <div className="card-panel border border-[#d1d9e6] rounded-lg p-4 text-center">
+          <span className="block text-[11px] text-[#6c757d] uppercase font-semibold">Identified Syndicates</span>
+          <strong className="text-2xl text-purple-700 block mt-1">{stats.syndicates}</strong>
         </div>
-        <div className="card-panel border border-slate-800 rounded-lg p-4 text-center">
-          <span className="block text-[11px] text-slate-500 uppercase font-semibold">High Threat Recidivists</span>
+        <div className="card-panel border border-[#d1d9e6] rounded-lg p-4 text-center">
+          <span className="block text-[11px] text-[#6c757d] uppercase font-semibold">High Threat Recidivists</span>
           <strong className="text-2xl text-red-500 block mt-1">{stats.highRisk}</strong>
         </div>
       </div>
 
       {/* Loading & Error display */}
       {loading && (
-        <div className="flex items-center justify-center gap-2 bg-slate-900/20 border border-slate-900 rounded-lg p-3 text-slate-400 text-xs">
-          <Loader2 size={12} className="animate-spin text-brand-primary" />
+        <div className="flex items-center justify-center gap-2 bg-[#f0f4f8]/20 border border-slate-900 rounded-lg p-3 text-[#6c757d] text-xs">
+          <Loader2 size={12} className="animate-spin text-[#1e3a5f]" />
           <span>Synchronizing map coordinates and criminal linkages...</span>
         </div>
       )}
       
       {error && (
-        <div className="flex items-center gap-2 bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-red-400 text-xs">
+        <div className="flex items-center gap-2 bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-[#d9251c] text-xs">
           <AlertCircle size={14} />
           <span>{error}</span>
         </div>
@@ -368,8 +368,8 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           onClick={() => setActiveSubTab('intel')}
           className={`pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
             activeSubTab === 'intel'
-              ? 'border-brand-primary text-slate-800'
-              : 'border-transparent text-slate-400 hover:text-slate-600'
+              ? 'border-[#1e3a5f] text-slate-800'
+              : 'border-transparent text-[#6c757d] hover:text-slate-600'
           }`}
         >
           Geo-Spatial & Syndicate Networks
@@ -378,8 +378,8 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           onClick={() => setActiveSubTab('cdr')}
           className={`pb-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
             activeSubTab === 'cdr'
-              ? 'border-brand-primary text-slate-800'
-              : 'border-transparent text-slate-400 hover:text-slate-600'
+              ? 'border-[#1e3a5f] text-slate-800'
+              : 'border-transparent text-[#6c757d] hover:text-slate-600'
           }`}
         >
           CDR Cellular Timeline Analysis
@@ -393,15 +393,15 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
-                <Map size={16} className="text-brand-primary" />
-                <span className="text-sm font-bold text-white uppercase tracking-wider">Geographic Hotspot Map</span>
+                <Map size={16} className="text-[#1e3a5f]" />
+                <span className="text-sm font-bold text-[#1e3a5f] uppercase tracking-wider">Geographic Hotspot Map</span>
               </div>
               <button
                 onClick={() => setHeatmapEnabled(v => !v)}
                 className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-lg text-[11px] font-bold transition cursor-pointer ${
                   heatmapEnabled
-                    ? 'bg-brand-primary text-white border-brand-primary'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                    ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]'
+                    : 'bg-white border-[#d1d9e6] text-[#6c757d] hover:text-[#1e3a5f] hover:border-[#d1d9e6]'
                 }`}
               >
                 🔥 {heatmapEnabled ? 'Heatmap ON' : 'Heatmap OFF'}
@@ -421,7 +421,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
               const sorted = Object.entries(districtCounts).sort((a, b) => b[1] - a[1]);
               return (
                 <div className="mt-2 space-y-2">
-                  <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider px-1 flex items-center gap-1">
+                  <div className="text-[10px] text-[#6c757d] font-semibold uppercase tracking-wider px-1 flex items-center gap-1">
                     🔥 Incident Density by District
                   </div>
                   <div className="grid grid-cols-1 gap-1.5">
@@ -430,8 +430,8 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
                       const color = pct >= 80 ? '#ef4444' : pct >= 60 ? '#f97316' : pct >= 40 ? '#eab308' : '#22c55e';
                       return (
                         <div key={district} className="flex items-center gap-2 px-1">
-                          <span className="text-[11px] text-slate-400 w-28 truncate font-medium">{district}</span>
-                          <div className="flex-1 h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                          <span className="text-[11px] text-[#6c757d] w-28 truncate font-medium">{district}</span>
+                          <div className="flex-1 h-2.5 bg-white rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all"
                               style={{ width: `${pct}%`, background: color }}
@@ -450,8 +450,8 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           {/* Association Network panel */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 px-1">
-              <Network size={16} className="text-brand-primary" />
-              <span className="text-sm font-bold text-white uppercase tracking-wider">Syndicate Linkage Network</span>
+              <Network size={16} className="text-[#1e3a5f]" />
+              <span className="text-sm font-bold text-[#1e3a5f] uppercase tracking-wider">Syndicate Linkage Network</span>
             </div>
             <NetworkGraph data={networkData} />
           </div>
@@ -464,12 +464,12 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           {/* CDR Controls & Breadcrumbs */}
           <div className="lg:col-span-4 space-y-4">
             <div className="card-panel border border-slate-200 rounded-lg p-4 bg-white space-y-3">
-              <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider block">Target Suspect</span>
+              <span className="text-[11px] text-[#6c757d] uppercase font-bold tracking-wider block">Target Suspect</span>
               <div className="flex gap-2">
                 <select
                   value={cdrSuspect}
                   onChange={(e) => setCdrSuspect(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:border-brand-primary focus:outline-none cursor-pointer flex-1"
+                  className="bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:border-[#1e3a5f] focus:outline-none cursor-pointer flex-1"
                 >
                   <option value="Rupa Naik">Rupa Naik (Organized Crime)</option>
                   <option value="Ramesh Kumar">Ramesh Kumar (Theft)</option>
@@ -480,15 +480,15 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
               {cdrTimelineData && (
                 <div className="text-xs space-y-1.5 pt-2 border-t border-slate-100">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Phone:</span>
+                    <span className="text-[#6c757d]">Phone:</span>
                     <strong className="text-slate-750">{cdrTimelineData.phone}</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">IMEI:</span>
+                    <span className="text-[#6c757d]">IMEI:</span>
                     <strong className="text-slate-755 font-mono">{cdrTimelineData.imei}</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Carrier:</span>
+                    <span className="text-[#6c757d]">Carrier:</span>
                     <strong className="text-slate-755">{cdrTimelineData.carrier}</strong>
                   </div>
                 </div>
@@ -497,11 +497,11 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
 
             {/* CDR Chronological Timeline Steps */}
             <div className="card-panel border border-slate-200 rounded-lg p-4 bg-white space-y-3">
-              <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider block">Chronological Ping Path</span>
+              <span className="text-[11px] text-[#6c757d] uppercase font-bold tracking-wider block">Chronological Ping Path</span>
               
               {cdrLoading ? (
-                <div className="flex justify-center items-center py-6 text-slate-400 gap-2">
-                  <Loader2 size={14} className="animate-spin text-brand-primary" />
+                <div className="flex justify-center items-center py-6 text-[#6c757d] gap-2">
+                  <Loader2 size={14} className="animate-spin text-[#1e3a5f]" />
                   <span>Fetching cellular logs...</span>
                 </div>
               ) : cdrTimelineData && cdrTimelineData.breadcrumbs ? (
@@ -526,16 +526,16 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
                         <div className="space-y-0.5 flex-1">
                           <div className="flex justify-between">
                             <strong>{b.tower}</strong>
-                            <span className="text-[10px] text-slate-400 font-bold">{b.time}</span>
+                            <span className="text-[10px] text-[#6c757d] font-bold">{b.time}</span>
                           </div>
-                          <p className="text-[10px] text-slate-500 font-medium">Lat: {b.lat.toFixed(4)}°, Lng: {b.lng.toFixed(4)}°</p>
+                          <p className="text-[10px] text-[#6c757d] font-medium">Lat: {b.lat.toFixed(4)}°, Lng: {b.lng.toFixed(4)}°</p>
                         </div>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="text-slate-400 text-center py-6 font-medium">No tower pings loaded.</div>
+                <div className="text-[#6c757d] text-center py-6 font-medium">No tower pings loaded.</div>
               )}
             </div>
 
@@ -564,7 +564,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
           <div className="lg:col-span-8 space-y-3">
             <div className="flex items-center justify-between px-1">
               <span className="text-sm font-bold text-slate-800 uppercase tracking-wider">Cellular Trajectory Plot</span>
-              <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 font-bold rounded">
+              <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-[#6c757d] border border-slate-200 font-bold rounded">
                 Live breadcrumbs representation
               </span>
             </div>
@@ -581,14 +581,14 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
         {/* Socio-Demographic Analytics */}
         <div className="lg:col-span-8 space-y-3">
           <div className="flex items-center gap-2 px-1">
-            <BarChart3 size={16} className="text-brand-primary" />
-            <span className="text-sm font-bold text-white uppercase tracking-wider">Socio-Demographic Profiling</span>
+            <BarChart3 size={16} className="text-[#1e3a5f]" />
+            <span className="text-sm font-bold text-[#1e3a5f] uppercase tracking-wider">Socio-Demographic Profiling</span>
           </div>
           {socioData ? (
             <SocioDemographicChart data={socioData} />
           ) : (
-            <div className="card-panel border border-slate-800 rounded-lg p-8 flex items-center justify-center text-slate-500 text-xs">
-              <Loader2 size={16} className="animate-spin text-brand-primary mr-2" />
+            <div className="card-panel border border-[#d1d9e6] rounded-lg p-8 flex items-center justify-center text-[#6c757d] text-xs">
+              <Loader2 size={16} className="animate-spin text-[#1e3a5f] mr-2" />
               Loading demographic profiling...
             </div>
           )}
@@ -597,14 +597,14 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
         {/* Predictive Crime Alerts */}
         <div className="lg:col-span-4 space-y-3">
           <div className="flex items-center gap-2 px-1">
-            <TrendingUp size={16} className="text-brand-primary" />
-            <span className="text-sm font-bold text-white uppercase tracking-wider">Predictive Early Warning Panel</span>
+            <TrendingUp size={16} className="text-[#1e3a5f]" />
+            <span className="text-sm font-bold text-[#1e3a5f] uppercase tracking-wider">Predictive Early Warning Panel</span>
           </div>
           {forecasts.length > 0 ? (
             <ForecastAlertPanel forecasts={forecasts} />
           ) : (
-            <div className="card-panel border border-slate-800 rounded-lg p-8 flex items-center justify-center text-slate-500 text-xs">
-              <Loader2 size={16} className="animate-spin text-brand-primary mr-2" />
+            <div className="card-panel border border-[#d1d9e6] rounded-lg p-8 flex items-center justify-center text-[#6c757d] text-xs">
+              <Loader2 size={16} className="animate-spin text-[#1e3a5f] mr-2" />
               Loading predictive models...
             </div>
           )}
@@ -616,7 +616,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
         <>
           {/* Backdrop overlay */}
           <div 
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[999] transition-opacity duration-300"
+            className="fixed inset-0 bg-[#f0f4f8]/40 backdrop-blur-xs z-[999] transition-opacity duration-300"
             onClick={() => setSelectedIncident(null)}
           />
           
@@ -625,14 +625,14 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
             {/* Header */}
             <div className="p-4 border-b border-slate-150 flex justify-between items-center bg-slate-50">
               <div>
-                <span className="text-[10px] uppercase font-bold text-brand-primary tracking-wide">Incident Intel Dossier</span>
+                <span className="text-[10px] uppercase font-bold text-[#1e3a5f] tracking-wide">Incident Intel Dossier</span>
                 <h2 className="text-base font-bold text-slate-800 flex items-center gap-2 mt-0.5">
                   {selectedIncident.fir_number}
                 </h2>
               </div>
               <button 
                 onClick={() => setSelectedIncident(null)}
-                className="p-1 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-full transition cursor-pointer"
+                className="p-1 hover:bg-slate-200 text-[#6c757d] hover:text-slate-600 rounded-full transition cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -643,13 +643,13 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
               {/* Type and status row */}
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-slate-50 p-2 rounded border border-slate-100">
-                  <span className="text-slate-400 font-bold block mb-1">Crime Type</span>
+                  <span className="text-[#6c757d] font-bold block mb-1">Crime Type</span>
                   <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-150">
                     {selectedIncident.crime_type}
                   </span>
                 </div>
                 <div className="bg-slate-50 p-2 rounded border border-slate-100">
-                  <span className="text-slate-400 font-bold block mb-1">Status</span>
+                  <span className="text-[#6c757d] font-bold block mb-1">Status</span>
                   <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                     selectedIncident.status === 'Under Investigation' 
                       ? 'bg-amber-50 text-amber-700 border-amber-150' 
@@ -662,26 +662,26 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
 
               {/* Geographic Parameters */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Jurisdiction & Location</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#6c757d]">Jurisdiction & Location</h3>
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-150 space-y-2 text-xs">
                   <div>
-                    <span className="text-slate-400 font-medium">District:</span>
+                    <span className="text-[#6c757d] font-medium">District:</span>
                     <strong className="text-slate-800 ml-1.5">{selectedIncident.district}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 font-medium">Police Station:</span>
+                    <span className="text-[#6c757d] font-medium">Police Station:</span>
                     <strong className="text-slate-800 ml-1.5">{selectedIncident.district.split(' ')[0]} Central PS</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 font-medium">Address:</span>
+                    <span className="text-[#6c757d] font-medium">Address:</span>
                     <strong className="text-slate-800 block mt-0.5">{selectedIncident.address}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 font-medium">Area Category:</span>
+                    <span className="text-[#6c757d] font-medium">Area Category:</span>
                     <strong className="text-slate-800 ml-1.5">{selectedIncident.area_type}</strong>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-slate-200">
-                    <span className="text-slate-400 font-medium">Spatial Coordinates:</span>
+                    <span className="text-[#6c757d] font-medium">Spatial Coordinates:</span>
                     <code className="text-slate-700 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-200">
                       {selectedIncident.latitude.toFixed(4)}°, {selectedIncident.longitude.toFixed(4)}°
                     </code>
@@ -691,26 +691,26 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
 
               {/* Temporal Parameters */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Temporal Parameters</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#6c757d]">Temporal Parameters</h3>
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-150 text-xs">
-                  <span className="text-slate-400 font-medium">Date/Time Reported:</span>
+                  <span className="text-[#6c757d] font-medium">Date/Time Reported:</span>
                   <strong className="text-slate-800 ml-1.5">{selectedIncident.date_reported}</strong>
                 </div>
               </div>
 
               {/* Suspect profile & leads */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Investigative Leads</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#6c757d]">Investigative Leads</h3>
                 <div className="space-y-2">
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-150 text-xs space-y-1.5">
-                    <span className="text-slate-400 font-bold block">Prime suspect associated:</span>
+                    <span className="text-[#6c757d] font-bold block">Prime suspect associated:</span>
                     <strong className="text-slate-800 text-[13px] block">
                       {selectedIncident.crime_type === 'Cyber Crime' ? 'Amit Verma (IP Spoofing Specialist)' : 
                        selectedIncident.crime_type === 'Theft' ? 'Ramesh Kumar (Logistics Courier)' :
                        selectedIncident.crime_type === 'Organized Crime' ? 'Rupa Naik (Syndicate Courier)' :
                        'Suresh Hegde (Accounts Manager)'}
                     </strong>
-                    <span className="text-slate-400 font-bold block pt-1.5 border-t border-slate-200">Modus Operandi:</span>
+                    <span className="text-[#6c757d] font-bold block pt-1.5 border-t border-slate-200">Modus Operandi:</span>
                     <span className="text-slate-600 italic block mt-0.5">
                       {selectedIncident.crime_type === 'Cyber Crime' ? 'Executing distributed denial of service requests through untraced cloud proxy servers.' :
                        selectedIncident.crime_type === 'Theft' ? 'Leveraging local transport operators during night shifts to move heavy cargo.' :
@@ -733,7 +733,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
             <div className="p-4 border-t border-slate-150 bg-slate-50 flex flex-col gap-2">
               <button 
                 onClick={handlePinCase}
-                className="w-full py-2 bg-blue-50 border border-blue-200 text-brand-primary text-xs font-bold rounded-lg shadow-sm cursor-pointer transition text-center flex items-center justify-center gap-1.5"
+                className="w-full py-2 bg-blue-50 border border-blue-200 text-[#1e3a5f] text-xs font-bold rounded-lg shadow-sm cursor-pointer transition text-center flex items-center justify-center gap-1.5"
               >
                 <Pin size={13} className="rotate-45" /> Pin to Collaborative Workspace
               </button>
@@ -742,7 +742,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
                   onClick={() => {
                     alert(`Initiated full forensic dossier download for ${selectedIncident.fir_number}`);
                   }}
-                  className="flex-1 py-2 bg-brand-primary hover:bg-brand-primary-light text-white text-xs font-bold rounded-lg shadow cursor-pointer transition text-center"
+                  className="flex-1 py-2 bg-[#1e3a5f] hover:bg-[#1e3a5f]-light text-white text-xs font-bold rounded-lg shadow cursor-pointer transition text-center"
                 >
                   Download dossier
                 </button>

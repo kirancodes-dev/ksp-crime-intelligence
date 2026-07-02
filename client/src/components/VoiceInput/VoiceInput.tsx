@@ -101,8 +101,8 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscriptReady, textT
         onClick={toggleListening}
         className={`p-3 rounded-full border transition duration-200 relative ${
           isListening 
-            ? 'bg-red-500/20 border-red-500/40 text-red-400 active-ring' 
-            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+            ? 'bg-red-500/20 border-red-500/40 text-[#d9251c] active-ring' 
+            : 'bg-[#f0f4f8] border-[#d1d9e6] text-[#6c757d] hover:text-[#1e3a5f] hover:border-[#d1d9e6]'
         }`}
         title={isListening ? "Stop listening" : "Dictate query via Mic"}
       >
@@ -115,8 +115,8 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscriptReady, textT
           onClick={handleSpeak}
           className={`p-3 rounded-full border transition duration-200 ${
             isSpeaking 
-              ? 'bg-brand-primary/20 border-brand-primary/40 text-brand-primary' 
-              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+              ? 'bg-[#1e3a5f]/20 border-[#1e3a5f]/40 text-white' 
+              : 'bg-[#f0f4f8] border-[#d1d9e6] text-[#6c757d] hover:text-[#1e3a5f] hover:border-[#d1d9e6]'
           }`}
           title={isSpeaking ? "Mute audio readout" : "Listen to audio readout"}
         >

@@ -140,30 +140,30 @@ ${recs.length > 0 ? `
       <button
         onClick={() => setShowModal(true)}
         id="intelligence-brief-trigger"
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 text-brand-primary rounded-lg text-xs font-bold transition cursor-pointer"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e3a5f]/10 hover:bg-[#1e3a5f]/20 border border-[#1e3a5f]/30 text-white rounded-lg text-xs font-bold transition cursor-pointer"
       >
         <FileText size={13} /> Generate Brief
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl my-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0d2137]/90 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-[#f0f4f8] border border-[#d1d9e6] rounded-2xl shadow-2xl my-4">
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Shield size={16} className="text-brand-primary" />
+            <div className="flex justify-between items-center px-6 py-4 border-b border-[#d1d9e6]">
+              <h3 className="text-base font-bold text-[#1e3a5f] flex items-center gap-2">
+                <Shield size={16} className="text-[#1e3a5f]" />
                 Intelligence Brief Generator
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white cursor-pointer transition">
+              <button onClick={() => setShowModal(false)} className="text-[#6c757d] hover:text-[#1e3a5f] cursor-pointer transition">
                 <X size={15} />
               </button>
             </div>
 
             {/* Tab toggle: form / preview */}
-            <div className="flex border-b border-slate-800">
+            <div className="flex border-b border-[#d1d9e6]">
               {(['Form', 'Preview'] as const).map(tab => (
                 <button key={tab} onClick={() => setPreviewMode(tab === 'Preview')}
-                  className={`flex-1 py-2.5 text-xs font-bold transition cursor-pointer ${previewMode === (tab === 'Preview') ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-slate-500 hover:text-slate-300'}`}>
+                  className={`flex-1 py-2.5 text-xs font-bold transition cursor-pointer ${previewMode === (tab === 'Preview') ? 'text-[#1e3a5f] border-b-2 border-[#1e3a5f]' : 'text-[#6c757d] hover:text-[#2d4a6f]'}`}>
                   {tab}
                 </button>
               ))}
@@ -174,7 +174,7 @@ ${recs.length > 0 ? `
               <div className="p-4 max-h-[60vh] overflow-y-auto">
                 <iframe
                   srcDoc={buildBriefHtml()}
-                  className="w-full h-[500px] bg-white rounded-lg border border-slate-700"
+                  className="w-full h-[500px] bg-white rounded-lg border border-[#d1d9e6]"
                   title="Brief Preview"
                 />
               </div>
@@ -183,62 +183,62 @@ ${recs.length > 0 ? `
               <div className="p-6 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">Brief Title</label>
+                    <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">Brief Title</label>
                     <input type="text" value={briefTitle} onChange={e => setBriefTitle(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary placeholder-slate-600"
+                      className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f] placeholder-[#9ca3af]"
                       placeholder="KSP Crime Intelligence Brief" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">Reference Period</label>
+                    <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">Reference Period</label>
                     <input type="text" value={briefPeriod} onChange={e => setBriefPeriod(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary" />
+                      className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f]" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">Classification</label>
+                    <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">Classification</label>
                     <select value={classification} onChange={e => setClassification(e.target.value as any)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary cursor-pointer">
+                      className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f] cursor-pointer">
                       <option value="RESTRICTED">RESTRICTED</option>
                       <option value="CONFIDENTIAL">CONFIDENTIAL</option>
                       <option value="SECRET">SECRET</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">Approving Officer</label>
+                    <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">Approving Officer</label>
                     <input type="text" value={approvingOfficer} onChange={e => setApprovingOfficer(e.target.value)}
                       placeholder={role}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary placeholder-slate-600" />
+                      className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f] placeholder-[#9ca3af]" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                  <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">
                     Key Findings <span className="text-slate-600 font-normal">(one per line)</span>
                   </label>
                   <textarea value={customFindings} onChange={e => setCustomFindings(e.target.value)} rows={5}
                     placeholder={"Organized crime syndicate operating in 3 districts detected\nHawala transaction volume increased 34% in Q2\nBiometric match identified wanted fugitive near Silk Board"}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary resize-none placeholder-slate-600 font-mono text-xs leading-relaxed" />
+                    className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f] resize-none placeholder-[#9ca3af] font-mono text-xs leading-relaxed" />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                  <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">
                     Recommendations <span className="text-slate-600 font-normal">(one per line)</span>
                   </label>
                   <textarea value={keyRecs} onChange={e => setKeyRecs(e.target.value)} rows={4}
                     placeholder={"Deploy additional patrol units to Bengaluru City hotspots\nIssue lookout notice for identified syndicate members\nInitiate financial investigation for hawala networks"}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary resize-none placeholder-slate-600 font-mono text-xs leading-relaxed" />
+                    className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f] resize-none placeholder-[#9ca3af] font-mono text-xs leading-relaxed" />
                 </div>
               </div>
             )}
 
             {/* Footer actions */}
-            <div className="flex gap-3 px-6 py-4 border-t border-slate-800">
+            <div className="flex gap-3 px-6 py-4 border-t border-[#d1d9e6]">
               <button onClick={() => setPreviewMode(v => !v)}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-lg border border-slate-700 transition cursor-pointer">
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-[#eef2f7] text-[#2d4a6f] font-semibold text-sm rounded-lg border border-[#d1d9e6] transition cursor-pointer">
                 <Printer size={13} /> {previewMode ? 'Edit Form' : 'Preview'}
                 <ChevronRight size={12} />
               </button>
               <button onClick={handleDownload} disabled={generating}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-primary hover:bg-brand-primary/90 disabled:bg-slate-700 text-white font-bold text-sm rounded-lg transition cursor-pointer">
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1e3a5f] hover:bg-[#1e3a5f]/90 disabled:bg-slate-700 text-white font-bold text-sm rounded-lg transition cursor-pointer">
                 {generating ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
                 {generating ? 'Generating PDF...' : 'Download Intelligence Brief'}
               </button>

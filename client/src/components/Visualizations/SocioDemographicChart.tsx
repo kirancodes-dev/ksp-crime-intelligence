@@ -61,16 +61,16 @@ const EDUCATION_COLORS = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="card-panel border border-slate-800 p-3 rounded-lg shadow-xl text-xs">
-        {label && <p className="font-bold text-white mb-2">{label}</p>}
+      <div className="card-panel border border-[#d1d9e6] p-3 rounded-lg shadow-xl text-xs">
+        {label && <p className="font-bold text-[#1e3a5f] mb-2">{label}</p>}
         <div className="space-y-1">
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex items-center gap-3 justify-between">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
-                <span className="text-slate-400">{entry.name}:</span>
+                <span className="text-[#6c757d]">{entry.name}:</span>
               </div>
-              <strong className="text-white">{typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}</strong>
+              <strong className="text-[#1e3a5f]">{typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}</strong>
             </div>
           ))}
         </div>
@@ -84,13 +84,13 @@ const ScatterTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const d = payload[0].payload;
     return (
-      <div className="card-panel border border-slate-800 p-3 rounded-lg shadow-xl text-xs">
-        <p className="font-bold text-white mb-2">{d.district}</p>
-        <div className="space-y-1 text-slate-300">
-          <div>Unemployment: <strong className="text-white">{d.unemploymentRate}%</strong></div>
-          <div>Crime Rate: <strong className="text-white">{d.crimeRate}</strong></div>
-          <div>Poverty Index: <strong className="text-white">{d.povertyIndex}</strong></div>
-          <div>Literacy: <strong className="text-white">{d.literacyRate}%</strong></div>
+      <div className="card-panel border border-[#d1d9e6] p-3 rounded-lg shadow-xl text-xs">
+        <p className="font-bold text-[#1e3a5f] mb-2">{d.district}</p>
+        <div className="space-y-1 text-[#2d4a6f]">
+          <div>Unemployment: <strong className="text-[#1e3a5f]">{d.unemploymentRate}%</strong></div>
+          <div>Crime Rate: <strong className="text-[#1e3a5f]">{d.crimeRate}</strong></div>
+          <div>Poverty Index: <strong className="text-[#1e3a5f]">{d.povertyIndex}</strong></div>
+          <div>Literacy: <strong className="text-[#1e3a5f]">{d.literacyRate}%</strong></div>
         </div>
       </div>
     );
@@ -102,13 +102,13 @@ export const SocioDemographicChart: React.FC<SocioDemographicChartProps> = ({ da
   const { demographics, socioCorrelation } = data;
 
   return (
-    <div className="card-panel rounded-lg border border-slate-800 p-6 text-slate-100 shadow-xl w-full my-4">
+    <div className="card-panel rounded-lg border border-[#d1d9e6] p-6 text-[#1e3a5f] shadow-xl w-full my-4">
       {/* Header */}
-      <div className="border-b border-slate-800 pb-4 mb-6">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <Users className="text-brand-primary" size={20} /> Socio-Demographic Crime Analytics
+      <div className="border-b border-[#d1d9e6] pb-4 mb-6">
+        <h2 className="text-lg font-bold text-[#1e3a5f] flex items-center gap-2">
+          <Users className="text-[#1e3a5f]" size={20} /> Socio-Demographic Crime Analytics
         </h2>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <p className="text-xs text-[#6c757d] mt-0.5">
           Population demographics and socio-economic correlation analysis
         </p>
       </div>
@@ -116,12 +116,12 @@ export const SocioDemographicChart: React.FC<SocioDemographicChartProps> = ({ da
       {/* 2x2 Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top-Left: Age Distribution Bar Chart */}
-        <div className="bg-slate-900/40 rounded-lg border border-slate-800/60 p-4">
-          <h3 className="text-sm font-semibold text-slate-300 mb-3">Age Distribution</h3>
+        <div className="bg-[#f0f4f8]/40 rounded-lg border border-[#d1d9e6]/60 p-4">
+          <h3 className="text-sm font-semibold text-[#2d4a6f] mb-3">Age Distribution</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={demographics.ageGroups} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid stroke="#d1d9e6" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="range" stroke="#94a3b8" fontSize={10} tickLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
@@ -132,8 +132,8 @@ export const SocioDemographicChart: React.FC<SocioDemographicChartProps> = ({ da
         </div>
 
         {/* Top-Right: Gender Split Pie Chart */}
-        <div className="bg-slate-900/40 rounded-lg border border-slate-800/60 p-4">
-          <h3 className="text-sm font-semibold text-slate-300 mb-3">Gender Split</h3>
+        <div className="bg-[#f0f4f8]/40 rounded-lg border border-[#d1d9e6]/60 p-4">
+          <h3 className="text-sm font-semibold text-[#2d4a6f] mb-3">Gender Split</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -172,13 +172,13 @@ export const SocioDemographicChart: React.FC<SocioDemographicChartProps> = ({ da
         </div>
 
         {/* Bottom-Left: Socio-Economic Correlation Scatter Chart */}
-        <div className="bg-slate-900/40 rounded-lg border border-slate-800/60 p-4">
-          <h3 className="text-sm font-semibold text-slate-300 mb-1">Socio-Economic Correlation</h3>
-          <p className="text-[10px] text-slate-500 mb-3">Unemployment Rate vs Crime Rate (dot size = poverty index)</p>
+        <div className="bg-[#f0f4f8]/40 rounded-lg border border-[#d1d9e6]/60 p-4">
+          <h3 className="text-sm font-semibold text-[#2d4a6f] mb-1">Socio-Economic Correlation</h3>
+          <p className="text-[10px] text-[#6c757d] mb-3">Unemployment Rate vs Crime Rate (dot size = poverty index)</p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+                <CartesianGrid stroke="#d1d9e6" strokeDasharray="3 3" />
                 <XAxis
                   dataKey="unemploymentRate"
                   name="Unemployment %"
@@ -217,8 +217,8 @@ export const SocioDemographicChart: React.FC<SocioDemographicChartProps> = ({ da
         </div>
 
         {/* Bottom-Right: Education Level Horizontal Bar Chart */}
-        <div className="bg-slate-900/40 rounded-lg border border-slate-800/60 p-4">
-          <h3 className="text-sm font-semibold text-slate-300 mb-3">Education Level Breakdown</h3>
+        <div className="bg-[#f0f4f8]/40 rounded-lg border border-[#d1d9e6]/60 p-4">
+          <h3 className="text-sm font-semibold text-[#2d4a6f] mb-3">Education Level Breakdown</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -226,7 +226,7 @@ export const SocioDemographicChart: React.FC<SocioDemographicChartProps> = ({ da
                 layout="vertical"
                 margin={{ top: 5, right: 20, left: 10, bottom: 0 }}
               >
-                <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" horizontal={false} />
+                <CartesianGrid stroke="#d1d9e6" strokeDasharray="3 3" horizontal={false} />
                 <XAxis type="number" stroke="#94a3b8" fontSize={10} tickLine={false} />
                 <YAxis
                   type="category"

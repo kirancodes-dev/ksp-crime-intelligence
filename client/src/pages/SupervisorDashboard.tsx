@@ -261,25 +261,25 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
       case 'Critical':
-        return 'bg-red-500/20 text-red-400 border border-red-500/35';
+        return 'bg-red-500/20 text-[#d9251c] border border-red-500/35';
       case 'High':
-        return 'bg-orange-500/20 text-orange-400 border border-orange-500/35';
+        return 'bg-orange-500/20 text-orange-700 border border-orange-500/35';
       case 'Medium':
-        return 'bg-amber-500/20 text-amber-400 border border-amber-500/35';
+        return 'bg-amber-500/20 text-amber-700 border border-amber-500/35';
       default:
-        return 'bg-blue-500/20 text-blue-400 border border-blue-500/35';
+        return 'bg-blue-500/20 text-[#1e3a5f] border border-blue-500/35';
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Header section */}
-      <div className="flex justify-between items-center bg-slate-900/40 border border-slate-800 rounded-lg p-4 bg-white border-slate-200">
+      <div className="flex justify-between items-center bg-[#f0f4f8]/40 border border-[#d1d9e6] rounded-lg p-4 bg-white border-slate-200">
         <div>
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="text-brand-primary" /> Supervision & Audit Management
+            <ShieldCheck className="text-[#1e3a5f]" /> Supervision & Audit Management
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5 font-medium">System audit logs, anomaly alerts, and operational health monitoring</p>
+          <p className="text-xs text-[#6c757d] mt-0.5 font-medium">System audit logs, anomaly alerts, and operational health monitoring</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
         <button
           onClick={() => setSupervisorTab('audit')}
           className={`flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold transition cursor-pointer border-b-2 ${
-            supervisorTab === 'audit' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-slate-500 hover:text-slate-700'
+            supervisorTab === 'audit' ? 'border-[#1e3a5f] text-[#1e3a5f]' : 'border-transparent text-[#6c757d] hover:text-slate-700'
           }`}
         >
           <ShieldCheck size={13} /> Audit &amp; Anomaly
@@ -308,7 +308,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
         <button
           onClick={() => setSupervisorTab('warrants')}
           className={`flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold transition cursor-pointer border-b-2 ${
-            supervisorTab === 'warrants' ? 'border-brand-primary text-brand-primary' : 'border-transparent text-slate-500 hover:text-slate-700'
+            supervisorTab === 'warrants' ? 'border-[#1e3a5f] text-[#1e3a5f]' : 'border-transparent text-[#6c757d] hover:text-slate-700'
           }`}
         >
           <Scale size={13} /> Warrant Desk
@@ -324,28 +324,28 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
       {/* System Health Status Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="card-panel border border-slate-200 rounded-lg p-4 flex flex-col justify-center items-center bg-white">
-          <span className="text-[11px] text-slate-400 uppercase font-bold">Datastore Health</span>
+          <span className="text-[11px] text-[#6c757d] uppercase font-bold">Datastore Health</span>
           <div className="flex items-center gap-1.5 mt-1">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <strong className="text-sm text-slate-800">99.98% / Healthy</strong>
           </div>
         </div>
         <div className="card-panel border border-slate-200 rounded-lg p-4 flex flex-col justify-center items-center bg-white">
-          <span className="text-[11px] text-slate-400 uppercase font-bold">AutoML Sync</span>
+          <span className="text-[11px] text-[#6c757d] uppercase font-bold">AutoML Sync</span>
           <div className="flex items-center gap-1.5 mt-1">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <strong className="text-sm text-slate-800">Zia Engine Online</strong>
           </div>
         </div>
         <div className="card-panel border border-slate-200 rounded-lg p-4 flex flex-col justify-center items-center bg-white">
-          <span className="text-[11px] text-slate-400 uppercase font-bold">Audit Ledger Integrity</span>
+          <span className="text-[11px] text-[#6c757d] uppercase font-bold">Audit Ledger Integrity</span>
           <div className="flex items-center gap-1.5 mt-1">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <strong className="text-sm text-slate-800">Cryptographic / Verified</strong>
           </div>
         </div>
         <div className="card-panel border border-slate-200 rounded-lg p-4 flex flex-col justify-center items-center bg-white">
-          <span className="text-[11px] text-slate-400 uppercase font-bold">Compliance Rating</span>
+          <span className="text-[11px] text-[#6c757d] uppercase font-bold">Compliance Rating</span>
           <div className="flex items-center gap-1.5 mt-1">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <strong className="text-sm text-slate-800">100% Compliant</strong>
@@ -354,8 +354,8 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
       </div>
 
       {loading && (
-        <div className="flex justify-center items-center py-10 text-slate-400 text-xs gap-2">
-          <Loader2 size={16} className="animate-spin text-brand-primary" />
+        <div className="flex justify-center items-center py-10 text-[#6c757d] text-xs gap-2">
+          <Loader2 size={16} className="animate-spin text-[#1e3a5f]" />
           <span>Fetching log ledgers and anomalies...</span>
         </div>
       )}
@@ -366,7 +366,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
           {/* Left Panel: Zia AutoML Anomaly Alerts */}
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center gap-2 px-1">
-              <AlertOctagon size={16} className="text-brand-primary" />
+              <AlertOctagon size={16} className="text-[#1e3a5f]" />
               <span className="text-sm font-bold text-slate-800 uppercase tracking-wider">Predictive Intelligence Flags</span>
             </div>
 
@@ -388,16 +388,16 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     </div>
 
                     <h4 className="text-sm font-bold text-slate-800 mt-2.5">{alert.title}</h4>
-                    <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">{alert.description}</p>
+                    <p className="text-xs text-[#6c757d] mt-1.5 leading-relaxed font-medium">{alert.description}</p>
                     
                     <div className="flex justify-between items-center mt-3 pt-2 border-t border-slate-50">
-                      <span className="text-[10px] text-brand-primary font-bold uppercase tracking-wider block">
+                      <span className="text-[10px] text-[#1e3a5f] font-bold uppercase tracking-wider block">
                         Source: {alert.type}
                       </span>
                       
                       <button
                         onClick={() => handleOpenOverrideModal(alert.title)}
-                        className="px-2.5 py-1 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary border border-brand-primary/25 rounded text-[10px] font-bold transition cursor-pointer"
+                        className="px-2.5 py-1 bg-[#1e3a5f]/10 hover:bg-[#1e3a5f]/20 text-white border border-[#1e3a5f]/25 rounded text-[10px] font-bold transition cursor-pointer"
                       >
                         Resolve Flag
                       </button>
@@ -405,7 +405,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                   </div>
                 ))
               ) : (
-                <div className="text-center py-10 text-slate-500 border border-slate-200 rounded-lg bg-white text-xs">
+                <div className="text-center py-10 text-[#6c757d] border border-slate-200 rounded-lg bg-white text-xs">
                   No predictive anomaly spikes flagged today.
                 </div>
               )}
@@ -416,13 +416,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
           <div className="lg:col-span-7 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-1">
               <div className="flex items-center gap-2">
-                <Terminal size={16} className="text-brand-primary" />
+                <Terminal size={16} className="text-[#1e3a5f]" />
                 <span className="text-sm font-bold text-slate-800 uppercase tracking-wider">Traceability Ledger (Audit Logs)</span>
               </div>
 
               {/* Log filter */}
               <div className="relative w-full sm:w-48">
-                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#6c757d]" />
                 <input
                   type="text"
                   value={logFilter}
@@ -431,7 +431,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     setCurrentPage(1);
                   }}
                   placeholder="Filter logs..."
-                  className="bg-white border border-slate-200 focus:border-brand-primary focus:outline-none rounded-lg pl-8 pr-3 py-1 text-[11px] text-slate-800 placeholder-slate-400 w-full"
+                  className="bg-white border border-slate-200 focus:border-[#1e3a5f] focus:outline-none rounded-lg pl-8 pr-3 py-1 text-[11px] text-slate-800 placeholder-slate-400 w-full"
                 />
               </div>
             </div>
@@ -441,7 +441,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               <div className="overflow-x-auto min-h-[380px] max-h-[460px] overflow-y-auto">
                 <table className="w-full text-left border-collapse text-xs table-zebra">
                   <thead>
-                    <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                    <tr className="bg-slate-50 text-[#6c757d] font-bold border-b border-slate-200">
                       <th className="p-3">User & Role</th>
                       <th className="p-3">Audit Details</th>
                       <th className="p-3 text-center">Security Level</th>
@@ -455,13 +455,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                         <tr key={log.id} className="hover:bg-slate-50 transition">
                           <td className="p-3 whitespace-nowrap">
                             <span className="font-bold text-slate-900 block">{log.user_id}</span>
-                            <span className="text-[11px] text-slate-400 font-semibold">{log.role}</span>
+                            <span className="text-[11px] text-[#6c757d] font-semibold">{log.role}</span>
                           </td>
                           <td className="p-3">
                             <span className="text-slate-800 font-semibold block max-w-xs truncate" title={log.query_text}>
                               {log.query_text}
                             </span>
-                            <span className="text-[10px] text-brand-primary font-bold block mt-0.5">
+                            <span className="text-[10px] text-[#1e3a5f] font-bold block mt-0.5">
                               {log.action_taken}
                             </span>
                           </td>
@@ -478,13 +478,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                               {log.data_classification || 'Restricted'}
                             </span>
                           </td>
-                          <td className="p-3 whitespace-nowrap text-slate-500 font-medium">
+                          <td className="p-3 whitespace-nowrap text-[#6c757d] font-medium">
                             {new Date(log.timestamp).toLocaleDateString()}
-                            <span className="block text-[11px] text-slate-400 font-mono mt-0.5">
+                            <span className="block text-[11px] text-[#6c757d] font-mono mt-0.5">
                               {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </td>
-                          <td className="p-3 text-right whitespace-nowrap text-slate-400 font-mono">
+                          <td className="p-3 text-right whitespace-nowrap text-[#6c757d] font-mono">
                             {log.ip_address}
                           </td>
                         </tr>
@@ -503,7 +503,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex justify-between items-center bg-slate-50 px-4 py-3 border-t border-slate-200 text-xs mt-auto">
-                  <span className="text-slate-500 font-bold">
+                  <span className="text-[#6c757d] font-bold">
                     Showing <strong className="text-slate-800">{(currentPage - 1) * itemsPerPage + 1}</strong> to <strong className="text-slate-800">{Math.min(currentPage * itemsPerPage, filteredLogs.length)}</strong> of <strong className="text-slate-800">{filteredLogs.length}</strong> logs
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -544,7 +544,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Live Ticker Feed */}
             <div className="lg:col-span-4 space-y-3">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Active Incoming Calls (Live Feed)</span>
+              <span className="text-[10px] uppercase font-bold text-[#6c757d] block">Active Incoming Calls (Live Feed)</span>
               
               <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                 {dispatchLogs.map((log) => {
@@ -557,7 +557,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                       onClick={() => isPending && setSelectedCall(log)}
                       className={`p-3 rounded-lg border transition text-xs ${
                         selectedCall?.id === log.id 
-                          ? 'border-brand-primary bg-blue-50/20' 
+                          ? 'border-[#1e3a5f] bg-blue-50/20' 
                           : isPending 
                             ? 'border-amber-200 bg-amber-50/10 hover:border-amber-400 cursor-pointer' 
                             : 'border-slate-200 bg-slate-50/30'
@@ -578,7 +578,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                       
                       <p className="text-slate-600 mt-1.5 font-medium leading-relaxed">{log.details}</p>
                       
-                      <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-slate-100 text-[10px] text-slate-400">
+                      <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-slate-100 text-[10px] text-[#6c757d]">
                         <span>Time: <strong>{log.time}</strong> • Caller: <strong>{log.caller}</strong></span>
                         {log.vehicle && (
                           <span className="text-slate-600 font-bold bg-white px-1.5 py-0.5 border border-slate-200 rounded font-mono">
@@ -594,12 +594,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
 
             {/* AI Dispatch Routing Recommendation */}
             <div className="lg:col-span-4 space-y-3">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">AI Patrol Dispatch Router</span>
+              <span className="text-[10px] uppercase font-bold text-[#6c757d] block">AI Patrol Dispatch Router</span>
               
               {selectedCall ? (
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4 text-xs">
                   <div className="space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Processing Incident</span>
+                    <span className="text-[10px] uppercase font-bold text-[#6c757d]">Processing Incident</span>
                     <strong className="text-slate-850 block">Call #{selectedCall.id}</strong>
                     <p className="text-slate-600 font-medium">{selectedCall.details}</p>
                   </div>
@@ -607,15 +607,15 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                   {!dispatchRecommendation && !dispatchLoading && (
                     <button
                       onClick={() => handleGenerateRecommendation(selectedCall)}
-                      className="w-full py-2 bg-brand-primary hover:bg-brand-primary-light text-white text-xs font-bold rounded-lg transition cursor-pointer text-center"
+                      className="w-full py-2 bg-[#1e3a5f] hover:bg-[#1e3a5f]-light text-white text-xs font-bold rounded-lg transition cursor-pointer text-center"
                     >
                       Calculate AI Dispatch Route
                     </button>
                   )}
 
                   {dispatchLoading && (
-                    <div className="flex flex-col items-center justify-center py-4 text-slate-400 text-xs gap-2">
-                      <Loader2 size={16} className="animate-spin text-brand-primary" />
+                    <div className="flex flex-col items-center justify-center py-4 text-[#6c757d] text-xs gap-2">
+                      <Loader2 size={16} className="animate-spin text-[#1e3a5f]" />
                       <span>Spatially locating closest patrol unit...</span>
                     </div>
                   )}
@@ -624,19 +624,19 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     <div className="space-y-3 pt-3 border-t border-slate-200">
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div className="bg-white p-2 rounded border border-slate-200">
-                          <span className="text-slate-400 block mb-0.5">Assigned Unit</span>
+                          <span className="text-[#6c757d] block mb-0.5">Assigned Unit</span>
                           <strong className="text-slate-800 block font-mono">{dispatchRecommendation.unit?.id}</strong>
-                          <span className="text-[10px] text-slate-500 font-medium block">{dispatchRecommendation.unit?.vehicle.split(' ')[0]}</span>
+                          <span className="text-[10px] text-[#6c757d] font-medium block">{dispatchRecommendation.unit?.vehicle.split(' ')[0]}</span>
                         </div>
                         <div className="bg-white p-2 rounded border border-slate-200">
-                          <span className="text-slate-400 block mb-0.5">Distance / ETA</span>
+                          <span className="text-[#6c757d] block mb-0.5">Distance / ETA</span>
                           <strong className="text-slate-800 block">{dispatchRecommendation.distance}</strong>
-                          <span className="text-[10px] text-slate-500 font-medium block">{dispatchRecommendation.eta}</span>
+                          <span className="text-[10px] text-[#6c757d] font-medium block">{dispatchRecommendation.eta}</span>
                         </div>
                       </div>
 
                       <div className="bg-white p-2.5 rounded border border-slate-200">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Optimized Patrol Path</span>
+                        <span className="text-[10px] uppercase font-bold text-[#6c757d] block mb-1">Optimized Patrol Path</span>
                         <p className="text-slate-600 italic leading-relaxed">{dispatchRecommendation.routeDescription}</p>
                       </div>
 
@@ -661,16 +661,16 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-500 border border-dashed border-slate-350 rounded-lg text-center space-y-2 bg-slate-50">
-                  <span className="h-5 w-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-xs">?</span>
-                  <p className="text-xs font-semibold text-slate-500">Select any pending incident from the live feed to run AI dispatch routing.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-[#6c757d] border border-dashed border-slate-350 rounded-lg text-center space-y-2 bg-slate-50">
+                  <span className="h-5 w-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-[#6c757d] text-xs">?</span>
+                  <p className="text-xs font-semibold text-[#6c757d]">Select any pending incident from the live feed to run AI dispatch routing.</p>
                 </div>
               )}
             </div>
 
             {/* Active Patrol Unit Grid */}
             <div className="lg:col-span-4 space-y-3">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block">Patrol Fleet Status Ledger</span>
+              <span className="text-[10px] uppercase font-bold text-[#6c757d] block">Patrol Fleet Status Ledger</span>
               
               <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
                 {patrolUnits.map((unit) => (
@@ -678,9 +678,9 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     <div>
                       <div className="flex items-center gap-1.5">
                         <strong className="text-slate-800 font-mono">{unit.id}</strong>
-                        <span className="text-[10px] text-slate-400 font-medium">({unit.officer})</span>
+                        <span className="text-[10px] text-[#6c757d] font-medium">({unit.officer})</span>
                       </div>
-                      <span className="text-[10px] text-slate-500 font-medium mt-0.5 block">{unit.vehicle}</span>
+                      <span className="text-[10px] text-[#6c757d] font-medium mt-0.5 block">{unit.vehicle}</span>
                     </div>
 
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
@@ -705,7 +705,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                 </div>
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-900 uppercase">CCTNS Ingestion Control & Scheduler</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Automated Synchronizer • Catalyst Cron Daemon</p>
+                  <p className="text-[10px] text-[#6c757d] font-bold uppercase mt-0.5">Automated Synchronizer • Catalyst Cron Daemon</p>
                 </div>
               </div>
 
@@ -713,7 +713,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                 <button
                   onClick={handleTriggerSync}
                   disabled={runningSync}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-650 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-650 text-[#1e3a5f] font-bold text-xs uppercase tracking-wider rounded-lg transition cursor-pointer disabled:bg-slate-200 disabled:text-[#6c757d] disabled:cursor-not-allowed"
                 >
                   <RefreshCw size={12} className={runningSync ? 'animate-spin' : ''} />
                   <span>{runningSync ? 'Syncing...' : 'Trigger Immediate Sync'}</span>
@@ -724,14 +724,14 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left & Mid: Chronological runs table */}
               <div className="lg:col-span-2 space-y-3">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                <span className="text-[10px] uppercase font-bold text-[#6c757d] block mb-1">
                   Ingestion Execution History (Last 10 Runs)
                 </span>
                 
                 <div className="overflow-x-auto border border-slate-150 rounded-lg bg-slate-50">
                   <table className="min-w-full text-xs text-slate-700">
                     <thead>
-                      <tr className="bg-slate-100 border-b border-slate-150 font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                      <tr className="bg-slate-100 border-b border-slate-150 font-bold text-[#6c757d] uppercase tracking-wider text-[10px]">
                         <th className="px-4 py-2 text-left">Run Timestamp</th>
                         <th className="px-4 py-2 text-left">Trigger</th>
                         <th className="px-4 py-2 text-left">Records Ingested</th>
@@ -749,13 +749,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                             <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
                               run.trigger_type === 'Manual'
                                 ? 'bg-blue-50 text-blue-700 border-blue-100'
-                                : 'bg-slate-100 text-slate-500 border-slate-200'
+                                : 'bg-slate-100 text-[#6c757d] border-slate-200'
                             }`}>
                               {run.trigger_type}
                             </span>
                           </td>
                           <td className="px-4 py-3 font-bold text-slate-900">{run.records_ingested} Recs</td>
-                          <td className="px-4 py-3 font-mono text-[11px] text-slate-500">{run.latency_ms} ms</td>
+                          <td className="px-4 py-3 font-mono text-[11px] text-[#6c757d]">{run.latency_ms} ms</td>
                           <td className="px-4 py-3">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                               run.status === 'SUCCESS'
@@ -776,7 +776,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               <div className="space-y-4">
                 {/* Config */}
                 <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-3">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  <span className="text-[10px] uppercase font-bold text-[#6c757d] block">
                     Catalyst Daemon Cron Setting
                   </span>
                   
@@ -784,14 +784,14 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     <select
                       value={cronInterval}
                       onChange={(e) => setCronInterval(e.target.value)}
-                      className="bg-white border border-slate-200 text-xs text-slate-800 rounded-lg px-3 py-2 w-full focus:outline-none focus:border-brand-primary"
+                      className="bg-white border border-slate-200 text-xs text-slate-800 rounded-lg px-3 py-2 w-full focus:outline-none focus:border-[#1e3a5f]"
                     >
                       <option value="1min">Every 1 Minute (Operational Sync)</option>
                       <option value="5min">Every 5 Minutes (Standard Ingest)</option>
                       <option value="Hourly">Every Hour (Hourly Reconciliation)</option>
                       <option value="Daily">Every 24 Hours (Daily Audit Backup)</option>
                     </select>
-                    <p className="text-[10px] text-slate-500 font-semibold italic">
+                    <p className="text-[10px] text-[#6c757d] font-semibold italic">
                       Active: Daemon scheduler fires sync requests on configured intervals.
                     </p>
                   </div>
@@ -799,21 +799,21 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
 
                 {/* Logs terminal */}
                 <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-2">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                  <span className="text-[10px] uppercase font-bold text-[#6c757d] block">
                     Daemon Ingestion Log Terminal
                   </span>
                   
-                  <div className="bg-slate-950 text-slate-300 font-mono text-[10px] p-3 rounded-lg border border-slate-900 h-32 overflow-y-auto space-y-1">
+                  <div className="bg-[#0d2137] text-[#2d4a6f] font-mono text-[10px] p-3 rounded-lg border border-slate-900 h-32 overflow-y-auto space-y-1">
                     {logsOutput.map((l, i) => (
                       <div key={i} className="leading-tight">
                         <span className="text-emerald-500">&gt;</span> {l}
                       </div>
                     ))}
                     {runningSync && (
-                      <div className="text-slate-500 animate-pulse">Ingesting data packets...</div>
+                      <div className="text-[#6c757d] animate-pulse">Ingesting data packets...</div>
                     )}
                     {!runningSync && logsOutput.length === 0 && (
-                      <div className="text-slate-500 italic">No active sync log. Click sync above to trigger.</div>
+                      <div className="text-[#6c757d] italic">No active sync log. Click sync above to trigger.</div>
                     )}
                   </div>
                 </div>
@@ -825,7 +825,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
 
       {/* Compliance Override Justification Modal */}
       {showOverrideModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[5000] p-4 font-sans select-none">
+        <div className="fixed inset-0 bg-[#f0f4f8]/60 backdrop-blur-sm flex items-center justify-center z-[5000] p-4 font-sans select-none">
           <form onSubmit={handleSubmitOverride} className="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-2xl p-6 flex flex-col gap-4">
             
             {/* Header */}
@@ -835,13 +835,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               </div>
               <div>
                 <h3 className="text-sm font-extrabold text-slate-900 uppercase">Compliance Override</h3>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Governance Resolution Log</p>
+                <p className="text-[10px] text-[#6c757d] font-semibold uppercase mt-0.5">Governance Resolution Log</p>
               </div>
             </div>
 
             {/* Target Alert */}
             <div className="bg-slate-50 border border-slate-150 rounded-lg p-3 text-xs">
-              <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">Target Anomaly</span>
+              <span className="block text-[10px] text-[#6c757d] font-bold uppercase mb-1">Target Anomaly</span>
               <strong className="text-slate-800 font-bold">"{selectedAlertTitle}"</strong>
             </div>
 
@@ -851,7 +851,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               <select
                 value={overrideReason}
                 onChange={(e) => setOverrideReason(e.target.value)}
-                className="bg-white border border-slate-200 text-xs text-slate-800 rounded-lg px-3 py-2 w-full focus:outline-none focus:border-brand-primary"
+                className="bg-white border border-slate-200 text-xs text-slate-800 rounded-lg px-3 py-2 w-full focus:outline-none focus:border-[#1e3a5f]"
               >
                 <option value="Authorized Operational Test">Authorized Operational Test</option>
                 <option value="False Positive Verification">False Positive Verification</option>
@@ -862,13 +862,13 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
 
             {/* Justification Textarea */}
             <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Justification Note</label>
+              <label className="block text-[10px] font-bold text-[#6c757d] uppercase tracking-wider">Justification Note</label>
               <textarea
                 value={overrideJustification}
                 onChange={(e) => setOverrideJustification(e.target.value)}
                 placeholder="Enter official justification detailing why this anomaly flag is overridden..."
                 rows={3}
-                className="bg-white border border-slate-200 text-xs text-slate-800 rounded-lg p-3 w-full focus:outline-none focus:border-brand-primary font-medium"
+                className="bg-white border border-slate-200 text-xs text-slate-800 rounded-lg p-3 w-full focus:outline-none focus:border-[#1e3a5f] font-medium"
                 required
               />
             </div>
@@ -886,7 +886,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               <button
                 type="submit"
                 disabled={submittingOverride}
-                className="flex-1 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs uppercase tracking-wider py-2.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5"
+                className="flex-1 bg-[#1e3a5f] hover:bg-[#1e3a5f]/95 text-white font-bold text-xs uppercase tracking-wider py-2.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5"
               >
                 {submittingOverride ? 'Submitting Override...' : 'Submit Override'}
               </button>

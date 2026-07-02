@@ -134,45 +134,45 @@ export const CdrTimelineMap: React.FC<CdrTimelineMapProps> = ({ data, mapId }) =
   }, []);
 
   return (
-    <div className="w-full bg-slate-900 border border-slate-800 rounded-lg p-5 shadow-lg text-slate-100">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+    <div className="w-full bg-[#f0f4f8] border border-[#d1d9e6] rounded-lg p-5 shadow-lg text-[#1e3a5f]">
+      <div className="flex items-center justify-between border-b border-[#d1d9e6] pb-3 mb-4">
         <div className="flex items-center gap-2">
-          <Layers className="text-brand-primary h-5 w-5" />
-          <h4 className="font-bold text-sm uppercase tracking-wider text-slate-200">
+          <Layers className="text-[#1e3a5f] h-5 w-5" />
+          <h4 className="font-bold text-sm uppercase tracking-wider text-[#1e3a5f]">
             CDR Trajectory map & Proximity Timeline
           </h4>
         </div>
-        <div className="flex items-center gap-1.5 bg-slate-850 px-2 py-0.5 rounded border border-slate-700 text-[10px] text-slate-400 font-bold uppercase">
-          <Phone size={10} className="text-brand-primary animate-pulse" />
+        <div className="flex items-center gap-1.5 bg-slate-850 px-2 py-0.5 rounded border border-[#d1d9e6] text-[10px] text-[#6c757d] font-bold uppercase">
+          <Phone size={10} className="text-[#1e3a5f] animate-pulse" />
           <span>{data.carrier}</span>
         </div>
       </div>
 
       {/* Trajectory Details */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 bg-slate-950/45 p-3 rounded-lg border border-slate-800 text-xs">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 bg-[#0d2137]/45 p-3 rounded-lg border border-[#d1d9e6] text-xs">
         <div>
-          <span className="text-[10px] text-slate-500 font-bold uppercase">Suspect Target</span>
-          <div className="font-bold text-slate-200">{data.suspect}</div>
+          <span className="text-[10px] text-[#6c757d] font-bold uppercase">Suspect Target</span>
+          <div className="font-bold text-[#1e3a5f]">{data.suspect}</div>
         </div>
         <div>
-          <span className="text-[10px] text-slate-500 font-bold uppercase">Mobile Number</span>
-          <div className="font-bold text-slate-200 font-mono">{data.phone}</div>
+          <span className="text-[10px] text-[#6c757d] font-bold uppercase">Mobile Number</span>
+          <div className="font-bold text-[#1e3a5f] font-mono">{data.phone}</div>
         </div>
         <div className="col-span-2 md:col-span-1">
-          <span className="text-[10px] text-slate-500 font-bold uppercase">IMEI Registry ID</span>
-          <div className="font-bold text-slate-300 font-mono">{data.imei}</div>
+          <span className="text-[10px] text-[#6c757d] font-bold uppercase">IMEI Registry ID</span>
+          <div className="font-bold text-[#2d4a6f] font-mono">{data.imei}</div>
         </div>
       </div>
 
       {/* Collision Alerts Panel */}
       {data.collisionAlerts && data.collisionAlerts.length > 0 && (
         <div className="mb-4 bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-xs flex gap-2.5 items-start">
-          <AlertTriangle className="text-red-400 h-5 w-5 shrink-0" />
+          <AlertTriangle className="text-[#d9251c] h-5 w-5 shrink-0" />
           <div>
-            <div className="font-bold text-red-400">⚠️ Proximity Crime Hotspot Overlap Flagged</div>
+            <div className="font-bold text-[#d9251c]">⚠️ Proximity Crime Hotspot Overlap Flagged</div>
             {data.collisionAlerts.map((alert, idx) => (
-              <p key={idx} className="text-slate-300 mt-1">
-                Suspect device was located <span className="font-bold text-red-300">{alert.distance_meters}m</span> from incident location for <span className="font-bold text-slate-200">{alert.fir_number}</span> at <span className="font-bold text-slate-200">{alert.incident_time}</span> (Tower: {alert.tower_id}).
+              <p key={idx} className="text-[#2d4a6f] mt-1">
+                Suspect device was located <span className="font-bold text-[#d9251c]">{alert.distance_meters}m</span> from incident location for <span className="font-bold text-[#1e3a5f]">{alert.fir_number}</span> at <span className="font-bold text-[#1e3a5f]">{alert.incident_time}</span> (Tower: {alert.tower_id}).
               </p>
             ))}
           </div>
@@ -183,15 +183,15 @@ export const CdrTimelineMap: React.FC<CdrTimelineMapProps> = ({ data, mapId }) =
       <div 
         ref={mapContainerRef} 
         id={mapId}
-        className="w-full h-[250px] bg-slate-950 rounded-lg border border-slate-800 mb-4 overflow-hidden relative z-10" 
+        className="w-full h-[250px] bg-[#0d2137] rounded-lg border border-[#d1d9e6] mb-4 overflow-hidden relative z-10" 
       />
 
       {/* Breadcrumbs Interactive Slider Timeline */}
       {data.breadcrumbs && data.breadcrumbs.length > 0 && (
         <div className="space-y-2.5">
           <div className="flex justify-between items-center text-xs font-semibold">
-            <span className="text-slate-400">Chronological Tower Pings ({data.breadcrumbs.length})</span>
-            <span className="text-brand-primary font-bold">
+            <span className="text-[#6c757d]">Chronological Tower Pings ({data.breadcrumbs.length})</span>
+            <span className="text-[#1e3a5f] font-bold">
               Active: {data.breadcrumbs[activeIndex].time} - {data.breadcrumbs[activeIndex].tower}
             </span>
           </div>
@@ -203,7 +203,7 @@ export const CdrTimelineMap: React.FC<CdrTimelineMapProps> = ({ data, mapId }) =
               max={data.breadcrumbs.length - 1} 
               value={activeIndex} 
               onChange={(e) => setActiveIndex(parseInt(e.target.value))} 
-              className="flex-1 accent-brand-primary bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer"
+              className="flex-1 accent-brand-primary bg-white h-1.5 rounded-lg appearance-none cursor-pointer"
             />
           </div>
 
@@ -214,8 +214,8 @@ export const CdrTimelineMap: React.FC<CdrTimelineMapProps> = ({ data, mapId }) =
                 onClick={() => setActiveIndex(idx)}
                 className={`py-1 rounded text-[10px] font-bold border transition ${
                   idx === activeIndex
-                    ? 'bg-brand-primary text-white border-brand-primary'
-                    : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-800'
+                    ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]'
+                    : 'bg-[#0d2137] text-[#6c757d] border-[#d1d9e6] hover:border-[#d1d9e6]'
                 }`}
               >
                 Ping #{idx + 1}

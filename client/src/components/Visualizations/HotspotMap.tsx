@@ -90,15 +90,15 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect, 
         popupContent.className = "p-1 font-sans text-xs text-slate-800";
         popupContent.innerHTML = `
           <div class="font-bold text-sm text-slate-900 border-b border-slate-200 pb-1 mb-2 flex justify-between items-center gap-4">
-            <span class="text-brand-primary cursor-pointer hover:underline" id="popup-fir-${inc.fir_number}">${inc.fir_number}</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500 font-semibold">${inc.area_type}</span>
+            <span class="text-[#1e3a5f] cursor-pointer hover:underline" id="popup-fir-${inc.fir_number}">${inc.fir_number}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-[#6c757d] font-semibold">${inc.area_type}</span>
           </div>
           <div class="space-y-1.5 text-slate-700 font-medium">
-            <div><span class="text-slate-400 font-bold">Type:</span> <strong class="text-slate-900">${inc.crime_type}</strong></div>
-            <div><span class="text-slate-400 font-bold">District:</span> <span>${inc.district}</span></div>
-            <div><span class="text-slate-400 font-bold">Station:</span> <span>${inc.district.split(' ')[0]} Central PS</span></div>
-            <div><span class="text-slate-400 font-bold">Date:</span> <span>${inc.date_reported}</span></div>
-            <div class="pt-1 border-t border-slate-100 text-slate-500"><span class="text-slate-400 font-bold">Address:</span> ${inc.address}</div>
+            <div><span class="text-[#6c757d] font-bold">Type:</span> <strong class="text-slate-900">${inc.crime_type}</strong></div>
+            <div><span class="text-[#6c757d] font-bold">District:</span> <span>${inc.district}</span></div>
+            <div><span class="text-[#6c757d] font-bold">Station:</span> <span>${inc.district.split(' ')[0]} Central PS</span></div>
+            <div><span class="text-[#6c757d] font-bold">Date:</span> <span>${inc.date_reported}</span></div>
+            <div class="pt-1 border-t border-slate-100 text-[#6c757d]"><span class="text-[#6c757d] font-bold">Address:</span> ${inc.address}</div>
           </div>
         `;
 

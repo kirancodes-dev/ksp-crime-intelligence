@@ -92,7 +92,7 @@ export const FinancialFlowGraph: React.FC<FinancialFlowGraphProps> = ({
         from: edge.from,
         to: edge.to,
         label: edge.label,
-        font: { color: '#94a3b8', size: 8, face: 'Inter', strokeWidth: 0 },
+        font: { color: '#6c757d', size: 8, face: 'Inter', strokeWidth: 0 },
         color: {
           color: isSuspicious ? '#ef4444' : (edge.color || '#475569'),
           highlight: '#ffffff',
@@ -158,36 +158,36 @@ export const FinancialFlowGraph: React.FC<FinancialFlowGraphProps> = ({
   };
 
   return (
-    <div className="card-panel rounded-lg border border-slate-800 p-6 text-slate-100 shadow-xl w-full my-4 relative">
+    <div className="card-panel rounded-lg border border-[#d1d9e6] p-6 text-[#1e3a5f] shadow-xl w-full my-4 relative">
       {/* Summary Bar */}
-      <div className="flex flex-wrap gap-4 items-center mb-4 bg-slate-900/60 rounded-lg border border-slate-800/60 p-3">
+      <div className="flex flex-wrap gap-4 items-center mb-4 bg-[#f0f4f8]/60 rounded-lg border border-[#d1d9e6]/60 p-3">
         {totalAmount !== undefined && (
           <div className="flex items-center gap-2">
-            <Landmark size={16} className="text-brand-primary" />
-            <span className="text-xs text-slate-400">Total Volume:</span>
-            <span className="text-sm font-bold text-white">{formatCurrency(totalAmount)}</span>
+            <Landmark size={16} className="text-[#1e3a5f]" />
+            <span className="text-xs text-[#6c757d]">Total Volume:</span>
+            <span className="text-sm font-bold text-[#1e3a5f]">{formatCurrency(totalAmount)}</span>
           </div>
         )}
         {suspiciousCount !== undefined && (
           <div className="flex items-center gap-2 ml-auto">
-            <AlertTriangle size={16} className="text-red-400" />
-            <span className="text-xs text-slate-400">Suspicious Transactions:</span>
-            <span className="text-sm font-bold text-red-400">{suspiciousCount}</span>
+            <AlertTriangle size={16} className="text-[#d9251c]" />
+            <span className="text-xs text-[#6c757d]">Suspicious Transactions:</span>
+            <span className="text-sm font-bold text-[#d9251c]">{suspiciousCount}</span>
           </div>
         )}
       </div>
 
       {/* Header */}
-      <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
+      <div className="flex justify-between items-center border-b border-[#d1d9e6] pb-4 mb-4">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Landmark className="text-brand-primary" size={20} /> Financial Flow Network
+          <h2 className="text-lg font-bold text-[#1e3a5f] flex items-center gap-2">
+            <Landmark className="text-[#1e3a5f]" size={20} /> Financial Flow Network
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Money trail between accounts — suspicious flows highlighted in red</p>
+          <p className="text-xs text-[#6c757d] mt-0.5">Money trail between accounts — suspicious flows highlighted in red</p>
         </div>
         <button
           onClick={triggerResetPhysics}
-          className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-md text-xs font-semibold transition"
+          className="flex items-center gap-1.5 px-3 py-1 bg-[#f0f4f8] hover:bg-white border border-[#d1d9e6] hover:border-[#d1d9e6] text-[#2d4a6f] rounded-md text-xs font-semibold transition"
           title="Stabilize Graph Layout"
         >
           <RefreshCw size={12} /> Re-center
@@ -197,11 +197,11 @@ export const FinancialFlowGraph: React.FC<FinancialFlowGraphProps> = ({
       {/* Network Container */}
       <div
         ref={containerRef}
-        className="w-full h-96 min-h-[400px] rounded-lg border border-slate-800 bg-slate-950/60 overflow-hidden cursor-grab active:cursor-grabbing"
+        className="w-full h-96 min-h-[400px] rounded-lg border border-[#d1d9e6] bg-[#0d2137]/60 overflow-hidden cursor-grab active:cursor-grabbing"
       />
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 mt-4 text-[10px] text-slate-400 border-t border-slate-900 pt-3">
+      <div className="flex flex-wrap gap-4 mt-4 text-[10px] text-[#6c757d] border-t border-slate-900 pt-3">
         {['Savings', 'UPI', 'Hawala', 'Shell Company', 'Crypto', 'Current'].map(type => (
           <div key={type} className="flex items-center gap-2">
             <span

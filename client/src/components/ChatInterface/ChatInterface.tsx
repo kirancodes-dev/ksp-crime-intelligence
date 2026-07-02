@@ -385,7 +385,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (llmMode === 'ollama') return 'bg-purple-500';
     if (llmMode === 'live') return 'bg-emerald-500';
     if (llmMode === 'fallback') return 'bg-amber-500';
-    return 'bg-brand-primary';
+    return 'bg-[#1e3a5f]';
   };
 
   const getStatusLabel = () => {
@@ -399,72 +399,72 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[600px] bg-slate-950 border border-slate-900 rounded-lg overflow-hidden shadow-2xl relative">
+    <div className="flex flex-col h-[600px] bg-[#0d2137] border border-slate-900 rounded-lg overflow-hidden shadow-2xl relative">
       
       {/* Session History Sidebar */}
       {showHistory && (
         <div className="absolute inset-0 z-50 flex">
-          <div className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col h-full">
-            <div className="flex justify-between items-center px-4 py-3 border-b border-slate-800">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <History size={14} className="text-brand-primary" /> Session History
+          <div className="w-72 bg-[#f0f4f8] border-r border-[#d1d9e6] flex flex-col h-full">
+            <div className="flex justify-between items-center px-4 py-3 border-b border-[#d1d9e6]">
+              <h4 className="text-sm font-bold text-[#1e3a5f] flex items-center gap-2">
+                <History size={14} className="text-[#1e3a5f]" /> Session History
               </h4>
-              <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-white cursor-pointer transition">
+              <button onClick={() => setShowHistory(false)} className="text-[#6c757d] hover:text-[#1e3a5f] cursor-pointer transition">
                 <X size={14} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {sessionHistory.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center mt-6">No queries yet in this session.</p>
+                <p className="text-xs text-[#6c757d] text-center mt-6">No queries yet in this session.</p>
               ) : (
                 sessionHistory.map((h, i) => (
                   <button
                     key={i}
                     onClick={() => { setShowHistory(false); handleSend(h.query); }}
-                    className="w-full text-left px-3 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-lg group transition cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 bg-white hover:bg-slate-750 border border-[#d1d9e6] rounded-lg group transition cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="text-xs text-slate-200 font-medium leading-relaxed line-clamp-2">{h.query}</span>
-                      <ChevronRight size={12} className="text-slate-500 group-hover:text-brand-primary shrink-0 mt-0.5 transition" />
+                      <span className="text-xs text-[#1e3a5f] font-medium leading-relaxed line-clamp-2">{h.query}</span>
+                      <ChevronRight size={12} className="text-[#6c757d] group-hover:text-[#1e3a5f] shrink-0 mt-0.5 transition" />
                     </div>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-[10px] px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary rounded border border-brand-primary/20 font-semibold uppercase">{h.tool}</span>
-                      <span className="text-[10px] text-slate-500">{h.ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-[#1e3a5f]/10 text-white rounded border border-[#1e3a5f]/20 font-semibold uppercase">{h.tool}</span>
+                      <span className="text-[10px] text-[#6c757d]">{h.ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                   </button>
                 ))
               )}
             </div>
           </div>
-          <div className="flex-1 bg-slate-950/70 backdrop-blur-sm" onClick={() => setShowHistory(false)} />
+          <div className="flex-1 bg-[#0d2137]/70 backdrop-blur-sm" onClick={() => setShowHistory(false)} />
         </div>
       )}
       
       {/* Header bar */}
-      <div className="flex justify-between items-center bg-slate-900 px-6 py-4 border-b border-slate-800">
+      <div className="flex justify-between items-center bg-[#f0f4f8] px-6 py-4 border-b border-[#d1d9e6]">
         <div className="flex items-center gap-3">
           <span className={`h-2.5 w-2.5 rounded-full ${getStatusColor()}`} />
           <div>
-            <h3 className="font-bold text-white text-sm flex items-center gap-2">
+            <h3 className="font-bold text-[#1e3a5f] text-sm flex items-center gap-2">
               AI Intelligence Assistant
               <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${
                 llmMode === 'live' 
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                  ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' 
                   : llmMode === 'fallback'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                  : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                  ? 'bg-amber-500/10 text-amber-700 border-amber-500/20'
+                  : 'bg-blue-500/10 text-[#1e3a5f] border-blue-500/20'
               }`}>
                 {getStatusLabel()}
               </span>
             </h3>
-            <p className="text-[11px] text-slate-400">Secure Query Terminal • {role}</p>
+            <p className="text-[11px] text-[#6c757d]">Secure Query Terminal • {role}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
           {/* Context indicator */}
           {contextIndicator && (
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-md text-[11px] text-brand-primary font-semibold">
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-[#1e3a5f]/10 border border-[#1e3a5f]/20 rounded-md text-[11px] text-white font-semibold">
               <MessageSquare size={10} />
               <span>Context: {contextIndicator}</span>
             </div>
@@ -475,19 +475,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             onClick={() => setShowHistory(v => !v)}
             className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold transition cursor-pointer ${
               sessionHistory.length > 0
-                ? 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary hover:bg-brand-primary/20'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-700'
+                ? 'bg-[#1e3a5f]/10 border-[#1e3a5f]/20 text-white hover:bg-[#1e3a5f]/20'
+                : 'bg-white hover:bg-[#eef2f7] text-[#6c757d] border-[#d1d9e6]'
             }`}
             title="Session History"
           >
             <History size={12} />
-            {sessionHistory.length > 0 && <span className="text-[10px] bg-brand-primary text-white rounded-full px-1.5 py-0.5">{sessionHistory.length}</span>}
+            {sessionHistory.length > 0 && <span className="text-[10px] bg-[#1e3a5f] text-white rounded-full px-1.5 py-0.5">{sessionHistory.length}</span>}
           </button>
           
           {/* PDF Export action */}
           <button
             onClick={handleExportPdf}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#eef2f7] text-[#1e3a5f] border border-[#d1d9e6] rounded-lg text-xs font-semibold transition cursor-pointer"
             title="Download Chat Log PDF"
           >
             <Download size={12} /> Export Report
@@ -502,8 +502,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <div className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
               <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 border ${
                 msg.sender === 'user' 
-                  ? 'bg-slate-800 border-slate-700 text-slate-300' 
-                  : 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary'
+                  ? 'bg-white border-[#d1d9e6] text-[#2d4a6f]' 
+                  : 'bg-[#1e3a5f]/10 border-[#1e3a5f]/20 text-white'
               }`}>
                 {msg.sender === 'user' ? <UserIcon size={16} /> : <Bot size={16} />}
               </div>
@@ -511,8 +511,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <div>
                 <div className={`rounded-lg p-4 text-sm leading-relaxed ${
                   msg.sender === 'user'
-                    ? 'bg-slate-900 text-slate-100 border border-slate-800 rounded-tr-none'
-                    : 'bg-slate-900/40 text-slate-200 border border-slate-800 rounded-tl-none font-medium'
+                    ? 'bg-[#f0f4f8] text-[#1e3a5f] border border-[#d1d9e6] rounded-tr-none'
+                    : 'bg-[#f0f4f8]/40 text-[#1e3a5f] border border-[#d1d9e6] rounded-tl-none font-medium'
                 }`}>
                   <p className="whitespace-pre-line">{msg.text}</p>
                 </div>
@@ -525,15 +525,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 {/* Follow-up suggestion chips */}
                 {msg.sender === 'system' && msg.followUpSuggestions && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    <div className="w-full flex items-center gap-1 text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-0.5">
-                      <Sparkles size={9} className="text-brand-primary" /> You might ask
+                    <div className="w-full flex items-center gap-1 text-[10px] text-[#6c757d] font-semibold uppercase tracking-wider mb-0.5">
+                      <Sparkles size={9} className="text-[#1e3a5f]" /> You might ask
                     </div>
                     {msg.followUpSuggestions.map((suggestion, si) => (
                       <button
                         key={si}
                         onClick={() => !isLoading && handleSend(suggestion)}
                         disabled={isLoading}
-                        className="text-[11px] px-2.5 py-1 bg-slate-800 hover:bg-brand-primary/10 border border-slate-700 hover:border-brand-primary/30 text-slate-300 hover:text-brand-primary rounded-full transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                        className="text-[11px] px-2.5 py-1 bg-white hover:bg-[#1e3a5f]/10 border border-[#d1d9e6] hover:border-[#1e3a5f]/30 text-[#2d4a6f] hover:text-white rounded-full transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-medium"
                       >
                         {suggestion}
                       </button>
@@ -541,7 +541,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </div>
                 )}
                 
-                <span className="text-[11px] text-slate-500 mt-1 block px-1">
+                <span className="text-[11px] text-[#6c757d] mt-1 block px-1">
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -602,18 +602,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
         {isLoading && (
           <div className="flex gap-3 max-w-[85%] items-center">
-            <div className="h-8 w-8 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-brand-primary flex items-center justify-center shrink-0">
+            <div className="h-8 w-8 rounded-full bg-[#1e3a5f]/10 border border-[#1e3a5f]/20 text-white flex items-center justify-center shrink-0">
               <Bot size={16} />
             </div>
-            <div className="flex items-center gap-2 bg-slate-900/40 border border-slate-800 rounded-lg px-4 py-3 text-slate-400 text-xs">
-              <Loader2 size={12} className="animate-spin text-brand-primary" />
+            <div className="flex items-center gap-2 bg-[#f0f4f8]/40 border border-[#d1d9e6] rounded-lg px-4 py-3 text-[#6c757d] text-xs">
+              <Loader2 size={12} className="animate-spin text-[#1e3a5f]" />
               <span>Processing query...</span>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="flex gap-2 items-center bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-red-400 text-xs">
+          <div className="flex gap-2 items-center bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-[#d9251c] text-xs">
             <AlertCircle size={14} />
             <span>{error}</span>
           </div>
@@ -622,8 +622,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Demo Presets Row */}
-      <div className="bg-slate-950 px-4 py-2 border-t border-slate-900/60 flex flex-wrap items-center gap-2">
-        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Demo Presets:</span>
+      <div className="bg-[#0d2137] px-4 py-2 border-t border-slate-900/60 flex flex-wrap items-center gap-2">
+        <span className="text-[10px] text-[#6c757d] font-bold uppercase tracking-wider">Demo Presets:</span>
         <div className="flex flex-1 gap-1.5 overflow-x-auto no-scrollbar py-0.5">
           {[
             { label: '👤 Risk of Jacky', query: 'Show risk profile of Jacky' },
@@ -637,7 +637,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               type="button"
               onClick={() => !isLoading && handleSend(preset.query)}
               disabled={isLoading}
-              className="text-[10px] whitespace-nowrap px-2.5 py-1 bg-slate-900/80 hover:bg-brand-primary/10 border border-slate-800 hover:border-brand-primary/30 text-slate-300 hover:text-brand-primary rounded transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+              className="text-[10px] whitespace-nowrap px-2.5 py-1 bg-[#f0f4f8]/80 hover:bg-[#1e3a5f]/10 border border-[#d1d9e6] hover:border-[#1e3a5f]/30 text-[#2d4a6f] hover:text-white rounded transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed font-medium"
             >
               {preset.label}
             </button>
@@ -648,7 +648,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* Input bar */}
       <form 
         onSubmit={(e) => { e.preventDefault(); handleSend(inputText); }}
-        className="bg-slate-900 p-4 border-t border-slate-800 flex items-center gap-3"
+        className="bg-[#f0f4f8] p-4 border-t border-[#d1d9e6] flex items-center gap-3"
       >
         {/* Voice Dictation Panel */}
         <VoiceInput 
@@ -661,14 +661,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Enter your query..."
-          className="flex-1 bg-slate-950 border border-slate-800 focus:border-brand-primary focus:outline-none rounded-lg px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition"
+          className="flex-1 bg-white border border-[#d1d9e6] focus:border-[#1e3a5f] focus:outline-none rounded-lg px-4 py-2.5 text-sm text-[#1e3a5f] placeholder-[#9ca3af] transition"
           disabled={isLoading}
         />
 
         <button
           type="submit"
           disabled={isLoading || !inputText.trim()}
-          className="p-3 bg-brand-primary hover:bg-brand-primary/95 disabled:bg-slate-800 text-white disabled:text-slate-600 rounded-lg transition shrink-0 cursor-pointer"
+          className="p-3 bg-[#1e3a5f] hover:bg-[#1e3a5f]/95 disabled:bg-white text-white disabled:text-slate-600 rounded-lg transition shrink-0 cursor-pointer"
         >
           <Send size={16} />
         </button>

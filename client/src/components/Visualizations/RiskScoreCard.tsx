@@ -65,22 +65,22 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
       case 'Critical':
         return {
           bg: 'bg-red-500/10',
-          border: 'border-red-500/30',
-          text: 'text-red-400',
+          border: 'border-red-200',
+          text: 'text-[#d9251c]',
           stroke: '#ef4444',
         };
       case 'Medium':
         return {
           bg: 'bg-amber-500/10',
           border: 'border-amber-500/30',
-          text: 'text-amber-400',
+          text: 'text-amber-700',
           stroke: '#f59e0b',
         };
       default:
         return {
           bg: 'bg-blue-500/10',
           border: 'border-blue-500/30',
-          text: 'text-blue-400',
+          text: 'text-[#1e3a5f]',
           stroke: '#3b82f6',
         };
     }
@@ -116,7 +116,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
   };
 
   return (
-    <div className={`card-panel rounded-lg border p-6 text-slate-200 ${colors.border} max-w-2xl w-full mx-auto my-4 bg-white border-slate-200`}>
+    <div className={`card-panel rounded-lg border p-6 text-[#1e3a5f] ${colors.border} max-w-2xl w-full mx-auto my-4 bg-white border-slate-200`}>
       
       {/* Header */}
       <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-6">
@@ -132,9 +132,9 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
             )}
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 mt-2 flex items-center gap-2">
-            <User className="text-slate-400" /> {profile.name}
+            <User className="text-[#6c757d]" /> {profile.name}
           </h2>
-          <p className="text-slate-500 text-sm mt-1">Recidivism Risk Profile & Recurrent Offender Index</p>
+          <p className="text-[#6c757d] text-sm mt-1">Recidivism Risk Profile & Recurrent Offender Index</p>
         </div>
 
         {/* Circular Gauge */}
@@ -162,7 +162,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
           </svg>
           <div className="absolute text-center">
             <span className="text-2xl font-black text-slate-900">{scorePercent}%</span>
-            <span className="block text-[10px] text-slate-400 font-medium tracking-wider">INDEX</span>
+            <span className="block text-[10px] text-[#6c757d] font-medium tracking-wider">INDEX</span>
           </div>
         </div>
       </div>
@@ -170,7 +170,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
       {/* Interactive Parameter Switches Panel */}
       {onRecalculate && (
         <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 mb-6">
-          <span className="block text-[10px] font-bold text-brand-gold uppercase tracking-wider mb-2">
+          <span className="block text-[10px] font-bold text-[#d4a843] uppercase tracking-wider mb-2">
             Interactive Risk Recalculator (Simulation)
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
@@ -179,7 +179,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
                 type="checkbox"
                 checked={warrant}
                 onChange={(e) => setWarrant(e.target.checked)}
-                className="rounded text-brand-primary border-slate-300 focus:ring-0 cursor-pointer"
+                className="rounded text-[#1e3a5f] border-slate-300 focus:ring-0 cursor-pointer"
               />
               <span>Active Arrest Warrant</span>
             </label>
@@ -188,7 +188,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
                 type="checkbox"
                 checked={weapon}
                 onChange={(e) => setWeapon(e.target.checked)}
-                className="rounded text-brand-primary border-slate-300 focus:ring-0 cursor-pointer"
+                className="rounded text-[#1e3a5f] border-slate-300 focus:ring-0 cursor-pointer"
               />
               <span>Weapon Association</span>
             </label>
@@ -197,7 +197,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
                 type="checkbox"
                 checked={hawala}
                 onChange={(e) => setHawala(e.target.checked)}
-                className="rounded text-brand-primary border-slate-300 focus:ring-0 cursor-pointer"
+                className="rounded text-[#1e3a5f] border-slate-300 focus:ring-0 cursor-pointer"
               />
               <span>Hawala Linkage</span>
             </label>
@@ -206,7 +206,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
                 type="checkbox"
                 checked={history}
                 onChange={(e) => setHistory(e.target.checked)}
-                className="rounded text-brand-primary border-slate-300 focus:ring-0 cursor-pointer"
+                className="rounded text-[#1e3a5f] border-slate-300 focus:ring-0 cursor-pointer"
               />
               <span>Habitual Offender History</span>
             </label>
@@ -216,7 +216,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
             type="button"
             onClick={handleRecalculate}
             disabled={recalculating}
-            className="w-full mt-3 py-2 bg-brand-primary hover:bg-brand-primary/95 disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full mt-3 py-2 bg-[#1e3a5f] hover:bg-[#1e3a5f]/95 disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-wider rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
           >
             {recalculating ? (
               <>
@@ -236,17 +236,17 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
       {/* Profile Details Grid */}
       <div className="grid grid-cols-2 gap-4 bg-slate-50 rounded-lg p-4 border border-slate-100 mb-6 text-sm text-slate-700">
         <div className="flex items-center gap-2">
-          <Calendar size={16} className="text-slate-400" />
+          <Calendar size={16} className="text-[#6c757d]" />
           <span>Age / Gender:</span>
           <strong className="text-slate-900 ml-auto">{profile.age || 'N/A'} yrs / {profile.gender}</strong>
         </div>
         <div className="flex items-center gap-2">
-          <Briefcase size={16} className="text-slate-400" />
+          <Briefcase size={16} className="text-[#6c757d]" />
           <span>Occupation:</span>
           <strong className="text-slate-900 ml-auto">{profile.occupation}</strong>
         </div>
         <div className="flex items-center gap-2 col-span-2 border-t border-slate-100 pt-2 mt-1">
-          <MapPin size={16} className="text-slate-400 shrink-0" />
+          <MapPin size={16} className="text-[#6c757d] shrink-0" />
           <span className="shrink-0">Registered Address:</span>
           <strong className="text-slate-900 text-right truncate w-full ml-2" title={profile.address}>{profile.address}</strong>
         </div>
@@ -254,8 +254,8 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
 
       {/* Risk Factors */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-100 pb-1">
-          <ShieldAlert size={16} className="text-brand-primary" /> Key Risk Factors
+        <h3 className="text-sm font-semibold text-[#6c757d] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-100 pb-1">
+          <ShieldAlert size={16} className="text-[#1e3a5f]" /> Key Risk Factors
         </h3>
         <div className="space-y-3">
           {profile.factors.map((f, index) => (
@@ -269,7 +269,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
               </span>
               <div>
                 <h4 className="text-sm font-bold text-slate-800">{f.factor}</h4>
-                <p className="text-xs text-slate-500 mt-0.5 font-medium">{f.detail}</p>
+                <p className="text-xs text-[#6c757d] mt-0.5 font-medium">{f.detail}</p>
               </div>
             </div>
           ))}
@@ -278,8 +278,8 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
 
       {/* Police Command Action Recommendation */}
       <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 mb-6">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Recommended Action</h3>
-        <p className="text-sm text-slate-800 mt-1 font-semibold italic border-l-2 border-brand-primary pl-3">
+        <h3 className="text-xs font-bold text-[#6c757d] uppercase tracking-wider">Recommended Action</h3>
+        <p className="text-sm text-slate-800 mt-1 font-semibold italic border-l-2 border-[#1e3a5f] pl-3">
           "{profile.recommendation}"
         </p>
       </div>
@@ -287,20 +287,20 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
       {/* Behavioral Profile Insights */}
       {profile.behavioral_profile && (
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-100 pb-1">
-            <Briefcase size={16} className="text-brand-primary" /> Behavioral & MO Profile
+          <h3 className="text-sm font-semibold text-[#6c757d] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-100 pb-1">
+            <Briefcase size={16} className="text-[#1e3a5f]" /> Behavioral & MO Profile
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
             {/* Classification & Patterns */}
             <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Classification:</span>
+                <span className="text-[#6c757d]">Classification:</span>
                 <span className="font-bold text-slate-900 bg-blue-100/50 text-blue-800 px-2 py-0.5 rounded">
                   {profile.behavioral_profile.behavioral_classification}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Spatial Pattern:</span>
+                <span className="text-[#6c757d]">Spatial Pattern:</span>
                 <span className={`font-bold px-2 py-0.5 rounded ${
                   profile.behavioral_profile.cross_district_operations
                     ? 'bg-red-100/50 text-red-800'
@@ -310,13 +310,13 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Tempo Pattern:</span>
+                <span className="text-[#6c757d]">Tempo Pattern:</span>
                 <span className="font-bold text-slate-900 bg-purple-100/50 text-purple-800 px-2 py-0.5 rounded">
                   {profile.behavioral_profile.tempo_pattern}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500">Active Span:</span>
+                <span className="text-[#6c757d]">Active Span:</span>
                 <span className="font-semibold text-slate-800">
                   {profile.behavioral_profile.active_period_days} Days
                 </span>
@@ -333,7 +333,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
             <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-500">Crime Diversity:</span>
+                  <span className="text-[#6c757d]">Crime Diversity:</span>
                   <span className="font-bold text-slate-850">{profile.behavioral_profile.crime_diversity} Type(s)</span>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-1">
@@ -346,7 +346,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
               </div>
               <div className="border-t border-slate-200 pt-2 mt-1">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-500">Jurisdiction Reach:</span>
+                  <span className="text-[#6c757d]">Jurisdiction Reach:</span>
                   <span className="font-bold text-slate-850">{profile.behavioral_profile.geographic_reach} District(s)</span>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-1">
@@ -362,7 +362,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
             {/* MO Patterns (full width) */}
             {profile.behavioral_profile.mo_patterns && profile.behavioral_profile.mo_patterns.length > 0 && (
               <div className="col-span-1 sm:col-span-2 bg-slate-50 border border-slate-100 rounded-lg p-3">
-                <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                <span className="block text-[10px] font-bold text-[#6c757d] uppercase tracking-wider mb-2">
                   Frequent Modus Operandi (MO) Patterns
                 </span>
                 <div className="space-y-1.5">
@@ -384,7 +384,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
       {/* Linked Incidents */}
       {profile.incidents && profile.incidents.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1">
+          <h3 className="text-sm font-semibold text-[#6c757d] uppercase tracking-wider mb-3 border-b border-slate-100 pb-1">
             Linked Investigations ({profile.incidents.length})
           </h3>
           <div className="space-y-2 max-h-36 overflow-y-auto pr-2">
@@ -395,12 +395,12 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
                 onClick={() => onFirSelect && onFirSelect(inc.fir_number)}
               >
                 <div>
-                  <span className="text-xs font-bold text-brand-primary hover:underline">{inc.fir_number}</span>
+                  <span className="text-xs font-bold text-[#1e3a5f] hover:underline">{inc.fir_number}</span>
                   <span className="text-slate-600 text-xs ml-3 font-semibold">{inc.crime_type}</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-500 text-xs">
+                <div className="flex items-center gap-2 text-[#6c757d] text-xs">
                   <span className="font-semibold">{inc.district}</span>
-                  <ArrowRight size={12} className="text-slate-400" />
+                  <ArrowRight size={12} className="text-[#6c757d]" />
                 </div>
               </div>
             ))}

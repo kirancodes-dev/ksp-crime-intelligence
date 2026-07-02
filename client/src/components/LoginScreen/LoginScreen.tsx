@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Lock, UserCheck, KeyRound, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, Lock, UserCheck, KeyRound, AlertTriangle, Phone, Globe } from 'lucide-react';
 import { api } from '../../services/api';
 
 interface LoginUser {
@@ -130,232 +130,286 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-dark flex flex-col justify-center items-center p-4 relative overflow-hidden select-none font-sans">
+    <div className="min-h-screen bg-gradient-to-b from-[#f0f4f8] to-[#dce4ed] flex flex-col select-none font-sans">
       
-      {/* Background visual graphics */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(30,58,95,0.12)_0%,transparent_70%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(28,42,63,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(28,42,63,0.05)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-
-      {/* State Colors Accent Bar (Karnataka Yellow & Red) */}
-      <div className="w-full max-w-md h-[4px] rounded-t-lg flex overflow-hidden shadow-lg z-10">
-        <div className="w-1/2 bg-[#ffd700]" />
-        <div className="w-1/2 bg-[#d9251c]" />
-      </div>
-
-      {/* Main Login Card */}
-      <div className="w-full max-w-md bg-[#111827] border border-brand-border border-t-0 rounded-b-lg p-8 shadow-2xl relative z-10 backdrop-blur-md">
-        
-        {/* Header section */}
-        <div className="text-center space-y-2.5 mb-8">
-          <img src="/emblem.png" alt="Karnataka State Police Emblem" className="h-24 w-auto mx-auto object-contain mb-2 hover:scale-105 transition duration-300" />
-          <div>
-            <h2 className="text-[15px] font-extrabold tracking-widest text-white uppercase">
-              ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪೊಲೀಸ್
-            </h2>
-            <h1 className="text-sm font-semibold tracking-wide text-brand-gold uppercase mt-0.5">
-              Karnataka State Police
-            </h1>
-            <p className="text-[11px] text-slate-500 font-medium tracking-wide uppercase mt-2">
-              Crime Intelligence & Analytics Portal
-            </p>
+      {/* Government Utility Bar */}
+      <div className="bg-[#0d2137] text-slate-400 text-[10px] py-1 px-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <span>Official Website of Government of Karnataka</span>
+            <a href="https://ksp.karnataka.gov.in" target="_blank" rel="noopener" className="text-[#d4a843] hover:text-white transition hidden sm:inline">ksp.karnataka.gov.in</a>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <Phone size={9} />
+              <span>Emergency: <strong className="text-white">112</strong></span>
+            </div>
+            <span className="text-slate-600">|</span>
+            <div className="flex items-center gap-1">
+              <Globe size={9} />
+              <span>English</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Error Alert Box */}
-        {error && (
-          <div className="mb-6 bg-red-950/40 border border-red-500/30 text-red-400 p-3 rounded-lg flex items-start gap-2.5 text-xs animate-shake">
-            <ShieldAlert size={16} className="shrink-0 mt-0.5" />
-            <span className="leading-relaxed font-medium">{error}</span>
+      {/* Indian Tricolor */}
+      <div className="h-[4px] w-full flex">
+        <div className="flex-1 bg-[#ff9933]" />
+        <div className="flex-1 bg-white" />
+        <div className="flex-1 bg-[#138808]" />
+      </div>
+
+      {/* Login Header Bar */}
+      <div className="bg-white border-b-[3px] border-[#1e3a5f] shadow-sm px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <img src="/emblem.png" alt="KSP Emblem" className="h-12 w-auto object-contain" />
+          <div>
+            <h1 className="text-[14px] font-bold tracking-wide text-[#1e3a5f] uppercase" style={{ fontFamily: "'Noto Sans Kannada', sans-serif" }}>
+              ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪೊಲೀಸ್
+            </h1>
+            <h2 className="text-[12px] font-bold tracking-wider text-[#1e3a5f] uppercase">
+              Karnataka State Police
+            </h2>
+            <span className="text-[10px] text-[#6c757d] font-semibold">Government of Karnataka</span>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Step 1: Username & Password Credentials */}
-        {step === 'credentials' && (
-          <form onSubmit={handleCredentialsSubmit} className="space-y-5">
+      {/* Main Content — Centered Login */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+
+          {/* Login Card */}
+          <div className="bg-white border border-[#d1d9e6] rounded-lg shadow-xl overflow-hidden">
             
-            {/* Badge ID Input */}
-            <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Official Badge ID / Service ID
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-                  <UserCheck size={16} />
-                </span>
-                <input
-                  type="text"
-                  value={badgeId}
-                  disabled={isSubmitting}
-                  onChange={(e) => setBadgeId(e.target.value)}
-                  placeholder="e.g. INV-1001"
-                  className="bg-brand-dark/50 border border-brand-border focus:border-brand-primary-light focus:ring-1 focus:ring-brand-primary-light focus:outline-none rounded-lg pl-10 pr-3 py-2.5 text-xs text-white placeholder-slate-600 w-full tracking-wide transition font-mono uppercase"
-                  autoComplete="off"
-                />
-              </div>
+            {/* Card Navy Header */}
+            <div className="bg-[#1e3a5f] px-6 py-4 text-center">
+              <img src="/emblem.png" alt="Karnataka State Police Emblem" className="h-16 w-auto mx-auto object-contain mb-2 drop-shadow-lg" />
+              <h2 className="text-[14px] font-bold tracking-widest text-white uppercase" style={{ fontFamily: "'Noto Sans Kannada', sans-serif" }}>
+                ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪೊಲೀಸ್
+              </h2>
+              <h3 className="text-[12px] font-semibold tracking-wide text-[#d4a843] uppercase mt-0.5">
+                Karnataka State Police
+              </h3>
+              <p className="text-[10px] text-blue-200 font-medium tracking-wide uppercase mt-1.5">
+                Crime Intelligence & Analytics Portal — Secure Login
+              </p>
+            </div>
+
+            {/* Card Body */}
+            <div className="p-6">
               
-              {/* Dynamic Credential Preview Helper */}
-              {matchedOfficer && (
-                <div className="bg-brand-navy/10 border border-brand-navy/30 rounded p-2 flex items-center gap-2 text-[10px] text-brand-primary-light font-medium transition animate-fade-in">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-primary animate-ping" />
-                  <span>Authorized Officer Found: <strong>{matchedOfficer.rank} {matchedOfficer.name}</strong> ({matchedOfficer.role})</span>
+              {/* Error Alert Box */}
+              {error && (
+                <div className="mb-5 bg-red-50 border border-red-200 text-[#d9251c] p-3 rounded-lg flex items-start gap-2.5 text-xs">
+                  <ShieldAlert size={16} className="shrink-0 mt-0.5" />
+                  <span className="leading-relaxed font-medium">{error}</span>
                 </div>
               )}
+
+              {/* Step 1: Username & Password Credentials */}
+              {step === 'credentials' && (
+                <form onSubmit={handleCredentialsSubmit} className="space-y-5">
+                  
+                  {/* Badge ID Input */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider">
+                      Official Badge ID / Service ID
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6c757d]">
+                        <UserCheck size={16} />
+                      </span>
+                      <input
+                        type="text"
+                        value={badgeId}
+                        disabled={isSubmitting}
+                        onChange={(e) => setBadgeId(e.target.value)}
+                        placeholder="e.g. INV-1001"
+                        className="bg-[#f8f9fa] border border-[#d1d9e6] focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]/20 focus:outline-none rounded-lg pl-10 pr-3 py-2.5 text-xs text-[#1e3a5f] placeholder-[#9ca3af] w-full tracking-wide transition font-mono uppercase"
+                        autoComplete="off"
+                      />
+                    </div>
+                    
+                    {/* Dynamic Credential Preview Helper */}
+                    {matchedOfficer && (
+                      <div className="bg-blue-50 border border-blue-200 rounded p-2 flex items-center gap-2 text-[10px] text-[#1e3a5f] font-medium transition">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Authorized Officer Found: <strong>{matchedOfficer.rank} {matchedOfficer.name}</strong> ({matchedOfficer.role})</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Password Input */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider">
+                      Access Password
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6c757d]">
+                        <Lock size={16} />
+                      </span>
+                      <input
+                        type="password"
+                        value={password}
+                        disabled={isSubmitting}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="bg-[#f8f9fa] border border-[#d1d9e6] focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]/20 focus:outline-none rounded-lg pl-10 pr-3 py-2.5 text-xs text-[#1e3a5f] placeholder-[#9ca3af] w-full transition"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Credentials Button */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#1e3a5f] hover:bg-[#2a4a73] text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg shadow-lg cursor-pointer transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <KeyRound size={14} /> {isSubmitting ? 'Authenticating...' : 'Verify Credentials'}
+                  </button>
+                  
+                  {/* Quick credentials references */}
+                  <div className="border-t border-[#e8ecf1] pt-4 mt-2">
+                    <span className="block text-[9px] text-[#6c757d] font-bold uppercase tracking-wider mb-2">
+                      Authorized Reference Badges (Password: ksp2026)
+                    </span>
+                    <div className="grid grid-cols-2 gap-2 text-[9px]">
+                      <button
+                        type="button"
+                        onClick={() => { setBadgeId('INV-1001'); setPassword('ksp2026'); }}
+                        className="text-left bg-[#f8f9fa] hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#4a5568] p-1.5 rounded cursor-pointer transition text-xs"
+                      >
+                        <span className="font-mono text-[#1e3a5f] block">INV-1001</span>
+                        Investigator (Meera Nair)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setBadgeId('ANA-2001'); setPassword('ksp2026'); }}
+                        className="text-left bg-[#f8f9fa] hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#4a5568] p-1.5 rounded cursor-pointer transition text-xs"
+                      >
+                        <span className="font-mono text-[#1e3a5f] block">ANA-2001</span>
+                        Analyst (Priya Sharma)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setBadgeId('SUP-3001'); setPassword('ksp2026'); }}
+                        className="text-left bg-[#f8f9fa] hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#4a5568] p-1.5 rounded cursor-pointer transition text-xs"
+                      >
+                        <span className="font-mono text-[#1e3a5f] block">SUP-3001</span>
+                        Supervisor (ACP Raghavendra)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setBadgeId('POL-4001'); setPassword('ksp2026'); }}
+                        className="text-left bg-[#f8f9fa] hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#4a5568] p-1.5 rounded cursor-pointer transition text-xs"
+                      >
+                        <span className="font-mono text-[#1e3a5f] block">POL-4001</span>
+                        Policymaker (DGP Srinivas)
+                      </button>
+                    </div>
+                  </div>
+
+                </form>
+              )}
+
+              {/* Step 2: Multi-Factor Authentication (OTP Token) */}
+              {step === 'otp' && (
+                <form onSubmit={handleOtpSubmit} className="space-y-6">
+                  
+                  <div className="space-y-2 text-center bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <span className="text-[10px] font-extrabold text-[#1e3a5f] uppercase tracking-widest block">
+                      Two-Factor Security Active
+                    </span>
+                    <p className="text-[11px] text-[#4a5568] leading-relaxed font-medium">
+                      A temporary security passcode has been dispatched to the registered mobile terminal ending in <strong>*9891</strong>.
+                    </p>
+                    <p className="text-[10px] text-[#6c757d] font-semibold italic">
+                      (Enter any 6-digit code or use <strong>123456</strong> to verify)
+                    </p>
+                  </div>
+
+                  {/* OTP Input */}
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider text-center">
+                      Enter 6-Digit MFA Token
+                    </label>
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="0 0 0 0 0 0"
+                      className="bg-[#f8f9fa] border border-[#d1d9e6] focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]/20 focus:outline-none rounded-lg py-3.5 text-lg text-[#1e3a5f] font-mono tracking-[0.75em] text-center w-full transition"
+                      autoComplete="one-time-code"
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* OTP Status & Resend */}
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-[#6c757d] font-medium">
+                      {countdown > 0 ? (
+                        <span>Code expires in: <strong className="text-[#1e3a5f] font-mono">00:{countdown.toString().padStart(2, '0')}</strong></span>
+                      ) : (
+                        <span className="text-[#d9251c]">Code expired</span>
+                      )}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={!canResend}
+                      className="text-[#1e3a5f] hover:text-[#2a4a73] font-bold uppercase disabled:text-[#9ca3af] cursor-pointer disabled:cursor-not-allowed transition"
+                    >
+                      Resend Code
+                    </button>
+                  </div>
+
+                  {/* Verification Actions */}
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setStep('credentials'); setOtp(''); setError(null); }}
+                      className="flex-1 bg-[#f8f9fa] hover:bg-[#eef2f7] text-[#4a5568] font-bold text-xs uppercase tracking-wider py-3 rounded-lg border border-[#d1d9e6] transition cursor-pointer"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-[2] bg-[#1e3a5f] hover:bg-[#2a4a73] text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg shadow-lg transition cursor-pointer"
+                    >
+                      Verify Code & Enter
+                    </button>
+                  </div>
+
+                </form>
+              )}
+
             </div>
+          </div>
 
-            {/* Password Input */}
-            <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Access Password
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-                  <Lock size={16} />
-                </span>
-                <input
-                  type="password"
-                  value={password}
-                  disabled={isSubmitting}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="bg-brand-dark/50 border border-brand-border focus:border-brand-primary-light focus:ring-1 focus:ring-brand-primary-light focus:outline-none rounded-lg pl-10 pr-3 py-2.5 text-xs text-white placeholder-slate-600 w-full transition"
-                />
-              </div>
-            </div>
+          {/* Security Warning Footer */}
+          <div className="mt-4 bg-white border border-[#d1d9e6] rounded-lg p-4 flex items-start gap-2.5 text-[9px] text-[#6c757d] leading-normal font-medium shadow-sm">
+            <AlertTriangle size={14} className="shrink-0 text-amber-500" />
+            <span>
+              <strong className="text-[#1e3a5f]">WARNING:</strong> This is a secure system of the Karnataka State Police. Unauthorized access, tampering, or intrusion attempts will be recorded and prosecuted under Sections 43, 65, and 66 of the IT Act, 2000.
+            </span>
+          </div>
 
-            {/* Submit Credentials Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg shadow-lg cursor-pointer transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <KeyRound size={14} /> {isSubmitting ? 'Authenticating...' : 'Verify Credentials'}
-            </button>
-            
-            {/* Quick credentials references */}
-            <div className="border-t border-brand-border/60 pt-4 mt-2">
-              <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">
-                Authorized Reference Badges (Password: ksp2026)
-              </span>
-              <div className="grid grid-cols-2 gap-2 text-[9px]">
-                <button
-                  type="button"
-                  onClick={() => { setBadgeId('INV-1001'); setPassword('ksp2026'); }}
-                  className="text-left bg-brand-dark/30 hover:bg-brand-dark/80 border border-brand-border/60 text-slate-400 p-1.5 rounded cursor-pointer transition text-xs"
-                >
-                  <span className="font-mono text-white block">INV-1001</span>
-                  Investigator (Meera Nair)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setBadgeId('ANA-2001'); setPassword('ksp2026'); }}
-                  className="text-left bg-brand-dark/30 hover:bg-brand-dark/80 border border-brand-border/60 text-slate-400 p-1.5 rounded cursor-pointer transition text-xs"
-                >
-                  <span className="font-mono text-white block">ANA-2001</span>
-                  Analyst (Priya Sharma)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setBadgeId('SUP-3001'); setPassword('ksp2026'); }}
-                  className="text-left bg-brand-dark/30 hover:bg-brand-dark/80 border border-brand-border/60 text-slate-400 p-1.5 rounded cursor-pointer transition text-xs"
-                >
-                  <span className="font-mono text-white block">SUP-3001</span>
-                  Supervisor (ACP Raghavendra)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setBadgeId('POL-4001'); setPassword('ksp2026'); }}
-                  className="text-left bg-brand-dark/30 hover:bg-brand-dark/80 border border-brand-border/60 text-slate-400 p-1.5 rounded cursor-pointer transition text-xs"
-                >
-                  <span className="font-mono text-white block">POL-4001</span>
-                  Policymaker (DGP Srinivas)
-                </button>
-              </div>
-            </div>
-
-          </form>
-        )}
-
-        {/* Step 2: Multi-Factor Authentication (OTP Token) */}
-        {step === 'otp' && (
-          <form onSubmit={handleOtpSubmit} className="space-y-6 animate-fade-in">
-            
-            <div className="space-y-2 text-center bg-brand-navy/15 border border-brand-navy/30 rounded-lg p-4">
-              <span className="text-[10px] font-extrabold text-brand-primary-light uppercase tracking-widest block">
-                Two-Factor Security Active
-              </span>
-              <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                A temporary security passcode has been dispatched to the registered mobile terminal ending in <strong>*9891</strong>.
-              </p>
-              <p className="text-[10px] text-slate-500 font-semibold italic">
-                (Enter any 6-digit code or use <strong>123456</strong> to verify)
-              </p>
-            </div>
-
-            {/* OTP Input */}
-            <div className="space-y-2">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
-                Enter 6-Digit MFA Token
-              </label>
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="0 0 0 0 0 0"
-                className="bg-brand-dark/50 border border-brand-border focus:border-brand-primary-light focus:ring-1 focus:ring-brand-primary-light focus:outline-none rounded-lg py-3.5 text-lg text-white font-mono tracking-[0.75em] text-center w-full transition"
-                autoComplete="one-time-code"
-                autoFocus
-              />
-            </div>
-
-            {/* OTP Status & Resend */}
-            <div className="flex justify-between items-center text-[11px]">
-              <span className="text-slate-500 font-medium">
-                {countdown > 0 ? (
-                  <span>Code expires in: <strong className="text-slate-300 font-mono">00:{countdown.toString().padStart(2, '0')}</strong></span>
-                ) : (
-                  <span className="text-red-400">Code expired</span>
-                )}
-              </span>
-
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                disabled={!canResend}
-                className="text-brand-primary hover:text-brand-primary-light font-bold uppercase disabled:text-slate-600 cursor-pointer disabled:cursor-not-allowed transition"
-              >
-                Resend Code
-              </button>
-            </div>
-
-            {/* Verification Actions */}
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => { setStep('credentials'); setOtp(''); setError(null); }}
-                className="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs uppercase tracking-wider py-3 rounded-lg border border-slate-800 transition cursor-pointer"
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                className="flex-[2] bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg shadow-lg transition cursor-pointer"
-              >
-                Verify Code & Enter
-              </button>
-            </div>
-
-          </form>
-        )}
-
-        {/* Security Warning Footer */}
-        <div className="mt-8 pt-4 border-t border-brand-border/60 flex items-start gap-2.5 text-[9px] text-slate-500 leading-normal font-medium">
-          <AlertTriangle size={14} className="shrink-0 text-amber-500/70" />
-          <span>
-            <strong>WARNING:</strong> This is a secure system of the Karnataka State Police. Unauthorized access, tampering, or intrusion attempts will be recorded and prosecuted under Sections 43, 65, and 66 of the IT Act, 2000.
-          </span>
         </div>
-
       </div>
+
+      {/* Footer */}
+      <div className="bg-[#0d2137] border-t-[3px] border-[#d4a843] py-4 text-center">
+        <div className="text-[10px] text-slate-400">
+          &copy; {new Date().getFullYear()} Karnataka State Police — Crime Intelligence & Analytics Division
+        </div>
+        <div className="text-[9px] text-slate-500 mt-1">
+          Designed & Developed for KSP — Powered by CCTNS & NIC
+        </div>
+      </div>
+
     </div>
   );
 };

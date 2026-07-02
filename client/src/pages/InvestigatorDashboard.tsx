@@ -317,11 +317,11 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'Closed':
-        return <CheckCircle size={16} className="text-emerald-400" />;
+        return <CheckCircle size={16} className="text-emerald-700" />;
       case 'Charge Sheeted':
-        return <Clock size={16} className="text-blue-400" />;
+        return <Clock size={16} className="text-[#1e3a5f]" />;
       default:
-        return <AlertTriangle size={16} className="text-amber-400" />;
+        return <AlertTriangle size={16} className="text-amber-700" />;
     }
   };
 
@@ -379,12 +379,12 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
   return (
     <div className="space-y-6">
       {/* Search Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/40 border border-slate-800 rounded-lg p-4 print:hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#f0f4f8]/40 border border-[#d1d9e6] rounded-lg p-4 print:hidden">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <FileText className="text-brand-primary" /> Case File Management
+          <h1 className="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+            <FileText className="text-[#1e3a5f]" /> Case File Management
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">Search FIR records and access case intelligence</p>
+          <p className="text-xs text-[#6c757d] mt-0.5">Search FIR records and access case intelligence</p>
         </div>
 
         <form onSubmit={handleSearch} className="flex gap-2 w-full md:w-auto">
@@ -393,11 +393,11 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
             value={firInput}
             onChange={(e) => setFirInput(e.target.value)}
             placeholder="Search FIR (e.g., FIR-2026-003)"
-            className="bg-slate-950 border border-slate-800 focus:border-brand-primary focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 w-full md:w-60"
+            className="bg-white border border-[#d1d9e6] focus:border-[#1e3a5f] focus:outline-none rounded-lg px-3 py-1.5 text-xs text-[#1e3a5f] placeholder-[#9ca3af] w-full md:w-60"
           />
           <button 
             type="submit"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-lg text-xs font-semibold cursor-pointer shrink-0 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1e3a5f] hover:bg-[#1e3a5f]/95 text-white rounded-lg text-xs font-semibold cursor-pointer shrink-0 transition"
           >
             <Search size={14} /> Search
           </button>
@@ -418,22 +418,22 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
         </div>
 
         {/* Right Pane - Case Details Viewer */}
-        <div className="lg:col-span-5 h-[600px] print:h-auto print:border-none print:shadow-none flex flex-col bg-slate-950 border border-slate-900 rounded-lg overflow-hidden shadow-2xl print:bg-white print:overflow-visible">
+        <div className="lg:col-span-5 h-[600px] print:h-auto print:border-none print:shadow-none flex flex-col bg-[#0d2137] border border-slate-900 rounded-lg overflow-hidden shadow-2xl print:bg-white print:overflow-visible">
           {loading ? (
-            <div className="flex flex-col items-center justify-center flex-1 text-slate-400 text-xs gap-3">
-              <LoaderIcon className="animate-spin text-brand-primary" size={24} />
+            <div className="flex flex-col items-center justify-center flex-1 text-[#6c757d] text-xs gap-3">
+              <LoaderIcon className="animate-spin text-[#1e3a5f]" size={24} />
               <span>Loading case records from Datastore...</span>
             </div>
           ) : caseDetails ? (
             <>
               {/* Tabs Bar */}
-              <div className="bg-slate-900 border-b border-slate-800 flex items-center print:hidden shrink-0">
+              <div className="bg-[#f0f4f8] border-b border-[#d1d9e6] flex items-center print:hidden shrink-0">
                 <button
                   onClick={() => setActiveTab('summary')}
                   className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
                     activeTab === 'summary'
-                      ? 'border-brand-primary text-white bg-slate-950/40'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      ? 'border-[#1e3a5f] text-[#1e3a5f] bg-[#0d2137]/40'
+                      : 'border-transparent text-[#6c757d] hover:text-[#1e3a5f]'
                   }`}
                 >
                   <FileText size={12} /> Brief
@@ -442,8 +442,8 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                   onClick={() => setActiveTab('financial')}
                   className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
                     activeTab === 'financial'
-                      ? 'border-brand-primary text-white bg-slate-950/40'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      ? 'border-[#1e3a5f] text-[#1e3a5f] bg-[#0d2137]/40'
+                      : 'border-transparent text-[#6c757d] hover:text-[#1e3a5f]'
                   }`}
                 >
                   <Landmark size={12} /> Financial Trail
@@ -452,8 +452,8 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                   onClick={() => setActiveTab('similar')}
                   className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
                     activeTab === 'similar'
-                      ? 'border-brand-primary text-white bg-slate-950/40'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      ? 'border-[#1e3a5f] text-[#1e3a5f] bg-[#0d2137]/40'
+                      : 'border-transparent text-[#6c757d] hover:text-[#1e3a5f]'
                   }`}
                 >
                   <Layers size={12} /> Similar Cases
@@ -462,11 +462,11 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                   onClick={() => setActiveTab('legal')}
                   className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
                     activeTab === 'legal'
-                      ? 'border-brand-primary text-white bg-slate-950/40'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      ? 'border-[#1e3a5f] text-[#1e3a5f] bg-[#0d2137]/40'
+                      : 'border-transparent text-[#6c757d] hover:text-[#1e3a5f]'
                   }`}
                 >
-                  <Scale size={12} className="text-amber-400" /> Legal &amp; Evidence
+                  <Scale size={12} className="text-amber-700" /> Legal &amp; Evidence
                 </button>
               </div>
 
@@ -478,26 +478,26 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                     <div className="flex justify-end gap-2 border-b border-slate-900 pb-4 print:hidden">
                       <button
                         onClick={handlePinCase}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg text-xs font-semibold cursor-pointer transition"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f0f4f8] hover:bg-white text-[#2d4a6f] border border-[#d1d9e6] rounded-lg text-xs font-semibold cursor-pointer transition"
                       >
-                        <Pin size={13} className="text-blue-400 rotate-45" /> Pin to Desk
+                        <Pin size={13} className="text-[#1e3a5f] rotate-45" /> Pin to Desk
                       </button>
                       <button
                         onClick={() => window.print()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg text-xs font-semibold cursor-pointer transition"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f0f4f8] hover:bg-white text-[#2d4a6f] border border-[#d1d9e6] rounded-lg text-xs font-semibold cursor-pointer transition"
                       >
                         <Printer size={13} /> Print Dossier
                       </button>
                       <button
                         onClick={handleExportXml}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg text-xs font-semibold cursor-pointer transition"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f0f4f8] hover:bg-white text-[#2d4a6f] border border-[#d1d9e6] rounded-lg text-xs font-semibold cursor-pointer transition"
                       >
                         <Download size={13} /> Export XML
                       </button>
                     </div>
 
                     {/* Dossier Target for printing */}
-                    <div className="dossier-print-target space-y-6 text-sm text-slate-300 font-sans print:text-black">
+                    <div className="dossier-print-target space-y-6 text-sm text-[#2d4a6f] font-sans print:text-black">
                       
                       {/* Scoped Print Style CSS */}
                       <style dangerouslySetInnerHTML={{__html: `
@@ -553,57 +553,57 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
 
                       {/* Official FIR Header (Only formatted for print / elegant in portal) */}
                       <div className="border-b-2 border-brand-gold pb-4 text-center space-y-1 print:border-black">
-                        <div className="flex justify-center items-center gap-2 text-brand-gold print:text-black">
+                        <div className="flex justify-center items-center gap-2 text-[#d4a843] print:text-black">
                           <Shield size={22} />
                           <h2 className="text-sm font-extrabold tracking-wider uppercase">ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪೊಲೀಸ್</h2>
                         </div>
-                        <h1 className="text-[13px] font-bold text-white print:text-black tracking-wide uppercase">Karnataka State Police</h1>
-                        <h3 className="text-xs font-bold text-slate-400 print:text-black uppercase">First Information Report (FIR) Dossier</h3>
-                        <span className="text-[10px] text-slate-500 font-mono tracking-wider block print:text-black">UNDER SECTION 154 CR.P.C. • RESTRICTED</span>
+                        <h1 className="text-[13px] font-bold text-[#1e3a5f] print:text-black tracking-wide uppercase">Karnataka State Police</h1>
+                        <h3 className="text-xs font-bold text-[#6c757d] print:text-black uppercase">First Information Report (FIR) Dossier</h3>
+                        <span className="text-[10px] text-[#6c757d] font-mono tracking-wider block print:text-black">UNDER SECTION 154 CR.P.C. • RESTRICTED</span>
                       </div>
 
                       {/* Section 1: Jurisdiction & Occurrence Details */}
-                      <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
-                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-800 pb-1.5 print:border-black">I. Jurisdiction & Event Occurrence</h4>
+                      <div className="section-block bg-[#f0f4f8]/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
+                        <h4 className="font-bold text-[#d4a843] print:text-black text-xs uppercase tracking-wider border-b border-[#d1d9e6] pb-1.5 print:border-black">I. Jurisdiction & Event Occurrence</h4>
                         <div className="grid grid-cols-2 gap-4 text-xs">
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase font-semibold">FIR Registration Number</span>
-                            <strong className="text-white print:text-black font-mono text-xs">{caseDetails.fir_number}</strong>
+                            <span className="block text-[10px] text-[#6c757d] uppercase font-semibold">FIR Registration Number</span>
+                            <strong className="text-[#1e3a5f] print:text-black font-mono text-xs">{caseDetails.fir_number}</strong>
                           </div>
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase font-semibold">Current Case Status</span>
+                            <span className="block text-[10px] text-[#6c757d] uppercase font-semibold">Current Case Status</span>
                             <div className="flex items-center gap-1.5 mt-0.5 print:text-black">
                               <span className="print:hidden">{getStatusIcon(caseDetails.status)}</span>
-                              <strong className="text-white print:text-black text-xs">{caseDetails.status}</strong>
+                              <strong className="text-[#1e3a5f] print:text-black text-xs">{caseDetails.status}</strong>
                             </div>
                           </div>
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase font-semibold">Police Station / District</span>
-                            <strong className="text-white print:text-black text-xs">{caseDetails.police_station} ({caseDetails.district})</strong>
+                            <span className="block text-[10px] text-[#6c757d] uppercase font-semibold">Police Station / District</span>
+                            <strong className="text-[#1e3a5f] print:text-black text-xs">{caseDetails.police_station} ({caseDetails.district})</strong>
                           </div>
                           <div>
-                            <span className="block text-[10px] text-slate-500 uppercase font-semibold">Crime Classification</span>
-                            <strong className="text-brand-primary print:text-black text-xs">{caseDetails.crime_type}</strong>
+                            <span className="block text-[10px] text-[#6c757d] uppercase font-semibold">Crime Classification</span>
+                            <strong className="text-[#1e3a5f] print:text-black text-xs">{caseDetails.crime_type}</strong>
                           </div>
-                          <div className="col-span-2 border-t border-slate-800/60 pt-2 mt-1 flex justify-between print:text-black print:border-black">
-                            <span>Date & Time of Occurrence: <strong className="text-slate-200 print:text-black">{caseDetails.date_occurrence}</strong></span>
-                            <span>Report Registered: <strong className="text-slate-200 print:text-black">{caseDetails.date_reported}</strong></span>
+                          <div className="col-span-2 border-t border-[#d1d9e6]/60 pt-2 mt-1 flex justify-between print:text-black print:border-black">
+                            <span>Date & Time of Occurrence: <strong className="text-[#1e3a5f] print:text-black">{caseDetails.date_occurrence}</strong></span>
+                            <span>Report Registered: <strong className="text-[#1e3a5f] print:text-black">{caseDetails.date_reported}</strong></span>
                           </div>
                         </div>
                       </div>
 
                       {/* Section 2: Complainant / Victim Demographics */}
-                      <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
-                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-800 pb-1.5 print:border-black">II. Complainants & Victim Register</h4>
+                      <div className="section-block bg-[#f0f4f8]/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
+                        <h4 className="font-bold text-[#d4a843] print:text-black text-xs uppercase tracking-wider border-b border-[#d1d9e6] pb-1.5 print:border-black">II. Complainants & Victim Register</h4>
                         {caseDetails.victims && caseDetails.victims.length > 0 ? (
                           <div className="space-y-3 divide-y divide-slate-850/40 print:divide-black">
                             {caseDetails.victims.map((vic: any, idx: number) => (
                               <div key={vic.id} className={`text-xs ${idx > 0 ? 'pt-3' : ''} table-row`}>
                                 <div className="flex justify-between font-bold">
-                                  <span className="text-slate-200 print:text-black">{vic.name} ({vic.age} Yrs)</span>
-                                  <span className="text-red-400 print:text-black">{vic.injury_type || 'None Specified'}</span>
+                                  <span className="text-[#1e3a5f] print:text-black">{vic.name} ({vic.age} Yrs)</span>
+                                  <span className="text-[#d9251c] print:text-black">{vic.injury_type || 'None Specified'}</span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 print:text-black mt-1 font-medium">
+                                <div className="grid grid-cols-2 gap-2 text-[10px] text-[#6c757d] print:text-black mt-1 font-medium">
                                   <span>Occupation: {vic.occupation || 'Unemployed'}</span>
                                   <span>Address: {vic.address || 'Not Recorded'}</span>
                                 </div>
@@ -611,22 +611,22 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                             ))}
                           </div>
                         ) : (
-                          <p className="text-slate-500 text-xs italic">No complainant records registered for this dossier.</p>
+                          <p className="text-[#6c757d] text-xs italic">No complainant records registered for this dossier.</p>
                         )}
                       </div>
 
                       {/* Section 3: Accused Details */}
-                      <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
-                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-800 pb-1.5 print:border-black">III. Accused Suspects Directory</h4>
+                      <div className="section-block bg-[#f0f4f8]/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
+                        <h4 className="font-bold text-[#d4a843] print:text-black text-xs uppercase tracking-wider border-b border-[#d1d9e6] pb-1.5 print:border-black">III. Accused Suspects Directory</h4>
                         {caseDetails.accused && caseDetails.accused.length > 0 ? (
                           <div className="space-y-3">
                             {caseDetails.accused.map((acc: any) => (
-                              <div key={acc.id} className="flex justify-between items-center bg-slate-950/40 print:bg-transparent border border-slate-900 print:border-none rounded-lg p-3 table-row">
+                              <div key={acc.id} className="flex justify-between items-center bg-[#0d2137]/40 print:bg-transparent border border-slate-900 print:border-none rounded-lg p-3 table-row">
                                 <div className="text-xs">
-                                  <strong className="text-white print:text-black flex items-center gap-1">
-                                    <User size={12} className="text-slate-500 print:text-black" /> {acc.name}
+                                  <strong className="text-[#1e3a5f] print:text-black flex items-center gap-1">
+                                    <User size={12} className="text-[#6c757d] print:text-black" /> {acc.name}
                                   </strong>
-                                  <span className="text-slate-500 print:text-black text-[10px] block mt-0.5">
+                                  <span className="text-[#6c757d] print:text-black text-[10px] block mt-0.5">
                                     Age: {acc.age} | Prior Conviction Rate: {acc.prior_convictions} cases
                                   </span>
                                 </div>
@@ -634,14 +634,14 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => handlePinAccused(acc.name)}
-                                    className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/25 border border-blue-500/20 text-blue-400 rounded-md text-[10px] font-semibold transition cursor-pointer print:hidden"
+                                    className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/25 border border-blue-500/20 text-[#1e3a5f] rounded-md text-[10px] font-semibold transition cursor-pointer print:hidden"
                                     title="Pin Accused to Workspace"
                                   >
                                     <Pin size={10} className="rotate-45" /> Pin
                                   </button>
                                   <button
                                     onClick={() => handleInvestigateAccused(acc.name)}
-                                    className="flex items-center gap-1 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 text-red-400 rounded-md text-[10px] font-semibold transition cursor-pointer print:hidden"
+                                    className="flex items-center gap-1 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 text-[#d9251c] rounded-md text-[10px] font-semibold transition cursor-pointer print:hidden"
                                   >
                                     <ShieldAlert size={10} /> Profile Risk
                                   </button>
@@ -650,32 +650,32 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                             ))}
                           </div>
                         ) : (
-                          <p className="text-slate-500 text-xs italic">No accused suspects registered in records yet.</p>
+                          <p className="text-[#6c757d] text-xs italic">No accused suspects registered in records yet.</p>
                         )}
                       </div>
 
                       {/* Section 4: Modus Operandi & Narrative */}
-                      <div className="section-block bg-slate-900/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
-                        <h4 className="font-bold text-brand-gold print:text-black text-xs uppercase tracking-wider border-b border-slate-800 pb-1.5 print:border-black">IV. Modus Operandi & Crime Narrative</h4>
+                      <div className="section-block bg-[#f0f4f8]/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
+                        <h4 className="font-bold text-[#d4a843] print:text-black text-xs uppercase tracking-wider border-b border-[#d1d9e6] pb-1.5 print:border-black">IV. Modus Operandi & Crime Narrative</h4>
                         <div>
-                          <span className="block text-[10px] text-slate-500 uppercase font-semibold mb-1">Modus Operandi Summary</span>
-                          <p className="bg-slate-950/40 print:bg-transparent border border-slate-900 print:border-none rounded-lg p-3 text-slate-200 print:text-black text-xs italic">
+                          <span className="block text-[10px] text-[#6c757d] uppercase font-semibold mb-1">Modus Operandi Summary</span>
+                          <p className="bg-[#0d2137]/40 print:bg-transparent border border-slate-900 print:border-none rounded-lg p-3 text-[#1e3a5f] print:text-black text-xs italic">
                             "{caseDetails.modus_operandi}"
                           </p>
                         </div>
                         <div className="pt-2">
-                          <span className="block text-[10px] text-slate-500 uppercase font-semibold mb-1">Occurrence Narrative Description</span>
-                          <p className="text-slate-300 print:text-black leading-relaxed text-xs text-justify">
+                          <span className="block text-[10px] text-[#6c757d] uppercase font-semibold mb-1">Occurrence Narrative Description</span>
+                          <p className="text-[#2d4a6f] print:text-black leading-relaxed text-xs text-justify">
                             {caseDetails.description}
                           </p>
                         </div>
                       </div>
 
                       {/* Section 5: Secure Ledger Digital Audit Trail (Security compliance) */}
-                      <div className="audit-block border-t border-dashed border-slate-800 pt-4 mt-6 text-[10px] text-slate-500 print:text-black space-y-2">
+                      <div className="audit-block border-t border-dashed border-[#d1d9e6] pt-4 mt-6 text-[10px] text-[#6c757d] print:text-black space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="font-bold uppercase tracking-wider text-slate-400 print:text-black">Cryptographic System Stamp</span>
-                          <span className="font-mono bg-brand-navy/20 print:bg-transparent px-2 py-0.5 rounded text-brand-gold print:text-black border border-brand-border/40 print:border-none">CONFIDENTIAL</span>
+                          <span className="font-bold uppercase tracking-wider text-[#6c757d] print:text-black">Cryptographic System Stamp</span>
+                          <span className="font-mono bg-brand-navy/20 print:bg-transparent px-2 py-0.5 rounded text-[#d4a843] print:text-black border border-[#d1d9e6]/40 print:border-none">CONFIDENTIAL</span>
                         </div>
                         <div className="font-mono leading-tight space-y-0.5">
                           <div>SECURE LEDGER SEAL HASH: SHA-256 (352a78f237efb23194a2119efd01902ba98cf218001e3e7f)</div>
@@ -703,8 +703,8 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                 {activeTab === 'financial' && (
                   <div className="h-full flex flex-col print:hidden">
                     {financialLoading ? (
-                      <div className="flex flex-col items-center justify-center flex-1 text-slate-400 text-xs gap-3">
-                        <LoaderIcon className="animate-spin text-brand-primary" size={24} />
+                      <div className="flex flex-col items-center justify-center flex-1 text-[#6c757d] text-xs gap-3">
+                        <LoaderIcon className="animate-spin text-[#1e3a5f]" size={24} />
                         <span>Compiling financial transactions...</span>
                       </div>
                     ) : financialData && financialData.nodes?.length > 0 ? (
@@ -716,7 +716,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                         />
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center flex-1 text-slate-500 text-xs gap-2 py-12">
+                      <div className="flex flex-col items-center justify-center flex-1 text-[#6c757d] text-xs gap-2 py-12">
                         <Landmark size={32} className="text-slate-700" />
                         <p>No financial transactions registered for this case.</p>
                       </div>
@@ -727,14 +727,14 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                 {activeTab === 'similar' && (
                   <div className="h-full flex flex-col print:hidden">
                     {similarLoading ? (
-                      <div className="flex flex-col items-center justify-center flex-1 text-slate-400 text-xs gap-3">
-                        <LoaderIcon className="animate-spin text-brand-primary" size={24} />
+                      <div className="flex flex-col items-center justify-center flex-1 text-[#6c757d] text-xs gap-3">
+                        <LoaderIcon className="animate-spin text-[#1e3a5f]" size={24} />
                         <span>Analyzing database for patterns...</span>
                       </div>
                     ) : similarData && similarData.similarCases?.length > 0 ? (
                       <SimilarCasesCard data={similarData} />
                     ) : (
-                      <div className="flex flex-col items-center justify-center flex-1 text-slate-500 text-xs gap-2 py-12">
+                      <div className="flex flex-col items-center justify-center flex-1 text-[#6c757d] text-xs gap-2 py-12">
                         <Layers size={32} className="text-slate-700" />
                         <p>No similar cases identified in the database.</p>
                       </div>
@@ -743,49 +743,49 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                 )}
 
                 {activeTab === 'legal' && (
-                  <div className="space-y-6 text-slate-300 text-xs leading-relaxed print:hidden">
+                  <div className="space-y-6 text-[#2d4a6f] text-xs leading-relaxed print:hidden">
                     {legalLoading ? (
-                      <div className="flex flex-col items-center justify-center py-10 text-slate-400 text-xs gap-3">
-                        <LoaderIcon className="animate-spin text-brand-primary" size={24} />
+                      <div className="flex flex-col items-center justify-center py-10 text-[#6c757d] text-xs gap-3">
+                        <LoaderIcon className="animate-spin text-[#1e3a5f]" size={24} />
                         <span>Fetching legal records and custody logs...</span>
                       </div>
                     ) : (
                       <>
                         {/* 1. e-Courts Portal */}
-                        <div className="border border-slate-800 bg-slate-900/20 rounded-lg p-4 space-y-3">
+                        <div className="border border-[#d1d9e6] bg-[#f0f4f8]/20 rounded-lg p-4 space-y-3">
                           <div className="flex items-center justify-between border-b border-slate-850 pb-2">
-                            <span className="font-extrabold uppercase text-brand-gold">e-Courts Case Tracking</span>
-                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">Karnataka Judiciary</span>
+                            <span className="font-extrabold uppercase text-[#d4a843]">e-Courts Case Tracking</span>
+                            <span className="text-[10px] bg-white text-[#6c757d] px-2 py-0.5 rounded font-mono">Karnataka Judiciary</span>
                           </div>
                           {courtData && courtData.icjs_court ? (
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <span className="text-slate-500 uppercase text-[10px] block">Court Name</span>
-                                <strong className="text-white">{courtData.icjs_court.name}</strong>
+                                <span className="text-[#6c757d] uppercase text-[10px] block">Court Name</span>
+                                <strong className="text-[#1e3a5f]">{courtData.icjs_court.name}</strong>
                               </div>
                               <div>
-                                <span className="text-slate-500 uppercase text-[10px] block">Case Number</span>
-                                <strong className="text-white font-mono">{courtData.icjs_court.case_number}</strong>
+                                <span className="text-[#6c757d] uppercase text-[10px] block">Case Number</span>
+                                <strong className="text-[#1e3a5f] font-mono">{courtData.icjs_court.case_number}</strong>
                               </div>
                               <div>
-                                <span className="text-slate-500 uppercase text-[10px] block">Presiding Judge</span>
-                                <strong className="text-white">{courtData.icjs_court.judge}</strong>
+                                <span className="text-[#6c757d] uppercase text-[10px] block">Presiding Judge</span>
+                                <strong className="text-[#1e3a5f]">{courtData.icjs_court.judge}</strong>
                               </div>
                               <div>
-                                <span className="text-slate-500 uppercase text-[10px] block">Next Hearing Date</span>
-                                <strong className="text-brand-primary">{courtData.icjs_court.next_hearing}</strong>
+                                <span className="text-[#6c757d] uppercase text-[10px] block">Next Hearing Date</span>
+                                <strong className="text-[#1e3a5f]">{courtData.icjs_court.next_hearing}</strong>
                               </div>
                               <div>
-                                <span className="text-slate-500 uppercase text-[10px] block">Court Status</span>
-                                <strong className="text-emerald-400">{courtData.icjs_court.status}</strong>
+                                <span className="text-[#6c757d] uppercase text-[10px] block">Court Status</span>
+                                <strong className="text-emerald-700">{courtData.icjs_court.status}</strong>
                               </div>
                               <div>
-                                <span className="text-slate-500 uppercase text-[10px] block">Charges Framed</span>
-                                <strong className="text-white">{courtData.icjs_court.charges_framed ? 'Yes' : 'No'}</strong>
+                                <span className="text-[#6c757d] uppercase text-[10px] block">Charges Framed</span>
+                                <strong className="text-[#1e3a5f]">{courtData.icjs_court.charges_framed ? 'Yes' : 'No'}</strong>
                               </div>
                             </div>
                           ) : (
-                            <p className="text-slate-500 italic">No e-Courts case status found on record.</p>
+                            <p className="text-[#6c757d] italic">No e-Courts case status found on record.</p>
                           )}
 
                           {/* Local court orders */}
@@ -794,12 +794,12 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                               <span className="text-[10px] uppercase font-bold text-slate-405 block">Court Order History</span>
                               <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
                                 {courtData.local_orders.map((order: any) => (
-                                  <div key={order.id} className="bg-slate-950/40 p-2 rounded border border-slate-850 flex justify-between items-center text-[10px]">
+                                  <div key={order.id} className="bg-[#0d2137]/40 p-2 rounded border border-slate-850 flex justify-between items-center text-[10px]">
                                     <div>
-                                      <strong className="text-slate-200">{order.order_type}</strong>
-                                      <span className="text-slate-500 block">{order.order_summary}</span>
+                                      <strong className="text-[#1e3a5f]">{order.order_type}</strong>
+                                      <span className="text-[#6c757d] block">{order.order_summary}</span>
                                     </div>
-                                    <span className="text-slate-400 font-mono">{order.order_date}</span>
+                                    <span className="text-[#6c757d] font-mono">{order.order_date}</span>
                                   </div>
                                 ))}
                               </div>
@@ -808,37 +808,37 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                         </div>
 
                         {/* 2. e-Prisons Custody Tracking */}
-                        <div className="border border-slate-800 bg-slate-900/20 rounded-lg p-4 space-y-3">
+                        <div className="border border-[#d1d9e6] bg-[#f0f4f8]/20 rounded-lg p-4 space-y-3">
                           <div className="flex items-center justify-between border-b border-slate-855 pb-2">
-                            <span className="font-extrabold uppercase text-brand-gold">e-Prisons Custody Ledger</span>
-                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">Prison Department</span>
+                            <span className="font-extrabold uppercase text-[#d4a843]">e-Prisons Custody Ledger</span>
+                            <span className="text-[10px] bg-white text-[#6c757d] px-2 py-0.5 rounded font-mono">Prison Department</span>
                           </div>
                           <div className="space-y-2">
                             {caseDetails.accused && caseDetails.accused.map((acc: any) => {
                               const prisonInfo = prisonData[acc.id];
                               return (
-                                <div key={acc.id} className="bg-slate-950/50 p-3 rounded-lg border border-slate-850 space-y-2">
+                                <div key={acc.id} className="bg-[#0d2137]/50 p-3 rounded-lg border border-slate-850 space-y-2">
                                   <div className="flex justify-between items-center">
-                                    <strong className="text-white text-xs">{acc.name}</strong>
+                                    <strong className="text-[#1e3a5f] text-xs">{acc.name}</strong>
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                                       prisonInfo?.status === 'Incarcerated' 
-                                        ? 'bg-red-950/40 text-red-400 border-red-900/50' 
-                                        : 'bg-emerald-950/40 text-emerald-400 border-emerald-900/50'
+                                        ? 'bg-red-50 text-[#d9251c] border-red-900/50' 
+                                        : 'bg-emerald-950/40 text-emerald-700 border-emerald-900/50'
                                     }`}>
                                       {prisonInfo?.status || 'Unknown'}
                                     </span>
                                   </div>
                                   {prisonInfo && prisonInfo.prison ? (
-                                    <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400">
-                                      <span>Prison: <strong className="text-slate-200">{prisonInfo.prison.name}</strong></span>
-                                      <span>Prisoner ID: <strong className="text-slate-200 font-mono">{prisonInfo.prison.prisoner_id}</strong></span>
-                                      <span>Ward: <strong className="text-slate-200">{prisonInfo.prison.ward}</strong></span>
-                                      <span>Parole: <strong className="text-slate-200">{prisonInfo.prison.next_parole_date}</strong></span>
-                                      <span>Bail Status: <strong className="text-slate-200">{prisonInfo.bail_status}</strong></span>
-                                      <span>Behavior: <strong className="text-slate-200">{prisonInfo.prison.behavior_rating}</strong></span>
+                                    <div className="grid grid-cols-2 gap-2 text-[10px] text-[#6c757d]">
+                                      <span>Prison: <strong className="text-[#1e3a5f]">{prisonInfo.prison.name}</strong></span>
+                                      <span>Prisoner ID: <strong className="text-[#1e3a5f] font-mono">{prisonInfo.prison.prisoner_id}</strong></span>
+                                      <span>Ward: <strong className="text-[#1e3a5f]">{prisonInfo.prison.ward}</strong></span>
+                                      <span>Parole: <strong className="text-[#1e3a5f]">{prisonInfo.prison.next_parole_date}</strong></span>
+                                      <span>Bail Status: <strong className="text-[#1e3a5f]">{prisonInfo.bail_status}</strong></span>
+                                      <span>Behavior: <strong className="text-[#1e3a5f]">{prisonInfo.prison.behavior_rating}</strong></span>
                                     </div>
                                   ) : (
-                                    <p className="text-[10px] text-slate-500 italic">Bail Status: {prisonInfo?.bail_status || 'Checking registry...'}</p>
+                                    <p className="text-[10px] text-[#6c757d] italic">Bail Status: {prisonInfo?.bail_status || 'Checking registry...'}</p>
                                   )}
                                 </div>
                               );
@@ -847,31 +847,31 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                         </div>
 
                         {/* 3. Evidence Vault */}
-                        <div className="border border-slate-800 bg-slate-900/20 rounded-lg p-4 space-y-4">
+                        <div className="border border-[#d1d9e6] bg-[#f0f4f8]/20 rounded-lg p-4 space-y-4">
                           <div className="flex items-center justify-between border-b border-slate-855 pb-2">
-                            <span className="font-extrabold uppercase text-brand-gold">Digital Evidence Vault (BSA Sec 63)</span>
-                            <span className="text-[10px] bg-red-955/40 text-red-400 px-2 py-0.5 rounded font-mono border border-red-900/30">Immutable Ledger</span>
+                            <span className="font-extrabold uppercase text-[#d4a843]">Digital Evidence Vault (BSA Sec 63)</span>
+                            <span className="text-[10px] bg-red-955/40 text-[#d9251c] px-2 py-0.5 rounded font-mono border border-red-900/30">Immutable Ledger</span>
                           </div>
 
                           {/* List Registered Evidence */}
                           {evidenceData && evidenceData.evidence && evidenceData.evidence.length > 0 ? (
                             <div className="space-y-2">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 block">Registered Evidence Files</span>
+                              <span className="text-[10px] uppercase font-bold text-[#6c757d] block">Registered Evidence Files</span>
                               <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                                 {evidenceData.evidence.map((ev: any) => (
-                                  <div key={ev.id} className="bg-slate-950/50 p-2 rounded border border-slate-850 text-[10px] space-y-1">
+                                  <div key={ev.id} className="bg-[#0d2137]/50 p-2 rounded border border-slate-850 text-[10px] space-y-1">
                                     <div className="flex justify-between items-center">
-                                      <strong className="text-white">{ev.file_name} ({ev.evidence_type})</strong>
+                                      <strong className="text-[#1e3a5f]">{ev.file_name} ({ev.evidence_type})</strong>
                                       <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                         ev.is_verified === 1 
-                                          ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/30' 
-                                          : 'bg-red-955/40 text-red-400 border border-red-900/30'
+                                          ? 'bg-emerald-950/40 text-emerald-700 border border-emerald-900/30' 
+                                          : 'bg-red-955/40 text-[#d9251c] border border-red-900/30'
                                       }`}>
                                         {ev.is_verified === 1 ? 'Verified Intact' : 'Untrusted/Compromised'}
                                       </span>
                                     </div>
-                                    <div className="text-slate-400 truncate font-mono text-[9px]">SHA256: {ev.file_hash}</div>
-                                    <div className="text-slate-500 text-[9px] flex justify-between">
+                                    <div className="text-[#6c757d] truncate font-mono text-[9px]">SHA256: {ev.file_hash}</div>
+                                    <div className="text-[#6c757d] text-[9px] flex justify-between">
                                       <span>Uploaded by: {ev.uploaded_by}</span>
                                       <span>Date: {new Date(ev.uploaded_at).toLocaleString()}</span>
                                     </div>
@@ -880,20 +880,20 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                               </div>
                             </div>
                           ) : (
-                            <p className="text-slate-500 italic">No registered digital evidence records found for this FIR.</p>
+                            <p className="text-[#6c757d] italic">No registered digital evidence records found for this FIR.</p>
                           )}
 
                           {/* Register Evidence Form */}
                           <form onSubmit={handleRegisterEvidence} className="space-y-3 bg-slate-955/30 border border-slate-850 p-3 rounded-lg">
-                            <span className="text-[10px] uppercase font-bold text-slate-400 block border-b border-slate-850 pb-1">Register New Electronic Record</span>
+                            <span className="text-[10px] uppercase font-bold text-[#6c757d] block border-b border-slate-850 pb-1">Register New Electronic Record</span>
                             
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <label className="block text-[9px] text-slate-500 uppercase font-semibold">Evidence Type</label>
+                                <label className="block text-[9px] text-[#6c757d] uppercase font-semibold">Evidence Type</label>
                                 <select
                                   value={newEvType}
                                   onChange={(e: any) => setNewEvType(e.target.value)}
-                                  className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary"
+                                  className="bg-[#f0f4f8] border border-[#d1d9e6] text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-[#1e3a5f]"
                                 >
                                   <option value="photograph">Photograph</option>
                                   <option value="video">Video Recording</option>
@@ -902,43 +902,43 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[9px] text-slate-500 uppercase font-semibold">File Name</label>
+                                <label className="block text-[9px] text-[#6c757d] uppercase font-semibold">File Name</label>
                                 <input
                                   type="text"
                                   value={newEvName}
                                   onChange={(e) => setNewEvName(e.target.value)}
                                   placeholder="cctv_footage.mp4"
-                                  className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary"
+                                  className="bg-[#f0f4f8] border border-[#d1d9e6] text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-[#1e3a5f]"
                                 />
                               </div>
                             </div>
 
                             <div className="space-y-1">
-                              <label className="block text-[9px] text-slate-500 uppercase font-semibold">SHA-256 Checksum Hash</label>
+                              <label className="block text-[9px] text-[#6c757d] uppercase font-semibold">SHA-256 Checksum Hash</label>
                               <input
                                 type="text"
                                 value={newEvHash}
                                 onChange={(e) => setNewEvHash(e.target.value)}
                                 placeholder="8f3c7763c5e3a893db... (64 hex characters)"
-                                className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary font-mono"
+                                className="bg-[#f0f4f8] border border-[#d1d9e6] text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-[#1e3a5f] font-mono"
                               />
                             </div>
 
                             <div className="space-y-1">
-                              <label className="block text-[9px] text-slate-500 uppercase font-semibold">Description</label>
+                              <label className="block text-[9px] text-[#6c757d] uppercase font-semibold">Description</label>
                               <input
                                 type="text"
                                 value={newEvDesc}
                                 onChange={(e) => setNewEvDesc(e.target.value)}
                                 placeholder="Details of capture location/context..."
-                                className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary"
+                                className="bg-[#f0f4f8] border border-[#d1d9e6] text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-[#1e3a5f]"
                               />
                             </div>
 
                             <button
                               type="submit"
                               disabled={evidenceRegistering}
-                              className="w-full py-1.5 bg-brand-primary hover:bg-brand-primary-light disabled:opacity-50 text-white rounded text-[10px] font-bold cursor-pointer transition text-center shadow"
+                              className="w-full py-1.5 bg-[#1e3a5f] hover:bg-[#1e3a5f]-light disabled:opacity-50 text-white rounded text-[10px] font-bold cursor-pointer transition text-center shadow"
                             >
                               {evidenceRegistering ? 'Signing Ledger...' : 'Secure & Register Electronic Evidence'}
                             </button>
@@ -946,15 +946,15 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
 
                           {/* Verify Evidence Form */}
                           <form onSubmit={handleVerifyEvidence} className="space-y-3 bg-slate-955/30 border border-slate-850 p-3 rounded-lg">
-                            <span className="text-[10px] uppercase font-bold text-slate-400 block border-b border-slate-850 pb-1">Verify File Integrity</span>
+                            <span className="text-[10px] uppercase font-bold text-[#6c757d] block border-b border-slate-850 pb-1">Verify File Integrity</span>
                             
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <label className="block text-[9px] text-slate-500 uppercase font-semibold">Select Evidence</label>
+                                <label className="block text-[9px] text-[#6c757d] uppercase font-semibold">Select Evidence</label>
                                 <select
                                   value={verifyEvId || ''}
                                   onChange={(e: any) => setVerifyEvId(Number(e.target.value))}
-                                  className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary"
+                                  className="bg-[#f0f4f8] border border-[#d1d9e6] text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-[#1e3a5f]"
                                 >
                                   <option value="">-- Choose File --</option>
                                   {evidenceData?.evidence?.map((ev: any) => (
@@ -963,20 +963,20 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[9px] text-slate-500 uppercase font-semibold">Verify Hash</label>
+                                <label className="block text-[9px] text-[#6c757d] uppercase font-semibold">Verify Hash</label>
                                 <input
                                   type="text"
                                   value={verifyEvHash}
                                   onChange={(e) => setVerifyEvHash(e.target.value)}
                                   placeholder="SHA-256 hash value..."
-                                  className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary font-mono"
+                                  className="bg-[#f0f4f8] border border-[#d1d9e6] text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-[#1e3a5f] font-mono"
                                 />
                               </div>
                             </div>
 
                             <button
                               type="submit"
-                              className="w-full py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-300 border border-slate-800 rounded text-[10px] font-bold cursor-pointer transition text-center"
+                              className="w-full py-1.5 bg-[#f0f4f8] hover:bg-slate-850 text-[#2d4a6f] border border-[#d1d9e6] rounded text-[10px] font-bold cursor-pointer transition text-center"
                             >
                               Execute Cryptographic Verification
                             </button>
@@ -984,8 +984,8 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                             {verifyResult && (
                               <div className={`p-2 rounded text-[10px] font-bold border ${
                                 verifyResult.match 
-                                  ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30' 
-                                  : 'bg-red-955/40 text-red-400 border-red-900/30'
+                                  ? 'bg-emerald-950/40 text-emerald-700 border-emerald-900/30' 
+                                  : 'bg-red-955/40 text-[#d9251c] border-red-900/30'
                               }`}>
                                 {verifyResult.match 
                                   ? '✅ MATCHED: File hash matches digital signature. Integrity verified.' 
@@ -996,10 +996,10 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                         </div>
 
                         {/* 4. BNS Section mapping tool */}
-                        <div className="border border-slate-800 bg-slate-900/20 rounded-lg p-4 space-y-3">
+                        <div className="border border-[#d1d9e6] bg-[#f0f4f8]/20 rounded-lg p-4 space-y-3">
                           <div className="flex items-center justify-between border-b border-slate-855 pb-2">
-                            <span className="font-extrabold uppercase text-brand-gold">BNS Compliance Mapping Registry</span>
-                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">BNS 2023 Converter</span>
+                            <span className="font-extrabold uppercase text-[#d4a843]">BNS Compliance Mapping Registry</span>
+                            <span className="text-[10px] bg-white text-[#6c757d] px-2 py-0.5 rounded font-mono">BNS 2023 Converter</span>
                           </div>
 
                           <form onSubmit={handleTranslateBns} className="flex gap-2">
@@ -1008,31 +1008,31 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                               value={bnsIpcInput}
                               onChange={(e) => setBnsIpcInput(e.target.value)}
                               placeholder="Enter IPC section (e.g. 302, 420)"
-                              className="bg-slate-900 border border-slate-800 focus:border-brand-primary focus:outline-none rounded px-2.5 py-1 text-[10px] text-slate-202 placeholder-slate-600 w-full"
+                              className="bg-[#f0f4f8] border border-[#d1d9e6] focus:border-[#1e3a5f] focus:outline-none rounded px-2.5 py-1 text-[10px] text-slate-202 placeholder-[#9ca3af] w-full"
                             />
                             <button
                               type="submit"
-                              className="px-3 py-1 bg-brand-primary hover:bg-brand-primary-light text-white text-[10px] font-bold rounded cursor-pointer transition shrink-0"
+                              className="px-3 py-1 bg-[#1e3a5f] hover:bg-[#1e3a5f]-light text-white text-[10px] font-bold rounded cursor-pointer transition shrink-0"
                             >
                               Translate
                             </button>
                           </form>
 
                           {bnsResult && (
-                            <div className="bg-slate-950/50 p-2.5 rounded border border-slate-850 text-[10px] space-y-1 text-slate-350">
+                            <div className="bg-[#0d2137]/50 p-2.5 rounded border border-slate-850 text-[10px] space-y-1 text-slate-350">
                               {bnsResult.error ? (
                                 <span className="text-red-450 font-bold">{bnsResult.error}</span>
                               ) : (
                                 <>
                                   <div>
-                                    IPC Section: <strong className="text-white">Sec {bnsResult.ipc_section}</strong> &rarr; BNS Section: <strong className="text-brand-gold">Sec {bnsResult.bns_section}</strong>
+                                    IPC Section: <strong className="text-[#1e3a5f]">Sec {bnsResult.ipc_section}</strong> &rarr; BNS Section: <strong className="text-[#d4a843]">Sec {bnsResult.bns_section}</strong>
                                   </div>
-                                  <div>Category: <strong className="text-white">{bnsResult.category}</strong></div>
-                                  <div>Description: <span className="text-slate-400">{bnsResult.description}</span></div>
-                                  <div>Max Punishment: <strong className="text-slate-200">{bnsResult.max_punishment}</strong></div>
+                                  <div>Category: <strong className="text-[#1e3a5f]">{bnsResult.category}</strong></div>
+                                  <div>Description: <span className="text-[#6c757d]">{bnsResult.description}</span></div>
+                                  <div>Max Punishment: <strong className="text-[#1e3a5f]">{bnsResult.max_punishment}</strong></div>
                                   <div className="flex gap-4 pt-1 font-semibold text-[9px] uppercase">
-                                    <span className={bnsResult.is_cognizable === 1 ? 'text-emerald-400' : 'text-slate-450'}>Cognizable: {bnsResult.is_cognizable === 1 ? 'Yes' : 'No'}</span>
-                                    <span className={bnsResult.is_bailable === 1 ? 'text-emerald-400' : 'text-red-400'}>Bailable: {bnsResult.is_bailable === 1 ? 'Yes' : 'No'}</span>
+                                    <span className={bnsResult.is_cognizable === 1 ? 'text-emerald-700' : 'text-slate-450'}>Cognizable: {bnsResult.is_cognizable === 1 ? 'Yes' : 'No'}</span>
+                                    <span className={bnsResult.is_bailable === 1 ? 'text-emerald-700' : 'text-[#d9251c]'}>Bailable: {bnsResult.is_bailable === 1 ? 'Yes' : 'No'}</span>
                                   </div>
                                 </>
                               )}
@@ -1046,7 +1046,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-slate-500 text-xs gap-3 print:hidden">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-[#6c757d] text-xs gap-3 print:hidden">
               <FileText size={48} className="text-slate-700" />
               <p>Click on any FIR number in the chat assistant or use the search box above to load digital case briefs.</p>
             </div>
@@ -1060,17 +1060,17 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
         {/* Vernacular OCR Scanner Card */}
         <div className="card-panel border border-slate-200 rounded-lg p-5 bg-white flex flex-col space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-            <Languages className="text-brand-primary" size={16} />
+            <Languages className="text-[#1e3a5f]" size={16} />
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Vernacular OCR Document Intelligence</h3>
           </div>
           
-          <div className="text-xs text-slate-500 font-medium leading-relaxed">
+          <div className="text-xs text-[#6c757d] font-medium leading-relaxed">
             Drag-and-drop or select hand-written Kannada documents to perform simulated OCR text translation and relational entity extraction.
           </div>
 
           {/* Upload Drop Zone / Sample Select */}
-          <div className="border border-dashed border-slate-300 rounded-lg p-4 bg-slate-50 text-center flex flex-col items-center justify-center space-y-2 hover:border-brand-primary/50 transition duration-200">
-            <UploadCloud size={32} className="text-slate-400" />
+          <div className="border border-dashed border-slate-300 rounded-lg p-4 bg-slate-50 text-center flex flex-col items-center justify-center space-y-2 hover:border-[#1e3a5f]/50 transition duration-200">
+            <UploadCloud size={32} className="text-[#6c757d]" />
             <span className="text-xs text-slate-600 font-semibold">Select and Analyze Sample Vernacular File:</span>
             
             <div className="flex flex-wrap justify-center gap-2 mt-1">
@@ -1103,14 +1103,14 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
             <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-150">
               <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
                 <span className="flex items-center gap-1.5">
-                  <LoaderIcon className="animate-spin text-brand-primary" size={12} />
+                  <LoaderIcon className="animate-spin text-[#1e3a5f]" size={12} />
                   <span>Processing {ocrFileName}...</span>
                 </span>
                 <span>{ocrProgress}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                 <div 
-                  className="bg-brand-primary h-1.5 rounded-full transition-all duration-300"
+                  className="bg-[#1e3a5f] h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${ocrProgress}%` }}
                 />
               </div>
@@ -1122,13 +1122,13 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
             <div className="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Raw Kannada Text</span>
+                  <span className="text-[10px] uppercase font-bold text-[#6c757d]">Raw Kannada Text</span>
                   <div className="p-2 bg-white rounded border border-slate-200 font-mono text-[11px] text-slate-700 min-h-[60px] max-h-[80px] overflow-y-auto">
                     {ocrResult.rawKannada}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">English Translation</span>
+                  <span className="text-[10px] uppercase font-bold text-[#6c757d]">English Translation</span>
                   <div className="p-2 bg-white rounded border border-slate-200 text-[11px] text-slate-700 min-h-[60px] max-h-[80px] overflow-y-auto leading-relaxed">
                     {ocrResult.translatedEnglish}
                   </div>
@@ -1137,18 +1137,18 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
 
               {/* Extracted Entities */}
               <div className="pt-2 border-t border-slate-200 space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Extracted System Entities</span>
+                <span className="text-[10px] uppercase font-bold text-[#6c757d]">Extracted System Entities</span>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div className="flex justify-between items-center bg-white p-1.5 rounded border border-slate-150">
-                    <span className="text-slate-400">Suspects:</span>
+                    <span className="text-[#6c757d]">Suspects:</span>
                     <strong className="text-slate-800">{ocrResult.entities.suspects.join(', ') || 'None'}</strong>
                   </div>
                   <div className="flex justify-between items-center bg-white p-1.5 rounded border border-slate-150">
-                    <span className="text-slate-400">Locations:</span>
+                    <span className="text-[#6c757d]">Locations:</span>
                     <strong className="text-slate-800">{ocrResult.entities.locations.join(', ') || 'None'}</strong>
                   </div>
                   <div className="flex justify-between items-center bg-white p-1.5 rounded border border-slate-150 col-span-2">
-                    <span className="text-slate-400">Monetary:</span>
+                    <span className="text-[#6c757d]">Monetary:</span>
                     <strong className="text-slate-800">{ocrResult.entities.monetaryAmount}</strong>
                   </div>
                 </div>
@@ -1163,7 +1163,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                     setChatOverrideQuery(prompt);
                     setTimeout(() => setChatOverrideQuery(undefined), 100);
                   }}
-                  className="w-full mt-1.5 py-1.5 bg-brand-primary hover:bg-brand-primary-light text-white rounded text-[11px] font-bold cursor-pointer transition text-center shadow"
+                  className="w-full mt-1.5 py-1.5 bg-[#1e3a5f] hover:bg-[#1e3a5f]-light text-white rounded text-[11px] font-bold cursor-pointer transition text-center shadow"
                 >
                   Verify Threat Score of {ocrResult.entities.suspects[0]}
                 </button>
@@ -1175,11 +1175,11 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
         {/* Zia Vision Biometric Facial Search Card */}
         <div className="card-panel border border-slate-200 rounded-lg p-5 bg-white flex flex-col space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-            <Fingerprint className="text-brand-primary" size={16} />
+            <Fingerprint className="text-[#1e3a5f]" size={16} />
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Zia Vision Biometric Facial Search</h3>
           </div>
 
-          <div className="text-xs text-slate-500 font-medium leading-relaxed">
+          <div className="text-xs text-[#6c757d] font-medium leading-relaxed">
             Upload a suspect photo or select pre-loaded criminal mugshots to run real-time similarity matching against the offender registry database.
           </div>
 
@@ -1192,7 +1192,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                 disabled={biometricScanning}
                 className={`px-2 py-1 text-[11px] font-bold border rounded cursor-pointer transition ${
                   selectedMugshot === 'mugshot_rupa' 
-                    ? 'bg-brand-primary text-white border-brand-primary' 
+                    ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' 
                     : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
                 }`}
               >
@@ -1203,7 +1203,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                 disabled={biometricScanning}
                 className={`px-2 py-1 text-[11px] font-bold border rounded cursor-pointer transition ${
                   selectedMugshot === 'mugshot_ramesh' 
-                    ? 'bg-brand-primary text-white border-brand-primary' 
+                    ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' 
                     : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
                 }`}
               >
@@ -1214,7 +1214,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                 disabled={biometricScanning}
                 className={`px-2 py-1 text-[11px] font-bold border rounded cursor-pointer transition ${
                   selectedMugshot === 'mugshot_amit' 
-                    ? 'bg-brand-primary text-white border-brand-primary' 
+                    ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' 
                     : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
                 }`}
               >
@@ -1227,9 +1227,9 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
           {biometricScanning && (
             <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-lg border border-slate-150 space-y-3 relative overflow-hidden">
               {/* Spinning Scanner radar grid */}
-              <div className="relative h-16 w-16 rounded-full border-2 border-brand-primary/20 flex items-center justify-center animate-pulse">
-                <div className="absolute inset-0 rounded-full border-t-2 border-brand-primary animate-spin" />
-                <Fingerprint size={28} className="text-brand-primary" />
+              <div className="relative h-16 w-16 rounded-full border-2 border-[#1e3a5f]/20 flex items-center justify-center animate-pulse">
+                <div className="absolute inset-0 rounded-full border-t-2 border-[#1e3a5f] animate-spin" />
+                <Fingerprint size={28} className="text-[#1e3a5f]" />
               </div>
               <span className="text-xs text-slate-600 font-bold animate-pulse">Scanning biometric facial nodes...</span>
             </div>
@@ -1238,16 +1238,16 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
           {/* Results Match List */}
           {!biometricScanning && biometricMatches.length > 0 && (
             <div className="space-y-2 max-h-[175px] overflow-y-auto pr-1">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Top Offender Matches</span>
+              <span className="text-[10px] uppercase font-bold text-[#6c757d] block mb-1">Top Offender Matches</span>
               {biometricMatches.map((match, idx) => (
-                <div key={idx} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-xs hover:border-brand-primary/45 transition">
+                <div key={idx} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-xs hover:border-[#1e3a5f]/45 transition">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-1.5">
                       <strong className="text-slate-800 text-[13px]">{match.name}</strong>
-                      <span className="text-[10px] text-slate-400 font-medium">({match.age} yrs • {match.gender})</span>
+                      <span className="text-[10px] text-[#6c757d] font-medium">({match.age} yrs • {match.gender})</span>
                     </div>
-                    <div className="text-[10px] text-slate-500 font-medium">
-                      Gang: <span className="text-slate-700 font-semibold">{match.gang}</span> • Case: <span className="text-brand-primary hover:underline cursor-pointer font-bold" onClick={() => setSelectedFirNumber(match.fir_number)}>{match.fir_number}</span>
+                    <div className="text-[10px] text-[#6c757d] font-medium">
+                      Gang: <span className="text-slate-700 font-semibold">{match.gang}</span> • Case: <span className="text-[#1e3a5f] hover:underline cursor-pointer font-bold" onClick={() => setSelectedFirNumber(match.fir_number)}>{match.fir_number}</span>
                     </div>
                   </div>
 
@@ -1257,7 +1257,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                     </div>
                     <button
                       onClick={() => handleInvestigateAccused(match.name)}
-                      className="block text-[10px] text-brand-primary font-bold hover:underline cursor-pointer text-right w-full"
+                      className="block text-[10px] text-[#1e3a5f] font-bold hover:underline cursor-pointer text-right w-full"
                     >
                       Analyze threat score
                     </button>

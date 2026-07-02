@@ -1,92 +1,103 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #1d4ed8;
-  --color-brand-primary-light: #2563eb;
-  --color-brand-navy: #0f172a;
-  --color-brand-dark: #0f172a;
-  --color-brand-card: #ffffff;
-  --color-brand-card-alt: #f1f5f9;
-  --color-brand-border: #cbd5e1;
-  --color-brand-border-light: #e2e8f0;
-  --color-brand-gold: #b45309;
-  --color-brand-muted: #64748b;
+  /* === Official KSP Government Color Palette === */
+  --color-brand-primary: #1e3a5f;         /* KSP Navy Blue */
+  --color-brand-primary-light: #2a4a73;   /* Navy hover */
+  --color-brand-primary-dark: #0d2137;    /* Deepest navy */
+  --color-brand-navy: #1e3a5f;            /* Header navy */
+  --color-brand-dark: #f8f9fa;            /* Light page bg */
+  --color-brand-card: #ffffff;            /* Card white */
+  --color-brand-card-alt: #eef2f7;        /* Alternate card bg */
+  --color-brand-border: #d1d9e6;          /* Borders */
+  --color-brand-border-light: #e8ecf1;    /* Light borders */
+  --color-brand-gold: #d4a843;            /* KSP Gold/Saffron */
+  --color-brand-muted: #6c757d;           /* Muted text */
+  --color-brand-red: #d9251c;             /* Karnataka Red */
+  --color-brand-saffron: #ff9933;         /* Indian Saffron */
+  --color-brand-green: #138808;           /* Indian Green */
+  --color-brand-text: #1e3a5f;            /* Primary text */
+  --color-brand-text-secondary: #4a5568;  /* Secondary text */
+  --color-brand-bg: #f0f4f8;             /* Page background */
 }
 
-/* Custom Scrollbars */
+/* Custom Scrollbars — Official light theme */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: #eef2f7;
 }
 ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #b0bec5;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2563eb;
+  background: #1e3a5f;
 }
 
+/* Base body styling */
 body {
-  background-color: #0f172a;
-  color: #e2e8f0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f0f4f8;
+  color: #1e3a5f;
+  font-family: 'Inter', 'Noto Sans Kannada', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
 }
 
-/* Leaflet maps styling to match dark professional theme */
+/* Leaflet maps styling — light official theme */
 .leaflet-container {
-  background: #1e293b !important;
+  background: #eef2f7 !important;
   border-radius: 0.5rem;
-  border: 1px solid #334155;
+  border: 1px solid #d1d9e6;
 }
 .leaflet-tile {
-  filter: none !important; /* Standard official light colored map */
+  filter: none !important;
 }
 .leaflet-bar {
-  border: 1px solid #334155 !important;
+  border: 1px solid #d1d9e6 !important;
 }
 .leaflet-bar a {
-  background-color: #1e293b !important;
-  color: #e2e8f0 !important;
-  border-bottom: 1px solid #334155 !important;
+  background-color: #ffffff !important;
+  color: #1e3a5f !important;
+  border-bottom: 1px solid #d1d9e6 !important;
 }
 .leaflet-bar a:hover {
-  background-color: #334155 !important;
+  background-color: #eef2f7 !important;
 }
 .leaflet-popup-content-wrapper {
-  background: #1e293b !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #334155;
+  background: #ffffff !important;
+  color: #1e3a5f !important;
+  border: 1px solid #d1d9e6;
   border-radius: 0.375rem !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.12) !important;
 }
 .leaflet-popup-tip {
-  background: #1e293b !important;
-  border: 1px solid #334155;
+  background: #ffffff !important;
+  border: 1px solid #d1d9e6;
 }
 
-/* Professional card panel — flat, structured */
+/* Professional card panel — clean government white */
 .card-panel {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: #ffffff;
+  border: 1px solid #d1d9e6;
   border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(30, 58, 95, 0.08);
 }
 
-/* KPI stat card — flat, high contrast, left-accent */
+/* KPI stat card — flat, official styling */
 .kpi-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: #ffffff;
+  border: 1px solid #d1d9e6;
   border-radius: 0.5rem;
   padding: 1rem 1.25rem;
   text-align: center;
+  box-shadow: 0 1px 3px rgba(30, 58, 95, 0.06);
 }
 
-/* Classification banner */
+/* Classification banner — official navy */
 .classification-banner {
-  background: #b45309;
+  background: #1e3a5f;
   color: #ffffff;
   text-align: center;
   padding: 4px 0;
@@ -94,50 +105,125 @@ body {
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  border-bottom: 1px solid #d97706;
+  border-bottom: 2px solid #d4a843;
 }
 
-/* Subtle accent shadows — replacing neon glows */
+/* Subtle accent shadows — government clean */
 .shadow-accent-blue {
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.05);
+  box-shadow: 0 1px 4px rgba(30, 58, 95, 0.1);
 }
 .shadow-accent-red {
-  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.05);
+  box-shadow: 0 1px 4px rgba(217, 37, 28, 0.1);
 }
 
 /* Zebra striping for data tables */
 .table-zebra tbody tr:nth-child(even) {
-  background: rgba(30, 41, 59, 0.5);
+  background: #f7f9fc;
 }
 .table-zebra tbody tr:hover {
-  background: rgba(37, 99, 235, 0.1);
+  background: rgba(30, 58, 95, 0.06);
 }
 
-/* Text area & inputs font color */
+/* Text area & inputs — light government theme */
 input, select, textarea {
-  color: #e2e8f0 !important;
+  color: #1e3a5f !important;
+  background-color: #ffffff;
 }
 input::placeholder {
-  color: #64748b !important;
+  color: #9ca3af !important;
 }
 
-/* Focus styles */
+/* Focus styles — navy blue */
 input:focus, select:focus, textarea:focus {
-  border-color: #2563eb !important;
+  border-color: #1e3a5f !important;
   outline: none !important;
+  box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.15) !important;
 }
 
 /* Geofence toast alert */
 .geofence-toast {
-  background-color: #dc2626 !important;
+  background-color: #d9251c !important;
   color: #ffffff !important;
 }
 .geofence-toast * {
   color: #ffffff !important;
 }
 
-/* Sync modal log terminal */
+/* Sync modal log terminal — keep dark for authenticity */
 .sync-terminal {
-  background-color: #0f172a !important;
+  background-color: #0d2137 !important;
   color: #cbd5e1 !important;
+}
+
+/* Official government utility bar */
+.govt-utility-bar {
+  background: #0d2137;
+  color: #cbd5e1;
+  font-size: 11px;
+  padding: 4px 0;
+}
+.govt-utility-bar a {
+  color: #d4a843;
+  text-decoration: none;
+}
+.govt-utility-bar a:hover {
+  color: #ffffff;
+}
+
+/* Official header */
+.govt-header {
+  background: #ffffff;
+  border-bottom: 3px solid #1e3a5f;
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.08);
+}
+
+/* Navigation bar */
+.govt-nav {
+  background: #1e3a5f;
+}
+.govt-nav button {
+  color: rgba(255, 255, 255, 0.85);
+  transition: all 0.2s;
+}
+.govt-nav button:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.govt-nav button.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+  border-bottom: 2px solid #d4a843;
+}
+
+/* Official footer */
+.govt-footer {
+  background: #0d2137;
+  color: #94a3b8;
+  border-top: 3px solid #d4a843;
+}
+
+/* Tricolor bar — Indian Flag */
+.tricolor-bar {
+  height: 4px;
+  display: flex;
+  width: 100%;
+}
+.tricolor-bar .saffron { flex: 1; background: #ff9933; }
+.tricolor-bar .white { flex: 1; background: #ffffff; }
+.tricolor-bar .green { flex: 1; background: #138808; }
+
+/* Recharts tooltip override for light theme */
+.recharts-default-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #d1d9e6 !important;
+  border-radius: 0.375rem !important;
+  color: #1e3a5f !important;
+}
+
+/* Print styles */
+@media print {
+  .classification-banner,
+  .govt-utility-bar,
+  .govt-nav { display: none; }
+  body { background: white; color: black; }
 }

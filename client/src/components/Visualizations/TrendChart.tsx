@@ -37,16 +37,16 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="card-panel border border-slate-800 p-3 rounded-lg shadow-xl text-xs">
-          <p className="font-bold text-white mb-2">{label}</p>
+        <div className="card-panel border border-[#d1d9e6] p-3 rounded-lg shadow-xl text-xs">
+          <p className="font-bold text-[#1e3a5f] mb-2">{label}</p>
           <div className="space-y-1">
             {payload.map((entry: any, index: number) => (
               <div key={index} className="flex items-center gap-3 justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                  <span className="text-slate-400">{entry.name}:</span>
+                  <span className="text-[#6c757d]">{entry.name}:</span>
                 </div>
-                <strong className="text-white">{entry.value}</strong>
+                <strong className="text-[#1e3a5f]">{entry.value}</strong>
               </div>
             ))}
           </div>
@@ -57,22 +57,22 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="card-panel rounded-lg border border-slate-800 p-6 text-slate-100 shadow-xl w-full my-4">
+    <div className="card-panel rounded-lg border border-[#d1d9e6] p-6 text-[#1e3a5f] shadow-xl w-full my-4">
       {/* Header and Toggle TABS */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4 mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#d1d9e6] pb-4 mb-6 gap-4">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <BarChart3 className="text-brand-primary" size={20} /> Statistical Crime Timelines & Densities
+          <h2 className="text-lg font-bold text-[#1e3a5f] flex items-center gap-2">
+            <BarChart3 className="text-[#1e3a5f]" size={20} /> Statistical Crime Timelines & Densities
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Aggregated district analytics and chronological trends</p>
+          <p className="text-xs text-[#6c757d] mt-0.5">Aggregated district analytics and chronological trends</p>
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 self-stretch sm:self-auto">
+        <div className="flex bg-[#f0f4f8] border border-[#d1d9e6] rounded-lg p-0.5 self-stretch sm:self-auto">
           <button
             onClick={() => setActiveTab('timeline')}
             className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold transition ${
-              activeTab === 'timeline' ? 'bg-brand-primary text-white' : 'text-slate-400 hover:text-slate-200'
+              activeTab === 'timeline' ? 'bg-[#1e3a5f] text-white' : 'text-[#6c757d] hover:text-white'
             }`}
           >
             <Calendar size={14} /> Monthly Timeline
@@ -80,7 +80,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
           <button
             onClick={() => setActiveTab('district')}
             className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-1.5 rounded-md text-xs font-semibold transition ${
-              activeTab === 'district' ? 'bg-brand-primary text-white' : 'text-slate-400 hover:text-slate-200'
+              activeTab === 'district' ? 'bg-[#1e3a5f] text-white' : 'text-[#6c757d] hover:text-white'
             }`}
           >
             <BarChart3 size={14} /> District Comparison

@@ -102,13 +102,13 @@ export const PolicymakerDashboard: React.FC<PolicymakerDashboardProps> = ({ user
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-slate-900/40 border border-slate-800 rounded-lg p-4">
+      <div className="bg-[#f0f4f8]/40 border border-[#d1d9e6] rounded-lg p-4">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <Landmark className="text-brand-primary" /> Executive Intelligence Brief
+            <h1 className="text-xl font-bold text-[#1e3a5f] flex items-center gap-2">
+              <Landmark className="text-[#1e3a5f]" /> Executive Intelligence Brief
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-[#6c757d] mt-0.5">
               State-wide crime analytics, demographic insights, and predictive threat assessment
             </p>
           </div>
@@ -118,33 +118,33 @@ export const PolicymakerDashboard: React.FC<PolicymakerDashboardProps> = ({ user
 
       {/* Statewide KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card-panel border border-slate-800 rounded-lg p-4 text-center">
-          <span className="block text-[11px] text-slate-500 uppercase font-semibold">Total Cases (180 days)</span>
-          <strong className="text-2xl text-white block mt-1">{stateStats.totalCases}</strong>
+        <div className="card-panel border border-[#d1d9e6] rounded-lg p-4 text-center">
+          <span className="block text-[11px] text-[#6c757d] uppercase font-semibold">Total Cases (180 days)</span>
+          <strong className="text-2xl text-[#1e3a5f] block mt-1">{stateStats.totalCases}</strong>
         </div>
-        <div className="card-panel border border-slate-800 rounded-lg p-4 text-center">
-          <span className="block text-[11px] text-slate-500 uppercase font-semibold">Active Investigations</span>
-          <strong className="text-2xl text-orange-400 block mt-1">{stateStats.activeCases}</strong>
+        <div className="card-panel border border-[#d1d9e6] rounded-lg p-4 text-center">
+          <span className="block text-[11px] text-[#6c757d] uppercase font-semibold">Active Investigations</span>
+          <strong className="text-2xl text-orange-700 block mt-1">{stateStats.activeCases}</strong>
         </div>
-        <div className="card-panel border border-slate-800 rounded-lg p-4 text-center">
-          <span className="block text-[11px] text-slate-500 uppercase font-semibold">Critical Forecasts</span>
+        <div className="card-panel border border-[#d1d9e6] rounded-lg p-4 text-center">
+          <span className="block text-[11px] text-[#6c757d] uppercase font-semibold">Critical Forecasts</span>
           <strong className="text-2xl text-red-500 block mt-1">{stateStats.criticalForecasts}</strong>
         </div>
-        <div className="card-panel border border-slate-800 rounded-lg p-4 text-center">
-          <span className="block text-[11px] text-slate-500 uppercase font-semibold">Districts Monitored</span>
-          <strong className="text-2xl text-emerald-400 block mt-1">{stateStats.districtsMonitored}</strong>
+        <div className="card-panel border border-[#d1d9e6] rounded-lg p-4 text-center">
+          <span className="block text-[11px] text-[#6c757d] uppercase font-semibold">Districts Monitored</span>
+          <strong className="text-2xl text-emerald-700 block mt-1">{stateStats.districtsMonitored}</strong>
         </div>
       </div>
 
       {/* Loading & Error */}
       {loading && (
-        <div className="flex items-center justify-center gap-2 bg-slate-900/20 border border-slate-900 rounded-lg p-4 text-slate-400 text-xs">
-          <Loader2 size={12} className="animate-spin text-brand-primary" />
+        <div className="flex items-center justify-center gap-2 bg-[#f0f4f8]/20 border border-slate-900 rounded-lg p-4 text-[#6c757d] text-xs">
+          <Loader2 size={12} className="animate-spin text-[#1e3a5f]" />
           <span>Compiling statewide intelligence metrics from all district nodes...</span>
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-2 bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-red-400 text-xs">
+        <div className="flex items-center gap-2 bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-[#d9251c] text-xs">
           <AlertCircle size={14} />
           <span>{error}</span>
         </div>
@@ -154,8 +154,8 @@ export const PolicymakerDashboard: React.FC<PolicymakerDashboardProps> = ({ user
       {trendData && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
-            <TrendingUp size={16} className="text-brand-primary" />
-            <span className="text-sm font-bold text-white uppercase tracking-wider">Statewide Crime Trend Analysis</span>
+            <TrendingUp size={16} className="text-[#1e3a5f]" />
+            <span className="text-sm font-bold text-[#1e3a5f] uppercase tracking-wider">Statewide Crime Trend Analysis</span>
           </div>
           <TrendChart data={trendData} />
         </div>
@@ -165,8 +165,8 @@ export const PolicymakerDashboard: React.FC<PolicymakerDashboardProps> = ({ user
       {socioData && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
-            <Users size={16} className="text-brand-primary" />
-            <span className="text-sm font-bold text-white uppercase tracking-wider">Sociological Crime Insights</span>
+            <Users size={16} className="text-[#1e3a5f]" />
+            <span className="text-sm font-bold text-[#1e3a5f] uppercase tracking-wider">Sociological Crime Insights</span>
           </div>
           <SocioDemographicChart data={socioData} />
         </div>
@@ -176,8 +176,8 @@ export const PolicymakerDashboard: React.FC<PolicymakerDashboardProps> = ({ user
       {forecasts.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
-            <ShieldAlert size={16} className="text-brand-primary" />
-            <span className="text-sm font-bold text-white uppercase tracking-wider">Predictive Crime Intelligence & Early Warning</span>
+            <ShieldAlert size={16} className="text-[#1e3a5f]" />
+            <span className="text-sm font-bold text-[#1e3a5f] uppercase tracking-wider">Predictive Crime Intelligence & Early Warning</span>
           </div>
           <ForecastAlertPanel forecasts={forecasts} />
         </div>

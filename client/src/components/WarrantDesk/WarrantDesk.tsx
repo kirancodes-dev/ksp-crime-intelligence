@@ -40,10 +40,10 @@ const OFFICERS = [
 ];
 
 const riskColor = (score: number) => {
-  if (score >= 80) return 'text-red-400 bg-red-950/40 border-red-900/40';
-  if (score >= 60) return 'text-orange-400 bg-orange-950/30 border-orange-900/30';
-  if (score >= 40) return 'text-amber-400 bg-amber-950/30 border-amber-900/30';
-  return 'text-emerald-400 bg-emerald-950/30 border-emerald-900/30';
+  if (score >= 80) return 'text-[#d9251c] bg-red-50 border-red-900/40';
+  if (score >= 60) return 'text-orange-700 bg-orange-950/30 border-orange-900/30';
+  if (score >= 40) return 'text-amber-700 bg-amber-950/30 border-amber-900/30';
+  return 'text-emerald-700 bg-emerald-950/30 border-emerald-900/30';
 };
 
 const urgencyClass = (days: number) => {
@@ -132,8 +132,8 @@ export const WarrantDesk: React.FC<WarrantDeskProps> = ({ userId, role }) => {
   };
 
   const SortIcon = ({ field }: { field: SortField }) => (
-    sortField === field && sortDir === 'asc' ? <ChevronUp size={10} className="text-brand-primary inline ml-1" /> :
-    sortField === field ? <ChevronDown size={10} className="text-brand-primary inline ml-1" /> :
+    sortField === field && sortDir === 'asc' ? <ChevronUp size={10} className="text-[#1e3a5f] inline ml-1" /> :
+    sortField === field ? <ChevronDown size={10} className="text-[#1e3a5f] inline ml-1" /> :
     <ChevronDown size={10} className="text-slate-600 inline ml-1" />
   );
 
@@ -144,14 +144,14 @@ export const WarrantDesk: React.FC<WarrantDeskProps> = ({ userId, role }) => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="bg-slate-900/40 border border-slate-800 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-[#f0f4f8]/40 border border-[#d1d9e6] rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Scale size={18} className="text-brand-primary" /> Warrant &amp; Case Management Desk
+          <h2 className="text-lg font-bold text-[#1e3a5f] flex items-center gap-2">
+            <Scale size={18} className="text-[#1e3a5f]" /> Warrant &amp; Case Management Desk
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Bulk manage FIR statuses, assign officers, and track escalations</p>
+          <p className="text-xs text-[#6c757d] mt-0.5">Bulk manage FIR statuses, assign officers, and track escalations</p>
         </div>
-        <button onClick={loadWarrants} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition cursor-pointer">
+        <button onClick={loadWarrants} disabled={loading} className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#2d4a6f] text-xs font-semibold rounded-lg transition cursor-pointer">
           <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
@@ -159,14 +159,14 @@ export const WarrantDesk: React.FC<WarrantDeskProps> = ({ userId, role }) => {
       {/* KPI Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { icon: <BarChart3 size={14} className="text-slate-400 mx-auto mb-1" />, label: 'Total Cases', val: warrants.length, cls: 'text-white' },
-          { icon: <AlertTriangle size={14} className="text-red-400 mx-auto mb-1" />, label: 'Critical (>60 days)', val: overdueCritical, cls: 'text-red-400', border: 'border-red-900/40' },
-          { icon: <Clock size={14} className="text-amber-400 mx-auto mb-1" />, label: 'Overdue 30-60d', val: overdueAmber, cls: 'text-amber-400', border: 'border-amber-900/40' },
-          { icon: <ShieldAlert size={14} className="text-orange-400 mx-auto mb-1" />, label: 'High Risk ≥70', val: highRisk, cls: 'text-orange-400', border: 'border-orange-900/40' },
+          { icon: <BarChart3 size={14} className="text-[#6c757d] mx-auto mb-1" />, label: 'Total Cases', val: warrants.length, cls: 'text-[#1e3a5f]' },
+          { icon: <AlertTriangle size={14} className="text-[#d9251c] mx-auto mb-1" />, label: 'Critical (>60 days)', val: overdueCritical, cls: 'text-[#d9251c]', border: 'border-red-900/40' },
+          { icon: <Clock size={14} className="text-amber-700 mx-auto mb-1" />, label: 'Overdue 30-60d', val: overdueAmber, cls: 'text-amber-700', border: 'border-amber-900/40' },
+          { icon: <ShieldAlert size={14} className="text-orange-700 mx-auto mb-1" />, label: 'High Risk ≥70', val: highRisk, cls: 'text-orange-700', border: 'border-orange-900/40' },
         ].map((kpi, i) => (
-          <div key={i} className={`card-panel border ${kpi.border || 'border-slate-800'} rounded-lg p-3 text-center`}>
+          <div key={i} className={`card-panel border ${kpi.border || 'border-[#d1d9e6]'} rounded-lg p-3 text-center`}>
             {kpi.icon}
-            <span className="block text-[10px] text-slate-500 uppercase font-semibold">{kpi.label}</span>
+            <span className="block text-[10px] text-[#6c757d] uppercase font-semibold">{kpi.label}</span>
             <strong className={`text-xl block ${kpi.cls}`}>{kpi.val}</strong>
           </div>
         ))}
@@ -176,96 +176,96 @@ export const WarrantDesk: React.FC<WarrantDeskProps> = ({ userId, role }) => {
       <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
         <div className="flex gap-2 items-center flex-wrap">
           <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#6c757d]" />
             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search FIR, crime, district…"
-              className="pl-7 pr-3 py-1.5 bg-slate-900 border border-slate-800 focus:border-brand-primary focus:outline-none rounded-lg text-xs text-slate-200 placeholder-slate-600 w-52 transition" />
+              className="pl-7 pr-3 py-1.5 bg-[#f0f4f8] border border-[#d1d9e6] focus:border-[#1e3a5f] focus:outline-none rounded-lg text-xs text-[#1e3a5f] placeholder-[#9ca3af] w-52 transition" />
           </div>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-primary cursor-pointer transition">
+            className="bg-[#f0f4f8] border border-[#d1d9e6] rounded-lg px-2.5 py-1.5 text-xs text-[#2d4a6f] focus:outline-none focus:border-[#1e3a5f] cursor-pointer transition">
             <option value="All">All Statuses</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         {selected.size > 0 && (
           <button onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-bold rounded-lg transition cursor-pointer shadow-lg">
+            className="flex items-center gap-2 px-4 py-2 bg-[#1e3a5f] hover:bg-[#1e3a5f]/90 text-white text-xs font-bold rounded-lg transition cursor-pointer shadow-lg">
             <FileCheck size={13} /> Bulk Action ({selected.size})
           </button>
         )}
       </div>
 
       {bulkSuccess && (
-        <div className="flex items-center gap-2 bg-emerald-950/30 border border-emerald-900/50 rounded-lg p-3 text-emerald-400 text-xs font-semibold">
+        <div className="flex items-center gap-2 bg-emerald-950/30 border border-emerald-900/50 rounded-lg p-3 text-emerald-700 text-xs font-semibold">
           <FileCheck size={13} /> {bulkSuccess}
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-2 bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-red-400 text-xs">
+        <div className="flex items-center gap-2 bg-red-950/20 border border-red-900/40 rounded-lg p-3 text-[#d9251c] text-xs">
           <AlertCircle size={14} /> {error}
         </div>
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-slate-400 text-xs">
-          <Loader2 size={14} className="animate-spin text-brand-primary" /> Loading warrant data...
+        <div className="flex items-center justify-center gap-2 py-12 text-[#6c757d] text-xs">
+          <Loader2 size={14} className="animate-spin text-[#1e3a5f]" /> Loading warrant data...
         </div>
       ) : (
-        <div className="bg-slate-900/30 border border-slate-800 rounded-lg overflow-hidden">
+        <div className="bg-[#f0f4f8]/30 border border-[#d1d9e6] rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/60">
+                <tr className="border-b border-[#d1d9e6] bg-[#f0f4f8]/60">
                   <th className="px-3 py-3 text-left">
-                    <button onClick={toggleAll} className="cursor-pointer text-slate-400 hover:text-white transition">
+                    <button onClick={toggleAll} className="cursor-pointer text-[#6c757d] hover:text-[#1e3a5f] transition">
                       {selected.size === filtered.length && filtered.length > 0
-                        ? <CheckSquare size={14} className="text-brand-primary" />
+                        ? <CheckSquare size={14} className="text-[#1e3a5f]" />
                         : <Square size={14} />}
                     </button>
                   </th>
-                  <th className="px-3 py-3 text-left text-slate-400 font-semibold uppercase tracking-wider">FIR #</th>
-                  <th className="px-3 py-3 text-left cursor-pointer text-slate-400 font-semibold uppercase tracking-wider hover:text-white" onClick={() => handleSort('district')}>
+                  <th className="px-3 py-3 text-left text-[#6c757d] font-semibold uppercase tracking-wider">FIR #</th>
+                  <th className="px-3 py-3 text-left cursor-pointer text-[#6c757d] font-semibold uppercase tracking-wider hover:text-[#1e3a5f]" onClick={() => handleSort('district')}>
                     District <SortIcon field="district" />
                   </th>
-                  <th className="px-3 py-3 text-left cursor-pointer text-slate-400 font-semibold uppercase tracking-wider hover:text-white" onClick={() => handleSort('crime_type')}>
+                  <th className="px-3 py-3 text-left cursor-pointer text-[#6c757d] font-semibold uppercase tracking-wider hover:text-[#1e3a5f]" onClick={() => handleSort('crime_type')}>
                     Crime Type <SortIcon field="crime_type" />
                   </th>
-                  <th className="px-3 py-3 text-left cursor-pointer text-slate-400 font-semibold uppercase tracking-wider hover:text-white" onClick={() => handleSort('status')}>
+                  <th className="px-3 py-3 text-left cursor-pointer text-[#6c757d] font-semibold uppercase tracking-wider hover:text-[#1e3a5f]" onClick={() => handleSort('status')}>
                     Status <SortIcon field="status" />
                   </th>
-                  <th className="px-3 py-3 text-left cursor-pointer text-slate-400 font-semibold uppercase tracking-wider hover:text-white" onClick={() => handleSort('days_open')}>
+                  <th className="px-3 py-3 text-left cursor-pointer text-[#6c757d] font-semibold uppercase tracking-wider hover:text-[#1e3a5f]" onClick={() => handleSort('days_open')}>
                     Days Open <SortIcon field="days_open" />
                   </th>
-                  <th className="px-3 py-3 text-left cursor-pointer text-slate-400 font-semibold uppercase tracking-wider hover:text-white" onClick={() => handleSort('max_risk_score')}>
+                  <th className="px-3 py-3 text-left cursor-pointer text-[#6c757d] font-semibold uppercase tracking-wider hover:text-[#1e3a5f]" onClick={() => handleSort('max_risk_score')}>
                     Risk <SortIcon field="max_risk_score" />
                   </th>
-                  <th className="px-3 py-3 text-left text-slate-400 font-semibold uppercase tracking-wider">Accused</th>
+                  <th className="px-3 py-3 text-left text-[#6c757d] font-semibold uppercase tracking-wider">Accused</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="text-center py-10 text-slate-500 text-xs">No warrants found.</td></tr>
+                  <tr><td colSpan={8} className="text-center py-10 text-[#6c757d] text-xs">No warrants found.</td></tr>
                 ) : filtered.map(w => (
-                  <tr key={w.id} className={`border-b border-slate-800/60 hover:bg-slate-800/30 transition ${urgencyClass(w.days_open)} ${selected.has(w.id) ? 'bg-brand-primary/5' : ''}`}>
+                  <tr key={w.id} className={`border-b border-[#d1d9e6]/60 hover:bg-white/30 transition ${urgencyClass(w.days_open)} ${selected.has(w.id) ? 'bg-[#1e3a5f]/5' : ''}`}>
                     <td className="px-3 py-3">
-                      <button onClick={() => toggleSelect(w.id)} className="cursor-pointer text-slate-400 hover:text-brand-primary transition">
-                        {selected.has(w.id) ? <CheckSquare size={14} className="text-brand-primary" /> : <Square size={14} />}
+                      <button onClick={() => toggleSelect(w.id)} className="cursor-pointer text-[#6c757d] hover:text-[#1e3a5f] transition">
+                        {selected.has(w.id) ? <CheckSquare size={14} className="text-[#1e3a5f]" /> : <Square size={14} />}
                       </button>
                     </td>
-                    <td className="px-3 py-3 font-mono text-brand-primary font-semibold">{w.fir_number}</td>
-                    <td className="px-3 py-3 text-slate-300">{w.district}</td>
+                    <td className="px-3 py-3 font-mono text-[#1e3a5f] font-semibold">{w.fir_number}</td>
+                    <td className="px-3 py-3 text-[#2d4a6f]">{w.district}</td>
                     <td className="px-3 py-3">
-                      <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-200 text-[10px] font-semibold">{w.crime_type}</span>
+                      <span className="px-2 py-0.5 bg-white border border-[#d1d9e6] rounded text-[#1e3a5f] text-[10px] font-semibold">{w.crime_type}</span>
                     </td>
                     <td className="px-3 py-3">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                        w.status === 'Closed' ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/30' :
-                        w.status === 'Escalated' || w.status === 'Warrant Issued' ? 'bg-red-950/30 text-red-400 border-red-900/30' :
-                        w.status === 'Court Trial' ? 'bg-purple-950/30 text-purple-400 border-purple-900/30' :
-                        'bg-slate-800 text-slate-300 border-slate-700'
+                        w.status === 'Closed' ? 'bg-emerald-950/30 text-emerald-700 border-emerald-900/30' :
+                        w.status === 'Escalated' || w.status === 'Warrant Issued' ? 'bg-red-950/30 text-[#d9251c] border-red-900/30' :
+                        w.status === 'Court Trial' ? 'bg-purple-950/30 text-purple-700 border-purple-900/30' :
+                        'bg-white text-[#2d4a6f] border-[#d1d9e6]'
                       }`}>{w.status}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={`font-semibold ${w.days_open > 60 ? 'text-red-400' : w.days_open > 30 ? 'text-amber-400' : 'text-slate-300'}`}>
+                      <span className={`font-semibold ${w.days_open > 60 ? 'text-[#d9251c]' : w.days_open > 30 ? 'text-amber-700' : 'text-[#2d4a6f]'}`}>
                         {Math.round(w.days_open)}d
                       </span>
                     </td>
@@ -274,60 +274,60 @@ export const WarrantDesk: React.FC<WarrantDeskProps> = ({ userId, role }) => {
                         ? <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${riskColor(w.max_risk_score)}`}>{Math.round(w.max_risk_score)}</span>
                         : <span className="text-slate-600">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-slate-400">{w.accused_count}</td>
+                    <td className="px-3 py-3 text-[#6c757d]">{w.accused_count}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-2 border-t border-slate-800 text-[11px] text-slate-500">
+          <div className="px-4 py-2 border-t border-[#d1d9e6] text-[11px] text-[#6c757d]">
             Showing {filtered.length} of {warrants.length} cases
-            &nbsp;•&nbsp;<span className="text-red-400">{overdueCritical} critical</span>
-            &nbsp;•&nbsp;<span className="text-amber-400">{overdueAmber} overdue</span>
+            &nbsp;•&nbsp;<span className="text-[#d9251c]">{overdueCritical} critical</span>
+            &nbsp;•&nbsp;<span className="text-amber-700">{overdueAmber} overdue</span>
           </div>
         </div>
       )}
 
       {/* Bulk Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-xl shadow-2xl">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <UserCheck size={14} className="text-brand-primary" /> Bulk Update — {selected.size} Cases
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0d2137]/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-[#f0f4f8] border border-[#d1d9e6] rounded-xl shadow-2xl">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-[#d1d9e6]">
+              <h3 className="text-sm font-bold text-[#1e3a5f] flex items-center gap-2">
+                <UserCheck size={14} className="text-[#1e3a5f]" /> Bulk Update — {selected.size} Cases
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white cursor-pointer transition"><X size={14} /></button>
+              <button onClick={() => setShowModal(false)} className="text-[#6c757d] hover:text-[#1e3a5f] cursor-pointer transition"><X size={14} /></button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5">New Status *</label>
+                <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">New Status *</label>
                 <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary cursor-pointer">
+                  className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f] cursor-pointer">
                   {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5">Assign Officer (optional)</label>
+                <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">Assign Officer (optional)</label>
                 <select value={bulkOfficer} onChange={e => setBulkOfficer(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary cursor-pointer">
+                  className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f] cursor-pointer">
                   <option value="">— No assignment —</option>
                   {OFFICERS.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5">Urgency Note (optional)</label>
+                <label className="block text-xs font-semibold text-[#6c757d] mb-1.5">Urgency Note (optional)</label>
                 <textarea value={bulkNote} onChange={e => setBulkNote(e.target.value)} rows={3}
                   placeholder="Enter justification or action note..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-primary resize-none placeholder-slate-600" />
+                  className="w-full bg-white border border-[#d1d9e6] rounded-lg px-3 py-2 text-sm text-[#1e3a5f] focus:outline-none focus:border-[#1e3a5f] resize-none placeholder-[#9ca3af]" />
               </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={handleBulkApply} disabled={bulkLoading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-primary hover:bg-brand-primary/90 disabled:bg-slate-700 text-white font-bold text-sm rounded-lg transition cursor-pointer">
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1e3a5f] hover:bg-[#1e3a5f]/90 disabled:bg-slate-700 text-white font-bold text-sm rounded-lg transition cursor-pointer">
                   {bulkLoading ? <Loader2 size={14} className="animate-spin" /> : <FileCheck size={14} />}
                   {bulkLoading ? 'Applying...' : 'Apply Update'}
                 </button>
                 <button onClick={() => setShowModal(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm rounded-lg border border-slate-700 transition cursor-pointer">
+                  className="px-4 py-2.5 bg-white hover:bg-[#eef2f7] text-[#2d4a6f] font-semibold text-sm rounded-lg border border-[#d1d9e6] transition cursor-pointer">
                   Cancel
                 </button>
               </div>

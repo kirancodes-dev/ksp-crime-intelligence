@@ -88,7 +88,7 @@ export const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect }
       from: edge.from,
       to: edge.to,
       label: edge.label,
-      font: { color: '#94a3b8', size: 8, face: 'Inter', strokeWidth: 0 },
+      font: { color: '#6c757d', size: 8, face: 'Inter', strokeWidth: 0 },
       color: edge.color || { color: '#475569' },
       width: 1.5,
       dashes: edge.dashes || false,
@@ -167,19 +167,19 @@ export const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect }
   };
 
   return (
-    <div className="card-panel rounded-lg border border-slate-800 p-6 text-slate-100 shadow-xl w-full my-4 relative">
-      <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
+    <div className="card-panel rounded-lg border border-[#d1d9e6] p-6 text-[#1e3a5f] shadow-xl w-full my-4 relative">
+      <div className="flex justify-between items-center border-b border-[#d1d9e6] pb-4 mb-4">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <NetworkIcon className="text-brand-primary" size={20} /> Syndicate & Case Association Network
+          <h2 className="text-lg font-bold text-[#1e3a5f] flex items-center gap-2">
+            <NetworkIcon className="text-[#1e3a5f]" size={20} /> Syndicate & Case Association Network
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Double-click nodes to expand risk profiles or inspection files</p>
+          <p className="text-xs text-[#6c757d] mt-0.5">Double-click nodes to expand risk profiles or inspection files</p>
         </div>
         
         {/* Reset physics button */}
         <button 
           onClick={triggerResetPhysics}
-          className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-md text-xs font-semibold transition"
+          className="flex items-center gap-1.5 px-3 py-1 bg-[#f0f4f8] hover:bg-white border border-[#d1d9e6] hover:border-[#d1d9e6] text-[#2d4a6f] rounded-md text-xs font-semibold transition"
           title="Stabilize Graph Layout"
         >
           <RefreshCw size={12} /> Re-center
@@ -189,11 +189,11 @@ export const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect }
       {/* Network Container */}
       <div 
         ref={containerRef} 
-        className="w-full h-96 min-h-[400px] rounded-lg border border-slate-800 bg-slate-950/60 overflow-hidden cursor-grab active:cursor-grabbing"
+        className="w-full h-96 min-h-[400px] rounded-lg border border-[#d1d9e6] bg-[#0d2137]/60 overflow-hidden cursor-grab active:cursor-grabbing"
       />
 
       {/* Network Legend */}
-      <div className="flex flex-wrap gap-4 mt-4 text-[10px] text-slate-400 border-t border-slate-900 pt-3">
+      <div className="flex flex-wrap gap-4 mt-4 text-[10px] text-[#6c757d] border-t border-slate-900 pt-3">
         <div className="flex items-center gap-2">
           <span className="h-3 w-3 rounded-full bg-red-500 border border-white/20" />
           <span>Critical Offender (Risk &ge; 70%)</span>
@@ -207,7 +207,7 @@ export const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect }
           <span>Syndicate Group Member</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-3.5 w-6 rounded bg-slate-900 border border-blue-500" />
+          <span className="h-3.5 w-6 rounded bg-[#f0f4f8] border border-blue-500" />
           <span>FIR Case File</span>
         </div>
         <div className="flex items-center gap-2 ml-auto">
