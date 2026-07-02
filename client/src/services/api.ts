@@ -18,8 +18,8 @@ const getBaseUrl = () => {
     }
   }
   
-  // 2. If accessed via Catalyst Slate / Hosting (root url), default to the "functions" prefix
-  return '/server/functions/api';
+  // 2. If accessed via Catalyst Slate / Hosting (root url), default to the "ksp" prefix
+  return '/server/ksp/api';
 };
 
 const BASE_URL = getBaseUrl();
