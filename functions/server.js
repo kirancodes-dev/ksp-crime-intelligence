@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -52,6 +53,11 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10mb' }));
+
+// Serve static client build (production)
+const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(clientDistPath));
+
 app.use('/api', limiter);
 app.use(authMiddleware);
 
@@ -1037,9 +1043,9 @@ app.get('/api/health/live', (req, res) => {
   res.json(health.isLive());
 });
 
-// Root redirect
-app.get('/', (req, res) => {
-  res.redirect('http://localhost:5173');
+// Serve SPA index.html for all non-API routes (client-side routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
 // Start the server
