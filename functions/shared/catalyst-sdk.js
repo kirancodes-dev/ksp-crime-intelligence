@@ -11,18 +11,38 @@ function resolveDataPath(...parts) {
   return path.join(__dirname, '..', '..', 'datastore', ...parts);
 }
 
-// Detect Catalyst production environment or serverless runtime
-const isCatalyst = !!process.env.CATALYST_ENVIRONMENT;
+// Function to check if a directory is writable
+function isDirectoryWritable(dir) {
+  try {
+    const testFile = path.join(dir, '.write_test_' + Math.random().toString(36).substring(2));
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Detect Catalyst environment or read-only runtime
+const sourceDbPath = resolveDataPath('ksp_crime.db');
+const sourceDbDir = path.dirname(sourceDbPath);
+const isCatalyst = !!(
+  process.env.CATALYST_ENVIRONMENT || 
+  process.env.CATALYST_PROJECT_ID || 
+  process.env.CATALYST_ENV_ID || 
+  process.env.CATALYST_PROJECT_NAME ||
+  !isDirectoryWritable(sourceDbDir)
+);
+
 let activeDbPath;
 
 if (isCatalyst) {
   activeDbPath = '/tmp/ksp_crime.db';
-  const sourceDbPath = resolveDataPath('ksp_crime.db');
   
   // Copy the database to /tmp if it doesn't exist
   if (!fs.existsSync(activeDbPath)) {
     try {
-      console.log(`Catalyst environment detected. Copying database from ${sourceDbPath} to ${activeDbPath}...`);
+      console.log(`Catalyst environment or read-only filesystem detected. Copying database from ${sourceDbPath} to ${activeDbPath}...`);
       fs.copyFileSync(sourceDbPath, activeDbPath);
       console.log('Database copy to /tmp successful.');
     } catch (err) {
@@ -30,7 +50,7 @@ if (isCatalyst) {
     }
   }
 } else {
-  activeDbPath = resolveDataPath('ksp_crime.db');
+  activeDbPath = sourceDbPath;
 }
 
 class DatastoreTable {
