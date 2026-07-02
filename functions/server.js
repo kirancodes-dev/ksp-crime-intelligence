@@ -55,7 +55,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // Serve static client build (production)
-const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+const clientDistPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(clientDistPath));
 
 app.use('/api', limiter);
