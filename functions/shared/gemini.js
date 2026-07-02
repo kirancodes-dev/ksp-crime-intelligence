@@ -5,6 +5,10 @@ const https = require('https');
 require('./dotenv').config();
 
 // --- Provider Configuration ---
+const USE_DEEPSEEK = process.env.USE_DEEPSEEK === 'true';
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+
 const USE_GROQ = process.env.USE_GROQ === 'true';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
@@ -24,7 +28,8 @@ const GLM_ENABLE_THINKING = process.env.GLM_ENABLE_THINKING !== 'false';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 // Log active LLM provider on startup
-const activeProvider = USE_GLM && (GLM_API_KEY || !GLM_API_BASE.includes('api.z.ai')) ? `GLM-5 (${GLM_MODEL})` :
+const activeProvider = USE_DEEPSEEK && DEEPSEEK_API_KEY ? `DeepSeek (${DEEPSEEK_MODEL})` :
+                       USE_GLM && (GLM_API_KEY || !GLM_API_BASE.includes('api.z.ai')) ? `GLM-5 (${GLM_MODEL})` :
                        USE_GROQ && GROQ_API_KEY ? 'Groq (Llama 3.3 70B)' :
                        process.env.GEMINI_API_KEY ? 'Google Gemini' :
                        USE_OLLAMA ? 'Ollama (local)' : 'Mock (no LLM)';
@@ -63,6 +68,63 @@ function parseJsonResponse(rawText) {
 // ============================================================================
 //  HTTP Request Helpers
 // ============================================================================
+
+/**
+ * Helper to make POST requests to DeepSeek API (OpenAI-compatible)
+ */
+function makeDeepSeekRequest(payload) {
+  return new Promise((resolve, reject) => {
+    if (!DEEPSEEK_API_KEY) {
+      return reject(new Error('DEEPSEEK_API_KEY is not defined in environment'));
+    }
+
+    const dataString = JSON.stringify(payload);
+    const options = {
+      hostname: 'api.deepseek.com',
+      port: 443,
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Content-Length': Buffer.byteLength(dataString)
+      },
+      timeout: 30000 // 30s timeout
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.setEncoding('utf-8');
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(body));
+          } catch (e) {
+            reject(new Error('Failed to parse DeepSeek response JSON'));
+          }
+        } else if (res.statusCode === 429) {
+          reject(new Error('DEEPSEEK_RATE_LIMITED'));
+        } else {
+          try {
+            const errorObj = JSON.parse(body);
+            reject(new Error(errorObj.error?.message || `DeepSeek API returned status ${res.statusCode}`));
+          } catch (e) {
+            reject(new Error(`DeepSeek API returned status ${res.statusCode}: ${body}`));
+          }
+        }
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('DeepSeek request timed out'));
+    });
+    req.write(dataString);
+    req.end();
+  });
+}
 
 /**
  * Helper to make POST requests to Groq API (OpenAI-compatible)
@@ -302,6 +364,31 @@ STRICT RULES:
 // ============================================================================
 //  Provider-specific LLM call functions
 // ============================================================================
+
+/**
+ * Call DeepSeek API (OpenAI-compatible chat completions)
+ */
+async function callDeepSeek(systemPrompt, userMessage, jsonMode = false) {
+  const payload = {
+    model: DEEPSEEK_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage }
+    ],
+    temperature: jsonMode ? 0.1 : 0.2,
+    max_tokens: jsonMode ? 300 : 500,
+    stream: false
+  };
+
+  if (jsonMode) {
+    payload.response_format = { type: 'json_object' };
+  }
+
+  const result = await makeDeepSeekRequest(payload);
+  const content = result.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Empty response from DeepSeek');
+  return content.trim();
+}
 
 /**
  * Call Groq API (OpenAI-compatible chat completions)
@@ -571,6 +658,9 @@ async function callLLM(systemPrompt, userMessage, jsonMode = false) {
   const providers = [];
 
   // Build the provider chain in priority order
+  if (USE_DEEPSEEK && DEEPSEEK_API_KEY) {
+    providers.push({ name: 'deepseek', fn: () => callDeepSeek(systemPrompt, userMessage, jsonMode) });
+  }
   if (USE_GLM && (GLM_API_KEY || !GLM_API_BASE.includes('api.z.ai'))) {
     providers.push({ name: 'glm', fn: () => callGLM(systemPrompt, userMessage, jsonMode) });
   }
@@ -717,6 +807,90 @@ async function generateNarrative(queryText, toolName, retrievedData) {
 }
 
 /**
+ * Helper to stream DeepSeek response chunk-by-chunk
+ */
+function makeDeepSeekStreamRequest(payload, onToken) {
+  return new Promise((resolve, reject) => {
+    if (!DEEPSEEK_API_KEY) {
+      return reject(new Error('DEEPSEEK_API_KEY is not defined in environment'));
+    }
+
+    const dataString = JSON.stringify({ ...payload, stream: true });
+    const options = {
+      hostname: 'api.deepseek.com',
+      port: 443,
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Content-Length': Buffer.byteLength(dataString)
+      },
+      timeout: 30000
+    };
+
+    const req = https.request(options, (res) => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        let body = '';
+        res.on('data', (chunk) => body += chunk);
+        res.on('end', () => {
+          reject(new Error(`DeepSeek API returned status ${res.statusCode}: ${body}`));
+        });
+        return;
+      }
+
+      res.setEncoding('utf-8');
+      let buffer = '';
+
+      res.on('data', (chunk) => {
+        buffer += chunk;
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Save partial line
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed === 'data: [DONE]') continue;
+
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              const content = data.choices?.[0]?.delta?.content;
+              if (content) {
+                onToken(content);
+              }
+            } catch (e) {
+              // Ignore parsing errors on partial streams
+            }
+          }
+        }
+      });
+
+      res.on('end', () => {
+        if (buffer && buffer.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(buffer.slice(6));
+            const content = data.choices?.[0]?.delta?.content;
+            if (content) {
+              onToken(content);
+            }
+          } catch (e) {}
+        }
+        resolve();
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('DeepSeek request timed out'));
+    });
+    req.write(dataString);
+    req.end();
+  });
+}
+
+/**
  * Helper to stream Groq response chunk-by-chunk
  */
 function makeGroqStreamRequest(payload, onToken) {
@@ -806,6 +980,26 @@ function makeGroqStreamRequest(payload, onToken) {
 async function generateNarrativeStream(queryText, toolName, retrievedData, onToken, onMeta) {
   const summarized = summarizeData(toolName, retrievedData);
   const inputContext = `Query: "${queryText}"\nTool: ${toolName}\nData: ${summarized}`;
+
+  if (USE_DEEPSEEK && DEEPSEEK_API_KEY) {
+    try {
+      const payload = {
+        model: DEEPSEEK_MODEL,
+        messages: [
+          { role: 'system', content: narrativeSystemPrompt },
+          { role: 'user', content: inputContext }
+        ],
+        temperature: 0.2,
+        max_tokens: 500
+      };
+      
+      onMeta({ provider: 'deepseek' });
+      await makeDeepSeekStreamRequest(payload, onToken);
+      return { success: true, provider: 'deepseek' };
+    } catch (error) {
+      console.warn(`⚠️ DeepSeek streaming failed: ${error.message}. Trying fallbacks...`);
+    }
+  }
 
   if (USE_GLM && (GLM_API_KEY || !GLM_API_BASE.includes('api.z.ai'))) {
     try {
