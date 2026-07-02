@@ -261,9 +261,20 @@ export const api = {
       body: JSON.stringify({ badgeId, password }),
     });
     
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error || 'Authentication failed. Check your Badge ID and password.');
+        if (!response.ok) {
+      let errorMsg = '';
+      try {
+        const err = await response.json();
+        errorMsg = err.error || err.message || JSON.stringify(err);
+      } catch (e) {
+        try {
+          const text = await response.text();
+          errorMsg = text.substring(0, 150) || `HTTP Error ${response.status}: ${response.statusText}`;
+        } catch (textErr) {
+          errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
+        }
+      }
+      throw new Error(errorMsg || 'Authentication failed. Check your Badge ID and password.');
     }
     return response.json();
   },

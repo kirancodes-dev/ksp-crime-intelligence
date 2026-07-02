@@ -39,8 +39,20 @@ let activeDbPath;
 if (isCatalyst) {
   activeDbPath = '/tmp/ksp_crime.db';
   
-  // Copy the database to /tmp if it doesn't exist
-  if (!fs.existsSync(activeDbPath)) {
+  // Copy the database to /tmp if it doesn't exist or is empty/invalid
+  let shouldCopy = !fs.existsSync(activeDbPath);
+  if (!shouldCopy) {
+    try {
+      const stats = fs.statSync(activeDbPath);
+      if (stats.size < 10000) {
+        shouldCopy = true;
+      }
+    } catch (e) {
+      shouldCopy = true;
+    }
+  }
+
+  if (shouldCopy) {
     try {
       console.log(`Catalyst environment or read-only filesystem detected. Copying database from ${sourceDbPath} to ${activeDbPath}...`);
       fs.copyFileSync(sourceDbPath, activeDbPath);
