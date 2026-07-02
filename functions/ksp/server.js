@@ -362,8 +362,8 @@ app.get('/api/fir/:firNumber', async (req, res) => {
     }
 
     const fir = firs[0];
-    const accused = await db.execute("SELECT * FROM Accused WHERE fir_id = ?", [fir.id]);
-    const victims = await db.execute("SELECT * FROM Victim WHERE fir_id = ?", [fir.id]);
+    const accused = await db.execute("SELECT * FROM FIR_Accused WHERE fir_id = ?", [fir.id]);
+    const victims = await db.execute("SELECT * FROM FIR_Victim WHERE fir_id = ?", [fir.id]);
     const locations = await db.execute("SELECT * FROM Location WHERE fir_id = ?", [fir.id]);
 
     res.json({
@@ -458,7 +458,7 @@ app.get('/api/socio-demographics', async (req, res) => {
           ELSE 'Senior (50+)'
         END as age_group,
         COUNT(*) as count
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE 1=1 ${rlsClause}
       GROUP BY age_group
@@ -467,7 +467,7 @@ app.get('/api/socio-demographics', async (req, res) => {
 
     const genderSplit = await db.execute(`
       SELECT gender, COUNT(*) as count
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE 1=1 ${rlsClause}
       GROUP BY gender
@@ -476,7 +476,7 @@ app.get('/api/socio-demographics', async (req, res) => {
 
     const educationLevels = await db.execute(`
       SELECT education_level, COUNT(*) as count
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE education_level IS NOT NULL ${rlsClause}
       GROUP BY education_level
@@ -487,7 +487,7 @@ app.get('/api/socio-demographics', async (req, res) => {
       SELECT 
         migration_status as status,
         COUNT(*) as count
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE 1=1 ${rlsClause}
       GROUP BY status
@@ -692,11 +692,11 @@ app.get('/api/warrants', async (req, res) => {
         f.crime_type,
         f.status,
         f.date_occurrence,
-        (SELECT name FROM Victim WHERE fir_id = f.id LIMIT 1) AS complainant_name,
+        (SELECT name FROM FIR_Victim WHERE fir_id = f.id LIMIT 1) AS complainant_name,
         CAST(julianday('now') - julianday(f.date_occurrence) AS INTEGER) AS days_open,
-        (SELECT COUNT(*) FROM Accused WHERE fir_id = f.id) AS accused_count,
+        (SELECT COUNT(*) FROM FIR_Accused WHERE fir_id = f.id) AS accused_count,
         COALESCE(
-          (SELECT MAX(a.risk_score) FROM Accused a WHERE a.fir_id = f.id), 0
+          (SELECT MAX(a.risk_score) FROM FIR_Accused a WHERE a.fir_id = f.id), 0
         ) AS max_risk_score
       FROM FIR f
       WHERE 1=1 ${clause}
@@ -824,14 +824,14 @@ app.get('/api/dashboard/stats', async (req, res) => {
     
     const syndicateRow = await db.execute(`
       SELECT COUNT(DISTINCT a.gang_affiliation) as count 
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       ${accusedFilter} AND a.gang_affiliation IS NOT NULL
     `, accusedParams);
     
     const highRiskRow = await db.execute(`
       SELECT COUNT(DISTINCT a.name) as count 
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       ${accusedFilter} AND a.risk_score >= 0.7
     `, accusedParams);
@@ -911,7 +911,7 @@ app.get('/api/prison/:accusedId', async (req, res) => {
     const { clause, params } = getRLSFilter(req.user, 'f');
     const allowed = await db.execute(`
       SELECT a.id 
-      FROM Accused a 
+      FROM FIR_Accused a 
       JOIN FIR f ON a.fir_id = f.id 
       WHERE a.id = ? ${clause}
     `, [accusedId, ...params]);

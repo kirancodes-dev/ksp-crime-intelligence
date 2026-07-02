@@ -446,7 +446,7 @@ class CatalystInstance {
             )
           `);
           this.db.run(`
-            CREATE TABLE IF NOT EXISTS VictimMaster (
+            CREATE TABLE IF NOT EXISTS Victim (
               VictimMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
               CaseMasterID INTEGER NOT NULL,
               VictimName TEXT NOT NULL,
@@ -457,7 +457,7 @@ class CatalystInstance {
             )
           `);
           this.db.run(`
-            CREATE TABLE IF NOT EXISTS AccusedMaster (
+            CREATE TABLE IF NOT EXISTS Accused (
               AccusedMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
               CaseMasterID INTEGER NOT NULL,
               AccusedName TEXT NOT NULL,
@@ -487,7 +487,7 @@ class CatalystInstance {
               FOREIGN KEY(PoliceStationID) REFERENCES Unit(UnitID),
               FOREIGN KEY(IOID) REFERENCES Employee(EmployeeID),
               FOREIGN KEY(CourtID) REFERENCES Court(CourtID),
-              FOREIGN KEY(AccusedMasterID) REFERENCES AccusedMaster(AccusedMasterID)
+              FOREIGN KEY(AccusedMasterID) REFERENCES Accused(AccusedMasterID)
             )
           `);
           this.db.run(`
@@ -511,14 +511,41 @@ class CatalystInstance {
               FOREIGN KEY(PolicePersonID) REFERENCES Employee(EmployeeID)
             )
           `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS inv_arrestsurrenderaccused (
+              ArrestSurrenderID INTEGER NOT NULL,
+              AccusedMasterID INTEGER NOT NULL,
+              PRIMARY KEY (ArrestSurrenderID, AccusedMasterID),
+              FOREIGN KEY(ArrestSurrenderID) REFERENCES ArrestSurrender(ArrestSurrenderID),
+              FOREIGN KEY(AccusedMasterID) REFERENCES Accused(AccusedMasterID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Inv_OccuranceTime (
+              CaseMasterID INTEGER PRIMARY KEY,
+              IncidentFromDate TEXT NOT NULL,
+              IncidentToDate TEXT,
+              InfoReceivedPSDate TEXT NOT NULL,
+              FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Inv_OccuranceLocation (
+              CaseMasterID INTEGER PRIMARY KEY,
+              latitude REAL,
+              longitude REAL,
+              BriefFacts TEXT,
+              FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID)
+            )
+          `);
 
           // Indexes for CCTNS schema
           this.db.run("CREATE INDEX IF NOT EXISTS idx_casemaster_crime_no ON CaseMaster(CrimeNo)", () => {});
           this.db.run("CREATE INDEX IF NOT EXISTS idx_casemaster_coords ON CaseMaster(latitude, longitude)", () => {});
           this.db.run("CREATE INDEX IF NOT EXISTS idx_complainant_case ON ComplainantDetails(CaseMasterID)", () => {});
           this.db.run("CREATE INDEX IF NOT EXISTS idx_actsection_case ON ActSectionAssociation(CaseMasterID)", () => {});
-          this.db.run("CREATE INDEX IF NOT EXISTS idx_victim_case ON VictimMaster(CaseMasterID)", () => {});
-          this.db.run("CREATE INDEX IF NOT EXISTS idx_accused_case ON AccusedMaster(CaseMasterID)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_victim_case ON Victim(CaseMasterID)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_accused_case ON Accused(CaseMasterID)", () => {});
           this.db.run("CREATE INDEX IF NOT EXISTS idx_arrest_case ON ArrestSurrender(CaseMasterID)", () => {});
 
           // Add hash chain columns to AuditLog if they don't exist

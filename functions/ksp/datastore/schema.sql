@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS FIR (
 );
 
 -- 2. Accused Table (Extended with demographic fields)
-CREATE TABLE IF NOT EXISTS Accused (
+CREATE TABLE IF NOT EXISTS FIR_Accused (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fir_id INTEGER NOT NULL,
     name TEXT NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS Accused (
 );
 
 -- 3. Victim Table
-CREATE TABLE IF NOT EXISTS Victim (
+CREATE TABLE IF NOT EXISTS FIR_Victim (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fir_id INTEGER NOT NULL,
     name TEXT NOT NULL,
@@ -529,7 +529,7 @@ CREATE TABLE IF NOT EXISTS ActSectionAssociation (
 );
 
 -- 22. Victim Table
-CREATE TABLE IF NOT EXISTS VictimMaster (
+CREATE TABLE IF NOT EXISTS Victim (
     VictimMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
     CaseMasterID INTEGER NOT NULL,
     VictimName TEXT NOT NULL,
@@ -540,7 +540,7 @@ CREATE TABLE IF NOT EXISTS VictimMaster (
 );
 
 -- 23. Accused Table
-CREATE TABLE IF NOT EXISTS AccusedMaster (
+CREATE TABLE IF NOT EXISTS Accused (
     AccusedMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
     CaseMasterID INTEGER NOT NULL,
     AccusedName TEXT NOT NULL,
@@ -570,7 +570,7 @@ CREATE TABLE IF NOT EXISTS ArrestSurrender (
     FOREIGN KEY(PoliceStationID) REFERENCES Unit(UnitID),
     FOREIGN KEY(IOID) REFERENCES Employee(EmployeeID),
     FOREIGN KEY(CourtID) REFERENCES Court(CourtID),
-    FOREIGN KEY(AccusedMasterID) REFERENCES AccusedMaster(AccusedMasterID)
+    FOREIGN KEY(AccusedMasterID) REFERENCES Accused(AccusedMasterID)
 );
 
 -- 25. CrimeHeadActSection Table
@@ -594,11 +594,38 @@ CREATE TABLE IF NOT EXISTS ChargesheetDetails (
     FOREIGN KEY(PolicePersonID) REFERENCES Employee(EmployeeID)
 );
 
+-- 27. Junction Table: inv_arrestsurrenderaccused
+CREATE TABLE IF NOT EXISTS inv_arrestsurrenderaccused (
+    ArrestSurrenderID INTEGER NOT NULL,
+    AccusedMasterID INTEGER NOT NULL,
+    PRIMARY KEY (ArrestSurrenderID, AccusedMasterID),
+    FOREIGN KEY(ArrestSurrenderID) REFERENCES ArrestSurrender(ArrestSurrenderID),
+    FOREIGN KEY(AccusedMasterID) REFERENCES Accused(AccusedMasterID)
+);
+
+-- 28. Junction Table: Inv_OccuranceTime
+CREATE TABLE IF NOT EXISTS Inv_OccuranceTime (
+    CaseMasterID INTEGER PRIMARY KEY,
+    IncidentFromDate TEXT NOT NULL,
+    IncidentToDate TEXT,
+    InfoReceivedPSDate TEXT NOT NULL,
+    FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID)
+);
+
+-- 29. Junction Table: Inv_OccuranceLocation
+CREATE TABLE IF NOT EXISTS Inv_OccuranceLocation (
+    CaseMasterID INTEGER PRIMARY KEY,
+    latitude REAL,
+    longitude REAL,
+    BriefFacts TEXT,
+    FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID)
+);
+
 -- Indexes for CCTNS schema
 CREATE INDEX IF NOT EXISTS idx_casemaster_crime_no ON CaseMaster(CrimeNo);
 CREATE INDEX IF NOT EXISTS idx_casemaster_coords ON CaseMaster(latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_complainant_case ON ComplainantDetails(CaseMasterID);
 CREATE INDEX IF NOT EXISTS idx_actsection_case ON ActSectionAssociation(CaseMasterID);
-CREATE INDEX IF NOT EXISTS idx_victim_case ON VictimMaster(CaseMasterID);
-CREATE INDEX IF NOT EXISTS idx_accused_case ON AccusedMaster(CaseMasterID);
+CREATE INDEX IF NOT EXISTS idx_victim_case ON Victim(CaseMasterID);
+CREATE INDEX IF NOT EXISTS idx_accused_case ON Accused(CaseMasterID);
 CREATE INDEX IF NOT EXISTS idx_arrest_case ON ArrestSurrender(CaseMasterID);
