@@ -5,7 +5,7 @@ dist/
 *.db-shm
 *.db-wal
 *.sqlite
-!functions/datastore/ksp_crime.db
+!functions/ksp/datastore/ksp_crime.db
 .DS_Store
 client/dist/
 functions/node_modules/
