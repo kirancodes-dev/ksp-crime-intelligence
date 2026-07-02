@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "install:linux": "rm -rf node_modules/sqlite3 && npm_config_platform=linux npm_config_arch=x64 npm install sqlite3"
   },
   "dependencies": {
     "cors": "^2.8.5",
