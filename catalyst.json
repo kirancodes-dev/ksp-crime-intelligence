@@ -3,10 +3,7 @@
     "targets": [
       "ksp"
     ],
-    "ignore": [
-      "**/node_modules/**",
-      "node_modules"
-    ],
+    "ignore": [],
     "source": "functions"
   }
 }
