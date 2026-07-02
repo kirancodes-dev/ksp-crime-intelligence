@@ -42,16 +42,32 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',') 
   : ['http://localhost:5173', 'http://127.0.0.1:5173'];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+const corsOptionsDelegate = (req, callback) => {
+  const origin = req.header('Origin');
+  const host = req.header('Host');
+  let corsOptions;
+
+  // Clean the origin to match against Host
+  const originHost = origin ? origin.replace(/^https?:\/\//, '') : '';
+  const isSameOrigin = originHost && host && originHost === host;
+
+  const isAllowed = !origin || 
+    isSameOrigin || 
+    allowedOrigins.indexOf(origin) !== -1 ||
+    origin.endsWith('.catalystserverless.in') ||
+    origin.endsWith('.catalystserverless.com') ||
+    origin.endsWith('.zoho.in') ||
+    origin.endsWith('.zoho.com');
+
+  if (isAllowed) {
+    corsOptions = { origin: true, credentials: true };
+  } else {
+    corsOptions = { origin: false };
+  }
+  callback(null, corsOptions);
+};
+
+app.use(cors(corsOptionsDelegate));
 
 app.use(express.json({ limit: '10mb' }));
 
