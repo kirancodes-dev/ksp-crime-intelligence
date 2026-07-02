@@ -226,6 +226,301 @@ class CatalystInstance {
             )
           `);
 
+          // ====================================================================
+          // Official Karnataka Police FIR System Schema (CCTNS Compliant)
+          // ====================================================================
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS State (
+              StateID INTEGER PRIMARY KEY AUTOINCREMENT,
+              StateName TEXT NOT NULL,
+              NationalityID INTEGER,
+              Active INTEGER DEFAULT 1
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS District (
+              DistrictID INTEGER PRIMARY KEY AUTOINCREMENT,
+              DistrictName TEXT NOT NULL,
+              StateID INTEGER NOT NULL,
+              Active INTEGER DEFAULT 1,
+              FOREIGN KEY(StateID) REFERENCES State(StateID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS UnitType (
+              UnitTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
+              UnitTypeName TEXT NOT NULL,
+              CityDistState TEXT,
+              Hierarchy INTEGER,
+              Active INTEGER DEFAULT 1
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Unit (
+              UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
+              UnitName TEXT NOT NULL,
+              TypeID INTEGER NOT NULL,
+              ParentUnit INTEGER,
+              NationalityID INTEGER,
+              StateID INTEGER NOT NULL,
+              DistrictID INTEGER NOT NULL,
+              Active INTEGER DEFAULT 1,
+              FOREIGN KEY(TypeID) REFERENCES UnitType(UnitTypeID),
+              FOREIGN KEY(StateID) REFERENCES State(StateID),
+              FOREIGN KEY(DistrictID) REFERENCES District(DistrictID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Rank (
+              RankID INTEGER PRIMARY KEY AUTOINCREMENT,
+              RankName TEXT NOT NULL,
+              Hierarchy INTEGER,
+              Active INTEGER DEFAULT 1
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Designation (
+              DesignationID INTEGER PRIMARY KEY AUTOINCREMENT,
+              DesignationName TEXT NOT NULL,
+              Active INTEGER DEFAULT 1,
+              SortOrder INTEGER
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Employee (
+              EmployeeID INTEGER PRIMARY KEY AUTOINCREMENT,
+              DistrictID INTEGER NOT NULL,
+              UnitID INTEGER NOT NULL,
+              RankID INTEGER NOT NULL,
+              DesignationID INTEGER NOT NULL,
+              KGID TEXT UNIQUE NOT NULL,
+              FirstName TEXT NOT NULL,
+              EmployeeDOB TEXT NOT NULL,
+              GenderID INTEGER,
+              BloodGroupID INTEGER,
+              PhysicallyChallenged INTEGER DEFAULT 0,
+              AppointmentDate TEXT NOT NULL,
+              FOREIGN KEY(DistrictID) REFERENCES District(DistrictID),
+              FOREIGN KEY(UnitID) REFERENCES Unit(UnitID),
+              FOREIGN KEY(RankID) REFERENCES Rank(RankID),
+              FOREIGN KEY(DesignationID) REFERENCES Designation(DesignationID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CaseCategory (
+              CaseCategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+              LookupValue TEXT NOT NULL
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS GravityOffence (
+              GravityOffenceID INTEGER PRIMARY KEY AUTOINCREMENT,
+              LookupValue TEXT NOT NULL
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CrimeHead (
+              CrimeHeadID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CrimeGroupName TEXT NOT NULL,
+              Active INTEGER DEFAULT 1
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CrimeSubHead (
+              CrimeSubHeadID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CrimeHeadID INTEGER NOT NULL,
+              CrimeHeadName TEXT NOT NULL,
+              SeqID INTEGER,
+              FOREIGN KEY(CrimeHeadID) REFERENCES CrimeHead(CrimeHeadID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CaseStatusMaster (
+              CaseStatusID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CaseStatusName TEXT NOT NULL
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Court (
+              CourtID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CourtName TEXT NOT NULL,
+              DistrictID INTEGER NOT NULL,
+              StateID INTEGER NOT NULL,
+              Active INTEGER DEFAULT 1,
+              FOREIGN KEY(DistrictID) REFERENCES District(DistrictID),
+              FOREIGN KEY(StateID) REFERENCES State(StateID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CasteMaster (
+              caste_master_id INTEGER PRIMARY KEY AUTOINCREMENT,
+              caste_master_name TEXT NOT NULL
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS ReligionMaster (
+              ReligionID INTEGER PRIMARY KEY AUTOINCREMENT,
+              ReligionName TEXT NOT NULL
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS OccupationMaster (
+              OccupationID INTEGER PRIMARY KEY AUTOINCREMENT,
+              OccupationName TEXT NOT NULL
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CaseMaster (
+              CaseMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CrimeNo TEXT UNIQUE NOT NULL,
+              CaseNo TEXT NOT NULL,
+              CrimeRegisteredDate TEXT NOT NULL,
+              PolicePersonID INTEGER NOT NULL,
+              PoliceStationID INTEGER NOT NULL,
+              CaseCategoryID INTEGER NOT NULL,
+              GravityOffenceID INTEGER NOT NULL,
+              CrimeMajorHeadID INTEGER NOT NULL,
+              CrimeMinorHeadID INTEGER NOT NULL,
+              CaseStatusID INTEGER NOT NULL,
+              CourtID INTEGER NOT NULL,
+              IncidentFromDate TEXT NOT NULL,
+              IncidentToDate TEXT,
+              InfoReceivedPSDate TEXT NOT NULL,
+              latitude REAL,
+              longitude REAL,
+              BriefFacts TEXT NOT NULL,
+              FOREIGN KEY(PolicePersonID) REFERENCES Employee(EmployeeID),
+              FOREIGN KEY(PoliceStationID) REFERENCES Unit(UnitID),
+              FOREIGN KEY(CaseCategoryID) REFERENCES CaseCategory(CaseCategoryID),
+              FOREIGN KEY(GravityOffenceID) REFERENCES GravityOffence(GravityOffenceID),
+              FOREIGN KEY(CrimeMajorHeadID) REFERENCES CrimeHead(CrimeHeadID),
+              FOREIGN KEY(CrimeMinorHeadID) REFERENCES CrimeSubHead(CrimeSubHeadID),
+              FOREIGN KEY(CaseStatusID) REFERENCES CaseStatusMaster(CaseStatusID),
+              FOREIGN KEY(CourtID) REFERENCES Court(CourtID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS ComplainantDetails (
+              ComplainantID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CaseMasterID INTEGER NOT NULL,
+              ComplainantName TEXT NOT NULL,
+              AgeYear INTEGER,
+              OccupationID INTEGER NOT NULL,
+              ReligionID INTEGER NOT NULL,
+              CasteID INTEGER NOT NULL,
+              GenderID INTEGER,
+              FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID),
+              FOREIGN KEY(OccupationID) REFERENCES OccupationMaster(OccupationID),
+              FOREIGN KEY(ReligionID) REFERENCES ReligionMaster(ReligionID),
+              FOREIGN KEY(CasteID) REFERENCES CasteMaster(caste_master_id)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Act (
+              ActCode TEXT PRIMARY KEY,
+              ActDescription TEXT NOT NULL,
+              ShortName TEXT,
+              Active INTEGER DEFAULT 1
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Section (
+              ActCode TEXT NOT NULL,
+              SectionCode TEXT NOT NULL,
+              SectionDescription TEXT,
+              Active INTEGER DEFAULT 1,
+              PRIMARY KEY (ActCode, SectionCode),
+              FOREIGN KEY(ActCode) REFERENCES Act(ActCode)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS ActSectionAssociation (
+              CaseMasterID INTEGER NOT NULL,
+              ActCode TEXT NOT NULL,
+              SectionCode TEXT NOT NULL,
+              ActOrderID INTEGER,
+              SectionOrderID INTEGER,
+              PRIMARY KEY (CaseMasterID, ActCode, SectionCode),
+              FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID),
+              FOREIGN KEY(ActCode, SectionCode) REFERENCES Section(ActCode, SectionCode)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS VictimMaster (
+              VictimMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CaseMasterID INTEGER NOT NULL,
+              VictimName TEXT NOT NULL,
+              AgeYear INTEGER,
+              GenderID INTEGER,
+              VictimPolice TEXT DEFAULT '0',
+              FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS AccusedMaster (
+              AccusedMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CaseMasterID INTEGER NOT NULL,
+              AccusedName TEXT NOT NULL,
+              AgeYear INTEGER,
+              GenderID INTEGER,
+              PersonID TEXT NOT NULL,
+              FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS ArrestSurrender (
+              ArrestSurrenderID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CaseMasterID INTEGER NOT NULL,
+              ArrestSurrenderTypeID INTEGER NOT NULL,
+              ArrestSurrenderDate TEXT NOT NULL,
+              ArrestSurrenderStateId INTEGER NOT NULL,
+              ArrestSurrenderDistrictId INTEGER NOT NULL,
+              PoliceStationID INTEGER NOT NULL,
+              IOID INTEGER NOT NULL,
+              CourtID INTEGER NOT NULL,
+              AccusedMasterID INTEGER NOT NULL,
+              IsAccused INTEGER DEFAULT 1,
+              IsComplainantAccused INTEGER DEFAULT 0,
+              FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID),
+              FOREIGN KEY(ArrestSurrenderStateId) REFERENCES State(StateID),
+              FOREIGN KEY(ArrestSurrenderDistrictId) REFERENCES District(DistrictID),
+              FOREIGN KEY(PoliceStationID) REFERENCES Unit(UnitID),
+              FOREIGN KEY(IOID) REFERENCES Employee(EmployeeID),
+              FOREIGN KEY(CourtID) REFERENCES Court(CourtID),
+              FOREIGN KEY(AccusedMasterID) REFERENCES AccusedMaster(AccusedMasterID)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CrimeHeadActSection (
+              CrimeHeadID INTEGER NOT NULL,
+              ActCode TEXT NOT NULL,
+              SectionCode TEXT NOT NULL,
+              PRIMARY KEY (CrimeHeadID, ActCode, SectionCode),
+              FOREIGN KEY(CrimeHeadID) REFERENCES CrimeHead(CrimeHeadID),
+              FOREIGN KEY(ActCode, SectionCode) REFERENCES Section(ActCode, SectionCode)
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS ChargesheetDetails (
+              CSID INTEGER PRIMARY KEY AUTOINCREMENT,
+              CaseMasterID INTEGER NOT NULL,
+              csdate TEXT NOT NULL,
+              cstype TEXT NOT NULL,
+              PolicePersonID INTEGER NOT NULL,
+              FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID),
+              FOREIGN KEY(PolicePersonID) REFERENCES Employee(EmployeeID)
+            )
+          `);
+
+          // Indexes for CCTNS schema
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_casemaster_crime_no ON CaseMaster(CrimeNo)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_casemaster_coords ON CaseMaster(latitude, longitude)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_complainant_case ON ComplainantDetails(CaseMasterID)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_actsection_case ON ActSectionAssociation(CaseMasterID)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_victim_case ON VictimMaster(CaseMasterID)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_accused_case ON AccusedMaster(CaseMasterID)", () => {});
+          this.db.run("CREATE INDEX IF NOT EXISTS idx_arrest_case ON ArrestSurrender(CaseMasterID)", () => {});
+
           // Add hash chain columns to AuditLog if they don't exist
           this.db.run("ALTER TABLE AuditLog ADD COLUMN prev_hash TEXT DEFAULT ''", () => {});
           this.db.run("ALTER TABLE AuditLog ADD COLUMN integrity_hash TEXT DEFAULT ''", () => {});

@@ -306,3 +306,299 @@ CREATE INDEX IF NOT EXISTS idx_memory_team ON LLMMemory(team_id);
 CREATE INDEX IF NOT EXISTS idx_agent_owner ON DeployedAgents(owner_id);
 CREATE INDEX IF NOT EXISTS idx_agent_team ON DeployedAgents(team_id);
 
+
+
+-- ============================================================================
+-- Official Karnataka Police FIR System Schema (CCTNS Compliant)
+-- ============================================================================
+
+-- 1. State Table
+CREATE TABLE IF NOT EXISTS State (
+    StateID INTEGER PRIMARY KEY AUTOINCREMENT,
+    StateName TEXT NOT NULL,
+    NationalityID INTEGER,
+    Active INTEGER DEFAULT 1
+);
+
+-- 2. District Table
+CREATE TABLE IF NOT EXISTS District (
+    DistrictID INTEGER PRIMARY KEY AUTOINCREMENT,
+    DistrictName TEXT NOT NULL,
+    StateID INTEGER NOT NULL,
+    Active INTEGER DEFAULT 1,
+    FOREIGN KEY(StateID) REFERENCES State(StateID)
+);
+
+-- 3. UnitType Table
+CREATE TABLE IF NOT EXISTS UnitType (
+    UnitTypeID INTEGER PRIMARY KEY AUTOINCREMENT,
+    UnitTypeName TEXT NOT NULL,
+    CityDistState TEXT,
+    Hierarchy INTEGER,
+    Active INTEGER DEFAULT 1
+);
+
+-- 4. Unit Table
+CREATE TABLE IF NOT EXISTS Unit (
+    UnitID INTEGER PRIMARY KEY AUTOINCREMENT,
+    UnitName TEXT NOT NULL,
+    TypeID INTEGER NOT NULL,
+    ParentUnit INTEGER,
+    NationalityID INTEGER,
+    StateID INTEGER NOT NULL,
+    DistrictID INTEGER NOT NULL,
+    Active INTEGER DEFAULT 1,
+    FOREIGN KEY(TypeID) REFERENCES UnitType(UnitTypeID),
+    FOREIGN KEY(StateID) REFERENCES State(StateID),
+    FOREIGN KEY(DistrictID) REFERENCES District(DistrictID)
+);
+
+-- 5. Rank Table
+CREATE TABLE IF NOT EXISTS Rank (
+    RankID INTEGER PRIMARY KEY AUTOINCREMENT,
+    RankName TEXT NOT NULL,
+    Hierarchy INTEGER,
+    Active INTEGER DEFAULT 1
+);
+
+-- 6. Designation Table
+CREATE TABLE IF NOT EXISTS Designation (
+    DesignationID INTEGER PRIMARY KEY AUTOINCREMENT,
+    DesignationName TEXT NOT NULL,
+    Active INTEGER DEFAULT 1,
+    SortOrder INTEGER
+);
+
+-- 7. Employee Table
+CREATE TABLE IF NOT EXISTS Employee (
+    EmployeeID INTEGER PRIMARY KEY AUTOINCREMENT,
+    DistrictID INTEGER NOT NULL,
+    UnitID INTEGER NOT NULL,
+    RankID INTEGER NOT NULL,
+    DesignationID INTEGER NOT NULL,
+    KGID TEXT UNIQUE NOT NULL,
+    FirstName TEXT NOT NULL,
+    EmployeeDOB TEXT NOT NULL,
+    GenderID INTEGER,
+    BloodGroupID INTEGER,
+    PhysicallyChallenged INTEGER DEFAULT 0,
+    AppointmentDate TEXT NOT NULL,
+    FOREIGN KEY(DistrictID) REFERENCES District(DistrictID),
+    FOREIGN KEY(UnitID) REFERENCES Unit(UnitID),
+    FOREIGN KEY(RankID) REFERENCES Rank(RankID),
+    FOREIGN KEY(DesignationID) REFERENCES Designation(DesignationID)
+);
+
+-- 8. CaseCategory Table
+CREATE TABLE IF NOT EXISTS CaseCategory (
+    CaseCategoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+    LookupValue TEXT NOT NULL
+);
+
+-- 9. GravityOffence Table
+CREATE TABLE IF NOT EXISTS GravityOffence (
+    GravityOffenceID INTEGER PRIMARY KEY AUTOINCREMENT,
+    LookupValue TEXT NOT NULL
+);
+
+-- 10. CrimeHead Table
+CREATE TABLE IF NOT EXISTS CrimeHead (
+    CrimeHeadID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CrimeGroupName TEXT NOT NULL,
+    Active INTEGER DEFAULT 1
+);
+
+-- 11. CrimeSubHead Table
+CREATE TABLE IF NOT EXISTS CrimeSubHead (
+    CrimeSubHeadID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CrimeHeadID INTEGER NOT NULL,
+    CrimeHeadName TEXT NOT NULL,
+    SeqID INTEGER,
+    FOREIGN KEY(CrimeHeadID) REFERENCES CrimeHead(CrimeHeadID)
+);
+
+-- 12. CaseStatusMaster Table
+CREATE TABLE IF NOT EXISTS CaseStatusMaster (
+    CaseStatusID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseStatusName TEXT NOT NULL
+);
+
+-- 13. Court Table
+CREATE TABLE IF NOT EXISTS Court (
+    CourtID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CourtName TEXT NOT NULL,
+    DistrictID INTEGER NOT NULL,
+    StateID INTEGER NOT NULL,
+    Active INTEGER DEFAULT 1,
+    FOREIGN KEY(DistrictID) REFERENCES District(DistrictID),
+    FOREIGN KEY(StateID) REFERENCES State(StateID)
+);
+
+-- 15. CasteMaster Table
+CREATE TABLE IF NOT EXISTS CasteMaster (
+    caste_master_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    caste_master_name TEXT NOT NULL
+);
+
+-- 16. ReligionMaster Table
+CREATE TABLE IF NOT EXISTS ReligionMaster (
+    ReligionID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ReligionName TEXT NOT NULL
+);
+
+-- 17. OccupationMaster Table
+CREATE TABLE IF NOT EXISTS OccupationMaster (
+    OccupationID INTEGER PRIMARY KEY AUTOINCREMENT,
+    OccupationName TEXT NOT NULL
+);
+
+-- 14. CaseMaster Table
+CREATE TABLE IF NOT EXISTS CaseMaster (
+    CaseMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CrimeNo TEXT UNIQUE NOT NULL,
+    CaseNo TEXT NOT NULL,
+    CrimeRegisteredDate TEXT NOT NULL,
+    PolicePersonID INTEGER NOT NULL,
+    PoliceStationID INTEGER NOT NULL,
+    CaseCategoryID INTEGER NOT NULL,
+    GravityOffenceID INTEGER NOT NULL,
+    CrimeMajorHeadID INTEGER NOT NULL,
+    CrimeMinorHeadID INTEGER NOT NULL,
+    CaseStatusID INTEGER NOT NULL,
+    CourtID INTEGER NOT NULL,
+    IncidentFromDate TEXT NOT NULL,
+    IncidentToDate TEXT,
+    InfoReceivedPSDate TEXT NOT NULL,
+    latitude REAL,
+    longitude REAL,
+    BriefFacts TEXT NOT NULL,
+    FOREIGN KEY(PolicePersonID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY(PoliceStationID) REFERENCES Unit(UnitID),
+    FOREIGN KEY(CaseCategoryID) REFERENCES CaseCategory(CaseCategoryID),
+    FOREIGN KEY(GravityOffenceID) REFERENCES GravityOffence(GravityOffenceID),
+    FOREIGN KEY(CrimeMajorHeadID) REFERENCES CrimeHead(CrimeHeadID),
+    FOREIGN KEY(CrimeMinorHeadID) REFERENCES CrimeSubHead(CrimeSubHeadID),
+    FOREIGN KEY(CaseStatusID) REFERENCES CaseStatusMaster(CaseStatusID),
+    FOREIGN KEY(CourtID) REFERENCES Court(CourtID)
+);
+
+-- 18. ComplainantDetails Table
+CREATE TABLE IF NOT EXISTS ComplainantDetails (
+    ComplainantID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseMasterID INTEGER NOT NULL,
+    ComplainantName TEXT NOT NULL,
+    AgeYear INTEGER,
+    OccupationID INTEGER NOT NULL,
+    ReligionID INTEGER NOT NULL,
+    CasteID INTEGER NOT NULL,
+    GenderID INTEGER,
+    FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID),
+    FOREIGN KEY(OccupationID) REFERENCES OccupationMaster(OccupationID),
+    FOREIGN KEY(ReligionID) REFERENCES ReligionMaster(ReligionID),
+    FOREIGN KEY(CasteID) REFERENCES CasteMaster(caste_master_id)
+);
+
+-- 19. Act Table
+CREATE TABLE IF NOT EXISTS Act (
+    ActCode TEXT PRIMARY KEY,
+    ActDescription TEXT NOT NULL,
+    ShortName TEXT,
+    Active INTEGER DEFAULT 1
+);
+
+-- 20. Section Table
+CREATE TABLE IF NOT EXISTS Section (
+    ActCode TEXT NOT NULL,
+    SectionCode TEXT NOT NULL,
+    SectionDescription TEXT,
+    Active INTEGER DEFAULT 1,
+    PRIMARY KEY (ActCode, SectionCode),
+    FOREIGN KEY(ActCode) REFERENCES Act(ActCode)
+);
+
+-- 21. ActSectionAssociation Table
+CREATE TABLE IF NOT EXISTS ActSectionAssociation (
+    CaseMasterID INTEGER NOT NULL,
+    ActCode TEXT NOT NULL,
+    SectionCode TEXT NOT NULL,
+    ActOrderID INTEGER,
+    SectionOrderID INTEGER,
+    PRIMARY KEY (CaseMasterID, ActCode, SectionCode),
+    FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID),
+    FOREIGN KEY(ActCode, SectionCode) REFERENCES Section(ActCode, SectionCode)
+);
+
+-- 22. Victim Table
+CREATE TABLE IF NOT EXISTS VictimMaster (
+    VictimMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseMasterID INTEGER NOT NULL,
+    VictimName TEXT NOT NULL,
+    AgeYear INTEGER,
+    GenderID INTEGER,
+    VictimPolice TEXT DEFAULT '0',
+    FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID)
+);
+
+-- 23. Accused Table
+CREATE TABLE IF NOT EXISTS AccusedMaster (
+    AccusedMasterID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseMasterID INTEGER NOT NULL,
+    AccusedName TEXT NOT NULL,
+    AgeYear INTEGER,
+    GenderID INTEGER,
+    PersonID TEXT NOT NULL,
+    FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID)
+);
+
+-- 24. ArrestSurrender Table
+CREATE TABLE IF NOT EXISTS ArrestSurrender (
+    ArrestSurrenderID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseMasterID INTEGER NOT NULL,
+    ArrestSurrenderTypeID INTEGER NOT NULL,
+    ArrestSurrenderDate TEXT NOT NULL,
+    ArrestSurrenderStateId INTEGER NOT NULL,
+    ArrestSurrenderDistrictId INTEGER NOT NULL,
+    PoliceStationID INTEGER NOT NULL,
+    IOID INTEGER NOT NULL,
+    CourtID INTEGER NOT NULL,
+    AccusedMasterID INTEGER NOT NULL,
+    IsAccused INTEGER DEFAULT 1,
+    IsComplainantAccused INTEGER DEFAULT 0,
+    FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID),
+    FOREIGN KEY(ArrestSurrenderStateId) REFERENCES State(StateID),
+    FOREIGN KEY(ArrestSurrenderDistrictId) REFERENCES District(DistrictID),
+    FOREIGN KEY(PoliceStationID) REFERENCES Unit(UnitID),
+    FOREIGN KEY(IOID) REFERENCES Employee(EmployeeID),
+    FOREIGN KEY(CourtID) REFERENCES Court(CourtID),
+    FOREIGN KEY(AccusedMasterID) REFERENCES AccusedMaster(AccusedMasterID)
+);
+
+-- 25. CrimeHeadActSection Table
+CREATE TABLE IF NOT EXISTS CrimeHeadActSection (
+    CrimeHeadID INTEGER NOT NULL,
+    ActCode TEXT NOT NULL,
+    SectionCode TEXT NOT NULL,
+    PRIMARY KEY (CrimeHeadID, ActCode, SectionCode),
+    FOREIGN KEY(CrimeHeadID) REFERENCES CrimeHead(CrimeHeadID),
+    FOREIGN KEY(ActCode, SectionCode) REFERENCES Section(ActCode, SectionCode)
+);
+
+-- 26. ChargesheetDetails Table
+CREATE TABLE IF NOT EXISTS ChargesheetDetails (
+    CSID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseMasterID INTEGER NOT NULL,
+    csdate TEXT NOT NULL,
+    cstype TEXT NOT NULL,
+    PolicePersonID INTEGER NOT NULL,
+    FOREIGN KEY(CaseMasterID) REFERENCES CaseMaster(CaseMasterID),
+    FOREIGN KEY(PolicePersonID) REFERENCES Employee(EmployeeID)
+);
+
+-- Indexes for CCTNS schema
+CREATE INDEX IF NOT EXISTS idx_casemaster_crime_no ON CaseMaster(CrimeNo);
+CREATE INDEX IF NOT EXISTS idx_casemaster_coords ON CaseMaster(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_complainant_case ON ComplainantDetails(CaseMasterID);
+CREATE INDEX IF NOT EXISTS idx_actsection_case ON ActSectionAssociation(CaseMasterID);
+CREATE INDEX IF NOT EXISTS idx_victim_case ON VictimMaster(CaseMasterID);
+CREATE INDEX IF NOT EXISTS idx_accused_case ON AccusedMaster(CaseMasterID);
+CREATE INDEX IF NOT EXISTS idx_arrest_case ON ArrestSurrender(CaseMasterID);
