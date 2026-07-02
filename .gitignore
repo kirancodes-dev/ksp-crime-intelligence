@@ -10,4 +10,7 @@ dist/
 client/dist/
 functions/node_modules/
 client/node_modules/
+*.log
+.catalystrc
+
 

@@ -1,6 +1,4 @@
 {
   "name": "functions",
-  "type": "express",
-  "stack": "node20",
-  "entry": "server.js"
+  "type": "nodejs"
 }
