@@ -37,12 +37,43 @@ class DatastoreTable {
 
 class CatalystInstance {
   constructor() {
+    this._readyResolve = null;
+    this.ready = new Promise(resolve => { this._readyResolve = resolve; });
+    this._initPending = 0;
+    this._initDone = false;
+
     this.db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('Failed to open SQLite database in Catalyst SDK:', err);
+        if (this._readyResolve) this._readyResolve();
       } else {
         this.db.run('PRAGMA journal_mode=WAL');
         this.db.run('PRAGMA busy_timeout=5000');
+
+        const markDone = () => {
+          this._initPending--;
+          if (this._initPending === 0 && !this._initDone) {
+            this._initDone = true;
+            if (this._readyResolve) this._readyResolve();
+            console.log('Database initialization complete.');
+          }
+        };
+
+        // Run schema.sql on first startup to create all core tables
+        const schemaPath = path.join(__dirname, '..', '..', 'datastore', 'schema.sql');
+        if (fs.existsSync(schemaPath)) {
+          this._initPending++;
+          const schema = fs.readFileSync(schemaPath, 'utf8');
+          this.db.exec(schema, (schemaErr) => {
+            if (schemaErr) {
+              console.error('Schema initialization error (may be partial):', schemaErr.message);
+            } else {
+              console.log('Core schema initialized from schema.sql');
+            }
+            markDone();
+          });
+        }
+
         // Initialize schema additions for collaborative workspaces and CCTNS scheduler
         this.db.serialize(() => {
           this.db.run(`
@@ -188,6 +219,7 @@ class CatalystInstance {
           // ====================================================================
           // Seed Officer Accounts (Phase 1)
           // ====================================================================
+          this._initPending++;
           this.db.get("SELECT COUNT(*) as count FROM Officers", (err, row) => {
             if (!err && row && row.count === 0) {
               const hashPw = (password) => {
@@ -206,11 +238,13 @@ class CatalystInstance {
               stmt.finalize();
               console.log('Default officer accounts seeded successfully.');
             }
+            markDone();
           });
 
           // ====================================================================
           // Seed BNS Mapping Data (Phase 6)
           // ====================================================================
+          this._initPending++;
           this.db.get("SELECT COUNT(*) as count FROM BNS_Mapping", (err, row) => {
             if (!err && row && row.count === 0) {
               try {
@@ -226,6 +260,7 @@ class CatalystInstance {
                 console.error('Failed to seed BNS mapping:', bnsErr);
               }
             }
+            markDone();
           });
 
           // Seed initial notes if empty
@@ -304,6 +339,15 @@ class CatalystInstance {
               console.log('SmartBrowz historical logs seeded successfully.');
             }
           });
+
+          // Safety fallback: resolve ready after 3s even if callbacks didn't fire
+          setTimeout(() => {
+            if (!this._initDone) {
+              this._initDone = true;
+              if (this._readyResolve) this._readyResolve();
+              console.log('Database initialization complete (fallback).');
+            }
+          }, 3000);
         });
       }
     });
@@ -479,5 +523,9 @@ module.exports = {
       _instance = new CatalystInstance();
     }
     return _instance;
+  },
+  waitForReady: () => {
+    if (!_instance) return Promise.resolve();
+    return _instance.ready || Promise.resolve();
   }
 };

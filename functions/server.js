@@ -15,6 +15,7 @@ const pdfExport = require('./pdf-export/index');
 const anomalyDetection = require('./anomaly-detection/index');
 const smartBrowz = require('./smartbrowz/index');
 const catalyst = require('./shared/catalyst-sdk').getInitializer();
+const { waitForReady } = require('./shared/catalyst-sdk');
 const health = require('./health/index');
 const ecourts = require('./ecourts-client/index');
 const eprisons = require('./eprisons-client/index');
@@ -57,6 +58,12 @@ app.use(express.json({ limit: '10mb' }));
 // Serve static client build (production)
 const clientDistPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(clientDistPath));
+
+// Wait for database initialization before processing API requests
+app.use('/api', async (req, res, next) => {
+  await waitForReady();
+  next();
+});
 
 app.use('/api', limiter);
 app.use(authMiddleware);
