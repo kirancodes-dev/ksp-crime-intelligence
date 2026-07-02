@@ -107,17 +107,17 @@ export interface ForecastResponse {
 export interface SocioDemographicResponse {
   success: boolean;
   demographics: {
-    ageGroups: Array<{ range: string; count: number }>;
+    ageGroups: Array<{ age_group: string; count: number }>;
     genderSplit: Array<{ gender: string; count: number }>;
-    educationLevels: Array<{ level: string; count: number }>;
+    educationLevels: Array<{ education_level: string; count: number }>;
     migrationStatus: Array<{ status: string; count: number }>;
   };
   socioCorrelation: Array<{
     district: string;
-    crimeRate: number;
-    unemploymentRate: number;
-    literacyRate: number;
-    povertyIndex: number;
+    crime_count: number;
+    unemployment_rate: number;
+    literacy_rate: number;
+    poverty_index: number;
   }>;
 }
 
@@ -175,18 +175,81 @@ export interface SmartBrowzRunResponse {
   error?: string;
 }
 
+/**
+ * Custom fetch wrapper that automatically appends JWT tokens and handles token refresh.
+ */
+async function secureFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('ksp_jwt_token');
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  } as Record<string, string>;
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const updatedOptions = { ...options, headers };
+  let response = await fetch(url, updatedOptions);
+
+  // If unauthorized and we have a token, attempt to refresh token
+  if (response.status === 401 && token) {
+    try {
+      const refreshResponse = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json();
+        if (data.success && data.token) {
+          localStorage.setItem('ksp_jwt_token', data.token);
+          // Retry original request with refreshed token
+          headers['Authorization'] = `Bearer ${data.token}`;
+          response = await fetch(url, updatedOptions);
+        }
+      } else {
+        // Refresh token failed - logout user
+        localStorage.removeItem('ksp_jwt_token');
+        localStorage.removeItem('ksp_user_id');
+        localStorage.removeItem('ksp_user_role');
+        localStorage.removeItem('ksp_mfa_verified');
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error('MFA Token Refresh Handshake Failed:', err);
+    }
+  }
+
+  return response;
+}
+
 export const api = {
+  /**
+   * Performs real badge login
+   */
+  async login(badgeId: string, password: string): Promise<any> {
+    const response = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ badgeId, password }),
+    });
+    
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Authentication failed. Check your Badge ID and password.');
+    }
+    return response.json();
+  },
+
   /**
    * Submits a natural language query to the conversation orchestrator
    */
-  async submitChat(query: string, userId: string, role: string, sessionId?: string): Promise<ChatResponse> {
-    const response = await fetch(`${BASE_URL}/chat`, {
+  async submitChat(query: string, _userId: string, _role: string, sessionId?: string): Promise<ChatResponse> {
+    const response = await secureFetch(`${BASE_URL}/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ query, sessionId }),
     });
     
@@ -200,13 +263,8 @@ export const api = {
   /**
    * Fetches real-time anomaly alerts from Zia AutoML engine
    */
-  async getAnomalies(userId: string, role: string): Promise<AnomalyResponse> {
-    const response = await fetch(`${BASE_URL}/anomalies`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getAnomalies(_userId: string, _role: string): Promise<AnomalyResponse> {
+    const response = await secureFetch(`${BASE_URL}/anomalies`);
     if (!response.ok) {
       throw new Error('Failed to fetch system anomalies');
     }
@@ -216,13 +274,8 @@ export const api = {
   /**
    * Fetches audit log entries for Supervisor inspection
    */
-  async getAuditLogs(userId: string, role: string): Promise<AuditLogResponse> {
-    const response = await fetch(`${BASE_URL}/audit-logs`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getAuditLogs(_userId: string, _role: string): Promise<AuditLogResponse> {
+    const response = await secureFetch(`${BASE_URL}/audit-logs`);
     if (!response.ok) {
       throw new Error('Failed to fetch system audit logs');
     }
@@ -230,15 +283,25 @@ export const api = {
   },
 
   /**
+   * Submits an override justification for critical audit compliance events
+   */
+  async submitOverride(alertTitle: string, reason: string, justification: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/audit-logs/override`, {
+      method: 'POST',
+      body: JSON.stringify({ alertTitle, reason, justification }),
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to submit override justification');
+    }
+    return response.json();
+  },
+
+  /**
    * Fetches detailed case file details
    */
-  async getCaseDetails(firNumber: string, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/fir/${firNumber}`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getCaseDetails(firNumber: string, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/fir/${firNumber}`);
     if (!response.ok) {
       throw new Error('Failed to fetch case file');
     }
@@ -248,13 +311,8 @@ export const api = {
   /**
    * Fetches financial transaction trail for a specific FIR
    */
-  async getFinancialTrail(firId: number, userId: string, role: string): Promise<FinancialTrailResponse> {
-    const response = await fetch(`${BASE_URL}/financial/${firId}`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getFinancialTrail(firId: number, _userId: string, _role: string): Promise<FinancialTrailResponse> {
+    const response = await secureFetch(`${BASE_URL}/financial/${firId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch financial trail');
     }
@@ -264,13 +322,8 @@ export const api = {
   /**
    * Fetches similar past cases for a given FIR
    */
-  async getSimilarCases(firId: number, userId: string, role: string): Promise<SimilarCasesResponse> {
-    const response = await fetch(`${BASE_URL}/similar/${firId}`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getSimilarCases(firId: number, _userId: string, _role: string): Promise<SimilarCasesResponse> {
+    const response = await secureFetch(`${BASE_URL}/similar/${firId}`);
     if (!response.ok) {
       throw new Error('Failed to find similar cases');
     }
@@ -280,13 +333,8 @@ export const api = {
   /**
    * Fetches crime forecasts / early warning predictions
    */
-  async getForecasts(userId: string, role: string): Promise<ForecastResponse> {
-    const response = await fetch(`${BASE_URL}/forecasts`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getForecasts(_userId: string, _role: string): Promise<ForecastResponse> {
+    const response = await secureFetch(`${BASE_URL}/forecasts`);
     if (!response.ok) {
       throw new Error('Failed to fetch crime forecasts');
     }
@@ -296,13 +344,8 @@ export const api = {
   /**
    * Fetches socio-demographic crime insights
    */
-  async getSocioDemographics(userId: string, role: string): Promise<SocioDemographicResponse> {
-    const response = await fetch(`${BASE_URL}/socio-demographics`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getSocioDemographics(_userId: string, _role: string): Promise<SocioDemographicResponse> {
+    const response = await secureFetch(`${BASE_URL}/socio-demographics`);
     if (!response.ok) {
       throw new Error('Failed to fetch socio-demographic data');
     }
@@ -312,13 +355,8 @@ export const api = {
   /**
    * Fetches real counts of database incidents for KPI statistics
    */
-  async getDashboardStats(district: string, crimeType: string, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/dashboard/stats?district=${encodeURIComponent(district)}&crimeType=${encodeURIComponent(crimeType)}`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getDashboardStats(district: string, crimeType: string, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/dashboard/stats?district=${encodeURIComponent(district)}&crimeType=${encodeURIComponent(crimeType)}`);
     if (!response.ok) {
       throw new Error('Failed to fetch dashboard statistics');
     }
@@ -328,14 +366,9 @@ export const api = {
   /**
    * Generates and downloads a conversation PDF summary using SmartBrowz
    */
-  async exportPdfReport(htmlContent: string, userId: string, role: string): Promise<Blob> {
-    const response = await fetch(`${BASE_URL}/pdf-export`, {
+  async exportPdfReport(htmlContent: string, _userId: string, _role: string): Promise<Blob> {
+    const response = await secureFetch(`${BASE_URL}/pdf-export`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ htmlContent }),
     });
 
@@ -348,14 +381,9 @@ export const api = {
   /**
    * Generates TTS audio data (base64) using Zia textToSpeech
    */
-  async textToSpeech(text: string, userId: string, role: string): Promise<string> {
-    const response = await fetch(`${BASE_URL}/voice`, {
+  async textToSpeech(text: string, _userId: string, _role: string): Promise<string> {
+    const response = await secureFetch(`${BASE_URL}/voice`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ action: 'tts', text }),
     });
     if (!response.ok) {
@@ -368,14 +396,9 @@ export const api = {
   /**
    * Uploads and runs simulated OCR + translation on a vernacular file
    */
-  async analyzeOcr(fileName: string, fileType: string, base64Data: string, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/ocr/analyze`, {
+  async analyzeOcr(fileName: string, fileType: string, base64Data: string, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/ocr/analyze`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ fileName, fileType, base64Data }),
     });
     if (!response.ok) {
@@ -387,13 +410,8 @@ export const api = {
   /**
    * Fetches simulated CDR timeline trajectory logs for a suspect
    */
-  async getCdrTimeline(suspect: string, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/cdr/timeline?suspect=${encodeURIComponent(suspect)}`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getCdrTimeline(suspect: string, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/cdr/timeline?suspect=${encodeURIComponent(suspect)}`);
     if (!response.ok) {
       throw new Error('Failed to fetch CDR timeline');
     }
@@ -403,14 +421,9 @@ export const api = {
   /**
    * Searches suspect databases using facial recognition similarity checks
    */
-  async searchBiometrics(name: string, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/biometrics/search`, {
+  async searchBiometrics(name: string, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/biometrics/search`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ name }),
     });
     if (!response.ok) {
@@ -422,13 +435,8 @@ export const api = {
   /**
    * Fetches active emergency dispatch patrol vehicles list
    */
-  async getDispatchUnits(userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/dispatch/units`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getDispatchUnits(_userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/dispatch/units`);
     if (!response.ok) {
       throw new Error('Failed to fetch dispatch patrol vehicles');
     }
@@ -438,13 +446,8 @@ export const api = {
   /**
    * Fetches collaborative workspace state (pinned assets and notes)
    */
-  async getWorkspaceState(userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/workspace`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getWorkspaceState(_userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/workspace`);
     if (!response.ok) {
       throw new Error('Failed to fetch workspace state');
     }
@@ -454,14 +457,9 @@ export const api = {
   /**
    * Pins or unpins a case asset to/from the collaborative workspace
    */
-  async pinWorkspaceAsset(assetType: 'fir' | 'accused', assetId: string, details: string, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/workspace/pin`, {
+  async pinWorkspaceAsset(assetType: 'fir' | 'accused', assetId: string, details: string, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/workspace/pin`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ assetType, assetId, details }),
     });
     if (!response.ok) {
@@ -473,14 +471,9 @@ export const api = {
   /**
    * Updates the shared notes on the collaborative workspace
    */
-  async saveWorkspaceNotes(notes: string, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/workspace/notes`, {
+  async saveWorkspaceNotes(notes: string, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/workspace/notes`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ notes }),
     });
     if (!response.ok) {
@@ -492,13 +485,8 @@ export const api = {
   /**
    * Fetches CCTNS sync execution job history runs
    */
-  async getCctnsRuns(userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/cctns/runs`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getCctnsRuns(_userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/cctns/runs`);
     if (!response.ok) {
       throw new Error('Failed to fetch CCTNS sync history');
     }
@@ -508,14 +496,9 @@ export const api = {
   /**
    * Triggers a CCTNS synchronization execution run
    */
-  async triggerCctnsSync(triggerType: 'Manual' | 'Automatic', userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/cctns/sync`, {
+  async triggerCctnsSync(triggerType: 'Manual' | 'Automatic', _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/cctns/sync`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ triggerType }),
     });
     if (!response.ok) {
@@ -527,13 +510,8 @@ export const api = {
   /**
    * Fetches all FIR cases with metadata for the Warrant Desk
    */
-  async getWarrants(userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/warrants`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getWarrants(_userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/warrants`);
     if (!response.ok) {
       throw new Error('Failed to fetch warrant data');
     }
@@ -548,16 +526,11 @@ export const api = {
     newStatus: string,
     assignedOfficer: string,
     urgencyNote: string,
-    userId: string,
-    role: string
+    _userId: string,
+    _role: string
   ): Promise<any> {
-    const response = await fetch(`${BASE_URL}/warrants/bulk`, {
+    const response = await secureFetch(`${BASE_URL}/warrants/bulk`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ firIds, newStatus, assignedOfficer, urgencyNote }),
     });
     if (!response.ok) {
@@ -566,26 +539,20 @@ export const api = {
     return response.json();
   },
 
-  async getInvestigationTimeline(firId: number, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/timeline/${firId}`, {
-      headers: { 'X-User-Id': userId, 'X-User-Role': role },
-    });
+  async getInvestigationTimeline(firId: number, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/timeline/${firId}`);
     if (!response.ok) throw new Error('Failed to fetch investigation timeline');
     return response.json();
   },
 
-  async getEarlyWarning(userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/early-warning`, {
-      headers: { 'X-User-Id': userId, 'X-User-Role': role },
-    });
+  async getEarlyWarning(_userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/early-warning`);
     if (!response.ok) throw new Error('Failed to fetch early warning intelligence');
     return response.json();
   },
 
-  async getCaseSummary(firId: number, userId: string, role: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/case-summary/${firId}`, {
-      headers: { 'X-User-Id': userId, 'X-User-Role': role },
-    });
+  async getCaseSummary(firId: number, _userId: string, _role: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/case-summary/${firId}`);
     if (!response.ok) throw new Error('Failed to fetch case summary');
     return response.json();
   },
@@ -593,13 +560,8 @@ export const api = {
   /**
    * Fetches aggregated SmartBrowz usage stats, breakdowns, and trend history.
    */
-  async getSmartBrowzStats(timeFilter: string, userId: string, role: string): Promise<SmartBrowzStatsResponse> {
-    const response = await fetch(`${BASE_URL}/smartbrowz/stats?timeFilter=${timeFilter}`, {
-      headers: {
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
-    });
+  async getSmartBrowzStats(timeFilter: string, _userId: string, _role: string): Promise<SmartBrowzStatsResponse> {
+    const response = await secureFetch(`${BASE_URL}/smartbrowz/stats?timeFilter=${timeFilter}`);
     if (!response.ok) {
       throw new Error('Failed to fetch SmartBrowz statistics');
     }
@@ -609,14 +571,9 @@ export const api = {
   /**
    * Triggers a simulated SmartBrowz browser control or convert task.
    */
-  async triggerSmartBrowzAction(actionType: string, userId: string, role: string): Promise<SmartBrowzRunResponse> {
-    const response = await fetch(`${BASE_URL}/smartbrowz/run`, {
+  async triggerSmartBrowzAction(actionType: string, _userId: string, _role: string): Promise<SmartBrowzRunResponse> {
+    const response = await secureFetch(`${BASE_URL}/smartbrowz/run`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': userId,
-        'X-User-Role': role,
-      },
       body: JSON.stringify({ actionType }),
     });
     if (!response.ok) {
@@ -624,5 +581,76 @@ export const api = {
     }
     return response.json();
   },
-};
 
+  // --- NEW INTEGRATED LEGAL & COMPLIANCE SERVICES ---
+
+  async getCourtStatus(firNumber: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/court/${firNumber}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch e-Courts case status');
+    }
+    return response.json();
+  },
+
+  async getPrisonStatus(accusedId: number): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/prison/${accusedId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch e-Prisons inmate status');
+    }
+    return response.json();
+  },
+
+  async getReleaseAlerts(): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/prison/releases`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch release alerts');
+    }
+    return response.json();
+  },
+
+  async registerEvidence(firId: number, type: string, fileHash: string, fileName?: string, description?: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/evidence/register`, {
+      method: 'POST',
+      body: JSON.stringify({ firId, type, fileHash, fileName, description }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to register evidence');
+    }
+    return response.json();
+  },
+
+  async getEvidenceChain(firId: number): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/evidence/${firId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch evidence chain');
+    }
+    return response.json();
+  },
+
+  async verifyEvidence(evidenceId: number, fileHash: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/evidence/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ evidenceId, fileHash }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to verify evidence hash');
+    }
+    return response.json();
+  },
+
+  async getBnsMapping(): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/bns/mapping`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch BNS mapping registry');
+    }
+    return response.json();
+  },
+
+  async translateBns(ipcSection: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/bns/translate/${ipcSection}`);
+    if (!response.ok) {
+      throw new Error('Failed to translate IPC section to BNS');
+    }
+    return response.json();
+  }
+};

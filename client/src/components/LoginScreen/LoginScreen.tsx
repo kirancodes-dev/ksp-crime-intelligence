@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Lock, UserCheck, KeyRound, AlertTriangle } from 'lucide-react';
+import { api } from '../../services/api';
 
 interface LoginUser {
   userId: string;
@@ -9,8 +10,8 @@ interface LoginUser {
 }
 
 const MOCK_CREDENTIALS: Record<string, LoginUser> = {
-  'INV-1002': { userId: 'INV-1002', role: 'Investigator', rank: 'SI', name: 'Meera Nair' },
-  'ANA-2041': { userId: 'ANA-2041', role: 'Analyst', rank: 'DA', name: 'Priya Sharma' },
+  'INV-1001': { userId: 'INV-1001', role: 'Investigator', rank: 'SI', name: 'Meera Nair' },
+  'ANA-2001': { userId: 'ANA-2001', role: 'Analyst', rank: 'DA', name: 'Priya Sharma' },
   'SUP-3001': { userId: 'SUP-3001', role: 'Supervisor', rank: 'ACP', name: 'Raghavendra K.' },
   'POL-4001': { userId: 'POL-4001', role: 'Policymaker', rank: 'DGP', name: 'Srinivas M.' },
 };
@@ -26,6 +27,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   
   const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // MFA OTP timer state
   const [countdown, setCountdown] = useState(30);
@@ -47,7 +49,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     return () => clearInterval(timer);
   }, [step, countdown]);
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -65,21 +67,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     // Strict check for demonstration or allow format pattern
     const badgeRegex = /^[A-Z]{3}-\d{4}$/;
     if (!badgeRegex.test(cleanBadge)) {
-      setError('Invalid Badge ID format. Expected format: AAA-0000 (e.g. INV-1002).');
+      setError('Invalid Badge ID format. Expected format: AAA-0000 (e.g. INV-1001).');
       return;
     }
 
-    // Mock validation
-    const officer = MOCK_CREDENTIALS[cleanBadge];
-    if (officer && password !== 'ksp123') {
-      setError('Authentication failed. Incorrect password for this Badge ID.');
-      return;
+    try {
+      setIsSubmitting(true);
+      const res = await api.login(cleanBadge, password);
+      if (res.success && res.token) {
+        // Store temp details to verify OTP step
+        localStorage.setItem('ksp_jwt_token', res.token);
+        localStorage.setItem('ksp_temp_user_id', res.user.userId);
+        localStorage.setItem('ksp_temp_user_role', res.user.role);
+        
+        // Proceed to MFA step
+        setStep('otp');
+        setCountdown(30);
+        setCanResend(false);
+      } else {
+        setError(res.error || 'Authentication failed. Please verify credentials.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Authentication connection failed. Please check backend server.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Proceed to MFA step
-    setStep('otp');
-    setCountdown(30);
-    setCanResend(false);
   };
 
   const handleOtpSubmit = (e: React.FormEvent) => {
@@ -92,17 +104,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // Resolve user details
-    const cleanBadge = badgeId.toUpperCase().trim();
-    const resolvedUser = MOCK_CREDENTIALS[cleanBadge] || {
-      userId: cleanBadge,
-      role: 'Investigator',
-      rank: 'Officer',
-      name: 'External Staff',
-    };
+    // Complete login using stored temporary session
+    const tempUserId = localStorage.getItem('ksp_temp_user_id');
+    const tempUserRole = localStorage.getItem('ksp_temp_user_role');
 
-    // Complete login
-    onLoginSuccess(resolvedUser.userId, resolvedUser.role);
+    if (!tempUserId || !tempUserRole) {
+      setError('Authentication session expired. Please log in again.');
+      setStep('credentials');
+      return;
+    }
+
+    // Clean up temporary variables
+    localStorage.removeItem('ksp_temp_user_id');
+    localStorage.removeItem('ksp_temp_user_role');
+
+    onLoginSuccess(tempUserId, tempUserRole);
   };
 
   const handleResendOtp = () => {
@@ -110,7 +126,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     setCanResend(false);
     setOtp('');
     setError(null);
-    alert('A new secure 6-digit verification code has been dispatched to your KSP security token.');
+    alert('A new secure 2FA verification token has been dispatched to your official communication terminal.');
   };
 
   return (
@@ -169,8 +185,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 <input
                   type="text"
                   value={badgeId}
+                  disabled={isSubmitting}
                   onChange={(e) => setBadgeId(e.target.value)}
-                  placeholder="e.g. INV-1002"
+                  placeholder="e.g. INV-1001"
                   className="bg-brand-dark/50 border border-brand-border focus:border-brand-primary-light focus:ring-1 focus:ring-brand-primary-light focus:outline-none rounded-lg pl-10 pr-3 py-2.5 text-xs text-white placeholder-slate-600 w-full tracking-wide transition font-mono uppercase"
                   autoComplete="off"
                 />
@@ -197,6 +214,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 <input
                   type="password"
                   value={password}
+                  disabled={isSubmitting}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
                   className="bg-brand-dark/50 border border-brand-border focus:border-brand-primary-light focus:ring-1 focus:ring-brand-primary-light focus:outline-none rounded-lg pl-10 pr-3 py-2.5 text-xs text-white placeholder-slate-600 w-full transition"
@@ -207,36 +225,37 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             {/* Submit Credentials Button */}
             <button
               type="submit"
-              className="w-full bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg shadow-lg cursor-pointer transition flex items-center justify-center gap-2"
+              disabled={isSubmitting}
+              className="w-full bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg shadow-lg cursor-pointer transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <KeyRound size={14} /> Verify Credentials
+              <KeyRound size={14} /> {isSubmitting ? 'Authenticating...' : 'Verify Credentials'}
             </button>
             
             {/* Quick credentials references */}
             <div className="border-t border-brand-border/60 pt-4 mt-2">
               <span className="block text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-2">
-                Authorized Reference Badges (Password: ksp123)
+                Authorized Reference Badges (Password: ksp2026)
               </span>
               <div className="grid grid-cols-2 gap-2 text-[9px]">
                 <button
                   type="button"
-                  onClick={() => { setBadgeId('INV-1002'); setPassword('ksp123'); }}
+                  onClick={() => { setBadgeId('INV-1001'); setPassword('ksp2026'); }}
                   className="text-left bg-brand-dark/30 hover:bg-brand-dark/80 border border-brand-border/60 text-slate-400 p-1.5 rounded cursor-pointer transition text-xs"
                 >
-                  <span className="font-mono text-white block">INV-1002</span>
+                  <span className="font-mono text-white block">INV-1001</span>
                   Investigator (Meera Nair)
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setBadgeId('ANA-2041'); setPassword('ksp123'); }}
+                  onClick={() => { setBadgeId('ANA-2001'); setPassword('ksp2026'); }}
                   className="text-left bg-brand-dark/30 hover:bg-brand-dark/80 border border-brand-border/60 text-slate-400 p-1.5 rounded cursor-pointer transition text-xs"
                 >
-                  <span className="font-mono text-white block">ANA-2041</span>
+                  <span className="font-mono text-white block">ANA-2001</span>
                   Analyst (Priya Sharma)
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setBadgeId('SUP-3001'); setPassword('ksp123'); }}
+                  onClick={() => { setBadgeId('SUP-3001'); setPassword('ksp2026'); }}
                   className="text-left bg-brand-dark/30 hover:bg-brand-dark/80 border border-brand-border/60 text-slate-400 p-1.5 rounded cursor-pointer transition text-xs"
                 >
                   <span className="font-mono text-white block">SUP-3001</span>
@@ -244,7 +263,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setBadgeId('POL-4001'); setPassword('ksp123'); }}
+                  onClick={() => { setBadgeId('POL-4001'); setPassword('ksp2026'); }}
                   className="text-left bg-brand-dark/30 hover:bg-brand-dark/80 border border-brand-border/60 text-slate-400 p-1.5 rounded cursor-pointer transition text-xs"
                 >
                   <span className="font-mono text-white block">POL-4001</span>
@@ -332,7 +351,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         <div className="mt-8 pt-4 border-t border-brand-border/60 flex items-start gap-2.5 text-[9px] text-slate-500 leading-normal font-medium">
           <AlertTriangle size={14} className="shrink-0 text-amber-500/70" />
           <span>
-            <strong>WARNING:</strong> This is a secure system of the Karnataka State Police. Unauthorized access, tempering, or intrusion attempts will be recorded and prosecuted under Sections 43, 65, and 66 of the IT Act, 2000.
+            <strong>WARNING:</strong> This is a secure system of the Karnataka State Police. Unauthorized access, tampering, or intrusion attempts will be recorded and prosecuted under Sections 43, 65, and 66 of the IT Act, 2000.
           </span>
         </div>
 

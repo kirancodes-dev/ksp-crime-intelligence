@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday, My Love!</title>
+    <meta name="description" content="A magical, interactive birthday card created especially for you. Happy Birthday!">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Ambient Stars/Particles Background (Persistent across pages) -->
+    <div id="ambient-particles" class="ambient-particles"></div>
+
+    <!-- Music / Sound Control -->
+    <div class="audio-control-container" id="audio-control-container">
+        <button id="music-toggle-btn" class="audio-btn" aria-label="Toggle Music">
+            <svg class="audio-icon play-icon" viewBox="0 0 24 24" width="24" height="24">
+                <path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+            <span class="btn-text">Play Melody</span>
+        </button>
+    </div>
+
+    <!-- Welcome / Envelope Screen -->
+    <section id="welcome-screen" class="welcome-screen">
+        <div class="envelope-wrapper">
+            <div class="envelope" id="main-envelope">
+                <div class="envelope-flap"></div>
+                <div class="envelope-pocket"></div>
+                <div class="letter-preview">
+                    <p class="preview-handwriting">For the most special person...</p>
+                </div>
+                <div class="wax-seal" id="wax-seal">
+                    <div class="seal-heart">❤️</div>
+                </div>
+            </div>
+            <p class="envelope-instruction">Tap the wax seal to open your card</p>
+        </div>
+    </section>
+
+    <!-- Main Content Container (Revealed after envelope opens) -->
+    <main id="main-content" class="main-content hidden">
+
+        <!-- 1. The Birthday Wish Letter -->
+        <section id="letter-section" class="content-section letter-section">
+            <div class="glass-card letter-card">
+                <h1 class="letter-heading">Happy Birthday!</h1>
+                <div class="letter-body">
+                    <p id="typewriter-text" class="typewriter-text"></p>
+                </div>
+                <div class="letter-signature">
+                    <p class="signature-date">August 12, 2026</p>
+                    <p class="signature-text">Yours forever, ❤️</p>
+                </div>
+                <div class="scroll-indicator" id="scroll-prompt">
+                    <span>Scroll down for a trip down memory lane</span>
+                    <div class="arrow-down"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Interactive Memory Lane (Timeline) -->
+        <section id="timeline-section" class="content-section timeline-section">
+            <h2 class="section-title">Our Beautiful Journey</h2>
+            <p class="section-subtitle">A few of the countless moments that made me fall for you</p>
+            
+            <div class="timeline-container">
+                <div class="timeline-line"></div>
+                
+                <!-- Event 1 -->
+                <div class="timeline-event left">
+                    <div class="timeline-dot"></div>
+                    <div class="glass-card timeline-card">
+                        <span class="event-date">Where it All Began</span>
+                        <h3 class="event-title">A Cozy Coffee Date</h3>
+                        <div class="event-image-container">
+                            <img src="assets/coffee.png" alt="Cozy coffee date" class="event-image" loading="lazy">
+                        </div>
+                        <p class="event-description">Sitting across from you in that little cafe while it rained outside, sharing stories and coffee. I knew right then that you were someone incredibly special.</p>
+                    </div>
+                </div>
+
+                <!-- Event 2 -->
+                <div class="timeline-event right">
+                    <div class="timeline-dot"></div>
+                    <div class="glass-card timeline-card">
+                        <span class="event-date">Our Shared Adventures</span>
+                        <h3 class="event-title">Sunset Walk by the Beach</h3>
+                        <div class="event-image-container">
+                            <img src="assets/sunset.png" alt="Walking along the beach at sunset" class="event-image" loading="lazy">
+                        </div>
+                        <p class="event-description">Walking hand in hand on the sand, listening to the soft waves under a breathtaking pink and orange sky. In that moment, the world felt absolutely perfect.</p>
+                    </div>
+                </div>
+
+                <!-- Event 3 -->
+                <div class="timeline-event left">
+                    <div class="timeline-dot"></div>
+                    <div class="glass-card timeline-card">
+                        <span class="event-date">Under the Stars</span>
+                        <h3 class="event-title">Stargazing Together</h3>
+                        <div class="event-image-container">
+                            <img src="assets/stargazing.png" alt="Stargazing under a shooting star" class="event-image" loading="lazy">
+                        </div>
+                        <p class="event-description">Lying under the endless sky, searching for shooting stars. Even with the beauty of the universe above us, I couldn't take my eyes off you.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Polaroid Photo Gallery -->
+        <section id="gallery-section" class="content-section gallery-section">
+            <h2 class="section-title">Captured Memories</h2>
+            <p class="section-subtitle">Hover or tap on a photo to reveal the memory behind it</p>
+            
+            <div class="polaroid-grid">
+                <!-- Polaroid 1 -->
+                <div class="polaroid-wrapper" style="--rotation: -4deg;">
+                    <div class="polaroid">
+                        <div class="polaroid-inner">
+                            <div class="polaroid-front">
+                                <img src="assets/coffee.png" alt="Memory One" class="polaroid-img">
+                                <p class="polaroid-caption">Laughter & Lattes ☕</p>
+                            </div>
+                            <div class="polaroid-back">
+                                <div class="polaroid-back-content">
+                                    <h3>A Sweet Day</h3>
+                                    <p>I still remember the way your eyes crinkled when you laughed at my silly joke. That laugh is my favorite sound in the entire world.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Polaroid 2 -->
+                <div class="polaroid-wrapper" style="--rotation: 3deg;">
+                    <div class="polaroid">
+                        <div class="polaroid-inner">
+                            <div class="polaroid-front">
+                                <img src="assets/cake.png" alt="Memory Two" class="polaroid-img">
+                                <p class="polaroid-caption">Celebrating You 🎂</p>
+                            </div>
+                            <div class="polaroid-back">
+                                <div class="polaroid-back-content">
+                                    <h3>Make a Wish</h3>
+                                    <p>Today is all about you. May all the joy, love, and magic you bring into my life return to you tenfold today.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Polaroid 3 -->
+                <div class="polaroid-wrapper" style="--rotation: -2deg;">
+                    <div class="polaroid">
+                        <div class="polaroid-inner">
+                            <div class="polaroid-front">
+                                <img src="assets/sunset.png" alt="Memory Three" class="polaroid-img">
+                                <p class="polaroid-caption">Infinite Sunsets 🌅</p>
+                            </div>
+                            <div class="polaroid-back">
+                                <div class="polaroid-back-content">
+                                    <h3>With You, Always</h3>
+                                    <p>Every sunset with you feels like a brand new beginning. I want to walk beside you through every season of life.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Polaroid 4 -->
+                <div class="polaroid-wrapper" style="--rotation: 5deg;">
+                    <div class="polaroid">
+                        <div class="polaroid-inner">
+                            <div class="polaroid-front">
+                                <img src="assets/stargazing.png" alt="Memory Four" class="polaroid-img">
+                                <p class="polaroid-caption">My Brightest Star ✨</p>
+                            </div>
+                            <div class="polaroid-back">
+                                <div class="polaroid-back-content">
+                                    <h3>My Universe</h3>
+                                    <p>No star in the sky could ever shine as bright as you do. You guide me, inspire me, and make my world complete.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Interactive Scratch Card (Surprise Coupon) -->
+        <section id="scratch-section" class="content-section scratch-section">
+            <h2 class="section-title">A Special Surprise</h2>
+            <p class="section-subtitle">Use your finger or mouse to scratch the heart and reveal your gift!</p>
+            
+            <div class="scratch-card-container">
+                <div class="glass-card scratch-card-base">
+                    <!-- Underneath Content -->
+                    <div class="coupon-content">
+                        <span class="coupon-tag">LOVE COUPON</span>
+                        <h3 class="coupon-title">A Romantic Dinner & Night Out</h3>
+                        <p class="coupon-details">This coupon is redeemable for one magical evening of your choice: a delicious dinner at your favorite restaurant, dessert, and a late-night drive under the stars.</p>
+                        <span class="coupon-signature">Expires: Never ❤️</span>
+                    </div>
+                    <!-- Scratch Canvas overlay -->
+                    <canvas id="scratch-canvas" class="scratch-canvas"></canvas>
+                </div>
+                <div id="scratch-instructions" class="scratch-instructions">Scratch 50% to claim!</div>
+            </div>
+        </section>
+
+        <!-- 4.5. The Wheel of Love (Roulette) -->
+        <section id="wheel-section" class="content-section wheel-section">
+            <h2 class="section-title">The Wheel of Love</h2>
+            <p class="section-subtitle">Spin the wheel to claim a sweet promise or future date idea!</p>
+            
+            <div class="wheel-outer-container">
+                <div class="wheel-pointer-pin">▼</div>
+                <div class="wheel-card glass-card">
+                    <canvas id="wheel-canvas" class="wheel-canvas"></canvas>
+                    <button id="spin-btn" class="spin-btn">Spin Your Gift</button>
+                </div>
+                <div id="wheel-result" class="wheel-result">Click the button to spin the wheel...</div>
+            </div>
+        </section>
+
+        <!-- 5. "Wish Upon a Star" Interactive Sky -->
+        <section id="sky-section" class="content-section sky-section">
+            <h2 class="section-title">Wish Upon a Star</h2>
+            <p class="section-subtitle">Click or tap anywhere on the night sky below to place a star and reveal a birthday wish...</p>
+            
+            <div class="sky-canvas-wrapper">
+                <canvas id="sky-canvas" class="sky-canvas"></canvas>
+                <div id="sky-instruction-overlay" class="sky-instruction-overlay">
+                    <p>✨ Click the night sky ✨</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-text">Made with all my love for your special day.</p>
+            <p class="footer-sub">Happy Birthday, Sweetheart. ❤️</p>
+        </footer>
+
+    </main>
+
+    <!-- JS Logic -->
+    <script src="app.js"></script>
+</body>
+</html>

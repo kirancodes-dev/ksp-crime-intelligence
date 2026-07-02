@@ -1,5 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
 const dbPath = path.join(__dirname, '..', '..', 'datastore', 'ksp_crime.db');
 
 class DatastoreTable {
@@ -81,7 +83,151 @@ class CatalystInstance {
               details TEXT
             )
           `);
-          
+
+          // ====================================================================
+          // Phase 1: Officers Table (Authentication & RLS)
+          // ====================================================================
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Officers (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              badge_id TEXT UNIQUE NOT NULL,
+              name TEXT NOT NULL,
+              rank TEXT NOT NULL,
+              role TEXT NOT NULL,
+              district TEXT NOT NULL,
+              police_station TEXT NOT NULL,
+              password_hash TEXT NOT NULL,
+              is_active INTEGER DEFAULT 1,
+              last_login TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              failed_login_attempts INTEGER DEFAULT 0,
+              locked_until TEXT
+            )
+          `);
+
+          // Add hash chain columns to AuditLog if they don't exist
+          this.db.run("ALTER TABLE AuditLog ADD COLUMN prev_hash TEXT DEFAULT ''", () => {});
+          this.db.run("ALTER TABLE AuditLog ADD COLUMN integrity_hash TEXT DEFAULT ''", () => {});
+          this.db.run("ALTER TABLE AuditLog ADD COLUMN ip_address TEXT", () => {});
+          this.db.run("ALTER TABLE AuditLog ADD COLUMN data_classification TEXT DEFAULT 'Restricted'", () => {});
+
+          // ====================================================================
+          // Phase 6: Legal & Compliance Tables
+          // ====================================================================
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS Warrants (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              fir_id INTEGER NOT NULL,
+              accused_id INTEGER,
+              warrant_type TEXT NOT NULL,
+              issued_date TEXT NOT NULL,
+              issued_by_court TEXT NOT NULL,
+              executed_date TEXT,
+              status TEXT NOT NULL DEFAULT 'Pending',
+              court_order_id INTEGER,
+              assigned_officer TEXT,
+              notes TEXT
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS CourtOrders (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              fir_id INTEGER NOT NULL,
+              accused_id INTEGER,
+              order_type TEXT NOT NULL,
+              court_name TEXT NOT NULL,
+              judge_name TEXT,
+              order_date TEXT NOT NULL,
+              next_hearing TEXT,
+              status TEXT NOT NULL DEFAULT 'Active',
+              order_summary TEXT,
+              sentence_details TEXT
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS EvidenceChain (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              fir_id INTEGER NOT NULL,
+              evidence_type TEXT NOT NULL,
+              file_hash TEXT NOT NULL,
+              file_name TEXT,
+              description TEXT,
+              uploaded_by TEXT NOT NULL,
+              uploaded_at TEXT NOT NULL DEFAULT (datetime('now')),
+              custody_log TEXT NOT NULL DEFAULT '[]',
+              is_verified INTEGER DEFAULT 0,
+              verification_hash TEXT
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS WitnessStatements (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              fir_id INTEGER NOT NULL,
+              witness_name TEXT NOT NULL,
+              witness_contact TEXT,
+              statement_text TEXT NOT NULL,
+              recorded_by TEXT NOT NULL,
+              recorded_date TEXT NOT NULL DEFAULT (datetime('now')),
+              is_confidential INTEGER DEFAULT 0,
+              statement_hash TEXT
+            )
+          `);
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS BNS_Mapping (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              ipc_section TEXT NOT NULL,
+              bns_section TEXT NOT NULL,
+              description TEXT NOT NULL,
+              category TEXT NOT NULL,
+              max_punishment TEXT,
+              is_cognizable INTEGER DEFAULT 1,
+              is_bailable INTEGER DEFAULT 0
+            )
+          `);
+
+          // ====================================================================
+          // Seed Officer Accounts (Phase 1)
+          // ====================================================================
+          this.db.get("SELECT COUNT(*) as count FROM Officers", (err, row) => {
+            if (!err && row && row.count === 0) {
+              const hashPw = (password) => {
+                const salt = crypto.randomBytes(16).toString('hex');
+                const hash = crypto.createHash('sha256').update(salt + password).digest('hex');
+                return `${salt}:${hash}`;
+              };
+              const officers = [
+                ['INV-1001', 'Meera Nair', 'SI', 'Investigator', 'Bengaluru City', 'Bengaluru City Central PS', hashPw('ksp2026')],
+                ['ANA-2001', 'Priya Sharma', 'DA', 'Analyst', 'Bengaluru City', 'Bengaluru City Central PS', hashPw('ksp2026')],
+                ['SUP-3001', 'Raghavendra K.', 'ACP', 'Supervisor', 'Bengaluru City', 'Bengaluru City Central PS', hashPw('ksp2026')],
+                ['POL-4001', 'Srinivas M.', 'DGP', 'Policymaker', 'Karnataka State', 'DGP Office Bengaluru', hashPw('ksp2026')]
+              ];
+              const stmt = this.db.prepare('INSERT INTO Officers (badge_id, name, rank, role, district, police_station, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)');
+              officers.forEach(o => stmt.run(...o));
+              stmt.finalize();
+              console.log('Default officer accounts seeded successfully.');
+            }
+          });
+
+          // ====================================================================
+          // Seed BNS Mapping Data (Phase 6)
+          // ====================================================================
+          this.db.get("SELECT COUNT(*) as count FROM BNS_Mapping", (err, row) => {
+            if (!err && row && row.count === 0) {
+              try {
+                const bnsPath = path.join(__dirname, '..', '..', 'datastore', 'seed', 'bns_mapping.json');
+                if (fs.existsSync(bnsPath)) {
+                  const bnsData = JSON.parse(fs.readFileSync(bnsPath, 'utf8'));
+                  const stmt = this.db.prepare('INSERT INTO BNS_Mapping (ipc_section, bns_section, description, category, max_punishment, is_cognizable, is_bailable) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                  bnsData.forEach(b => stmt.run(b.ipc, b.bns, b.description, b.category, b.max_punishment, b.cognizable ? 1 : 0, b.bailable ? 1 : 0));
+                  stmt.finalize();
+                  console.log(`BNS mapping seeded: ${bnsData.length} sections.`);
+                }
+              } catch (bnsErr) {
+                console.error('Failed to seed BNS mapping:', bnsErr);
+              }
+            }
+          });
+
           // Seed initial notes if empty
           this.db.get("SELECT COUNT(*) as count FROM SharedNotes", (err, row) => {
             if (!err && row && row.count === 0) {
@@ -117,22 +263,17 @@ class CatalystInstance {
                 { category: 'Data', feature: 'Dataverse', details: 'Synchronized CCTNS regional dataverse schema' }
               ];
               
-              // Seed historical logs spread over the last 30 days
               const seedStmt = this.db.prepare(`
                 INSERT INTO SmartBrowz_Logs (timestamp, category, feature, status, latency_ms, size_kb, details)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
               `);
 
               const now = new Date();
-              
-              // Helper to get ISO string modified by offset
               const offsetDate = (hoursAgo) => {
                 const d = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
                 return d.toISOString().replace('T', ' ').substring(0, 19);
               };
 
-              // Let's generate ~60 logs spanning 30 days
-              // We'll generate more logs in the last 24 hours (e.g. 25 logs)
               for (let h = 0.5; h <= 24; h += 1) {
                 const feat = features[Math.floor(Math.random() * features.length)];
                 const status = Math.random() > 0.05 ? 'SUCCESS' : 'FAILED';
@@ -140,10 +281,7 @@ class CatalystInstance {
                 const size = feat.category === 'Convert' ? 20 + Math.floor(Math.random() * 150) : null;
                 seedStmt.run(offsetDate(h), feat.category, feat.feature, status, latency, size, feat.details);
               }
-
-              // Days 2 to 7 (e.g., 20 logs)
               for (let d = 2; d <= 7; d++) {
-                // 3 logs per day
                 for (let i = 0; i < 3; i++) {
                   const feat = features[Math.floor(Math.random() * features.length)];
                   const status = Math.random() > 0.08 ? 'SUCCESS' : 'FAILED';
@@ -153,10 +291,7 @@ class CatalystInstance {
                   seedStmt.run(offsetDate(hoursAgo), feat.category, feat.feature, status, latency, size, feat.details);
                 }
               }
-
-              // Days 8 to 30 (e.g., 23 logs)
               for (let d = 8; d <= 30; d++) {
-                // 1 log per day
                 const feat = features[Math.floor(Math.random() * features.length)];
                 const status = Math.random() > 0.1 ? 'SUCCESS' : 'FAILED';
                 const latency = status === 'SUCCESS' ? 300 + Math.floor(Math.random() * 1200) : 2000 + Math.floor(Math.random() * 3000);
@@ -202,52 +337,54 @@ class CatalystInstance {
         const f = fromLang.toLowerCase();
         const t = toLang.toLowerCase();
         
-        // Simple English to Kannada word-based mockup translation
+        // Expanded police/legal Kannada dictionary (~100+ essential terms)
         const enToKn = {
-          "where": "ಎಲ್ಲಿ (Where)",
-          "crime": "ಅಪರಾಧ (Crime)",
-          "cyber": "ಸೈಬರ್ (Cyber)",
-          "theft": "ಕಳ್ಳತನ (Theft)",
-          "fraud": "ವಂಚನೆ (Fraud)",
-          "organized": "ಸಂಘಟಿತ (Organized)",
-          "bengaluru": "ಬೆಂಗಳೂರು (Bengaluru)",
-          "mysuru": "ಮೈಸೂರು (Mysuru)",
-          "hubli": "ಹುಬ್ಬಳ್ಳಿ (Hubli)",
-          "mangaluru": "ಮಂಗಳೂರು (Mangaluru)",
-          "belagavi": "ಬೆಳಗಾವಿ (Belagavi)",
-          "accused": "ಆರೋಪಿ (Accused)",
-          "victim": "ಸಂತ್ರಸ್ತ (Victim)",
-          "police": "ಪೊಲೀಸ್ (Police)",
-          "station": "ಠಾಣೆ (Station)",
-          "risk": "ಅಪಾಯ (Risk)",
-          "score": "ಅಂಕ (Score)",
-          "show": "ತೋರಿಸಿ (Show)",
-          "map": "ನಕ್ಷೆ (Map)",
-          "history": "ಇತಿಹಾಸ (History)"
+          // Core Police Terms
+          "where": "ಎಲ್ಲಿ", "crime": "ಅಪರಾಧ", "cyber": "ಸೈಬರ್", "theft": "ಕಳ್ಳತನ",
+          "fraud": "ವಂಚನೆ", "organized": "ಸಂಘಟಿತ", "accused": "ಆರೋಪಿ",
+          "victim": "ಸಂತ್ರಸ್ತ", "police": "ಪೊಲೀಸ್", "station": "ಠಾಣೆ",
+          "risk": "ಅಪಾಯ", "score": "ಅಂಕ", "show": "ತೋರಿಸಿ", "map": "ನಕ್ಷೆ",
+          "history": "ಇತಿಹಾಸ", "murder": "ಕೊಲೆ", "robbery": "ದರೋಡೆ",
+          "assault": "ಹಲ್ಲೆ", "kidnapping": "ಅಪಹರಣ", "arrest": "ಬಂಧನ",
+          "bail": "ಜಾಮೀನು", "warrant": "ವಾರಂಟ್", "evidence": "ಸಾಕ್ಷ್ಯ",
+          "witness": "ಸಾಕ್ಷಿ", "court": "ನ್ಯಾಯಾಲಯ", "judge": "ನ್ಯಾಯಾಧೀಶ",
+          "investigation": "ತನಿಖೆ", "complaint": "ದೂರು", "charge": "ಆರೋಪ",
+          "conviction": "ಶಿಕ್ಷೆ", "acquittal": "ಖುಲಾಸೆ", "sentence": "ಶಿಕ್ಷೆ",
+          "imprisonment": "ಸೆರೆವಾಸ", "fine": "ದಂಡ", "parole": "ಪೆರೋಲ್",
+          "remand": "ನ್ಯಾಯಾಂಗ ಬಂಧನ", "suspect": "ಶಂಕಿತ", "informant": "ಮಾಹಿತಿದಾರ",
+          "patrol": "ಗಸ್ತು", "raid": "ದಾಳಿ", "seizure": "ವಶಪಡಿಸಿಕೊಳ್ಳುವಿಕೆ",
+          "forensic": "ವಿಧಿವಿಜ್ಞಾನ", "autopsy": "ಮರಣೋತ್ತರ ಪರೀಕ್ಷೆ",
+          "fingerprint": "ಬೆರಳಚ್ಚು", "dna": "ಡಿಎನ್ಎ", "weapon": "ಆಯುಧ",
+          "firearm": "ಬಂದೂಕು", "drug": "ಮಾದಕ ವಸ್ತು", "smuggling": "ಕಳ್ಳಸಾಗಣೆ",
+          "extortion": "ಸುಲಿಗೆ", "bribery": "ಲಂಚ", "corruption": "ಭ್ರಷ್ಟಾಚಾರ",
+          "gang": "ಗ್ಯಾಂಗ್", "syndicate": "ಸಿಂಡಿಕೇಟ್", "network": "ಜಾಲ",
+          "district": "ಜಿಲ್ಲೆ", "superintendent": "ಅಧೀಕ್ಷಕ", "inspector": "ಇನ್ಸ್ಪೆಕ್ಟರ್",
+          "constable": "ಕಾನ್ಸ್ಟೇಬಲ್", "commissioner": "ಆಯುಕ್ತ",
+          "report": "ವರದಿ", "statement": "ಹೇಳಿಕೆ", "confession": "ತಪ್ಪೊಪ್ಪಿಗೆ",
+          "search": "ಹುಡುಕಾಟ", "surveillance": "ಕಣ್ಗಾವಲು", "intelligence": "ಗುಪ್ತಚರ",
+          "alert": "ಎಚ್ಚರಿಕೆ", "warning": "ಎಚ್ಚರಿಕೆ", "danger": "ಅಪಾಯ",
+          "safe": "ಸುರಕ್ಷಿತ", "emergency": "ತುರ್ತು", "help": "ಸಹಾಯ",
+          "law": "ಕಾನೂನು", "order": "ಆದೇಶ", "section": "ಸೆಕ್ಷನ್",
+          "offense": "ಅಪರಾಧ", "criminal": "ಅಪರಾಧಿ", "case": "ಪ್ರಕರಣ",
+          "file": "ಕಡತ", "register": "ನೋಂದಣಿ", "transfer": "ವರ್ಗಾವಣೆ",
+          "prison": "ಕಾರಾಗೃಹ", "jail": "ಜೈಲು", "hearing": "ವಿಚಾರಣೆ",
+          "trial": "ವಿಚಾರಣೆ", "appeal": "ಮೇಲ್ಮನವಿ", "petition": "ಅರ್ಜಿ",
+          // Karnataka Places
+          "bengaluru": "ಬೆಂಗಳೂರು", "mysuru": "ಮೈಸೂರು", "hubli": "ಹುಬ್ಬಳ್ಳಿ",
+          "mangaluru": "ಮಂಗಳೂರು", "belagavi": "ಬೆಳಗಾವಿ", "dharwad": "ಧಾರವಾಡ",
+          "gulbarga": "ಗುಲ್ಬರ್ಗಾ", "karnataka": "ಕರ್ನಾಟಕ",
+          // Common Action Words
+          "find": "ಹುಡುಕಿ", "get": "ಪಡೆಯಿರಿ", "tell": "ಹೇಳಿ", "give": "ಕೊಡಿ",
+          "open": "ತೆರೆಯಿರಿ", "close": "ಮುಚ್ಚಿ", "start": "ಪ್ರಾರಂಭಿಸಿ",
+          "stop": "ನಿಲ್ಲಿಸಿ", "yes": "ಹೌದು", "no": "ಇಲ್ಲ",
+          // Numbers & Time
+          "today": "ಇಂದು", "yesterday": "ನಿನ್ನೆ", "tomorrow": "ನಾಳೆ",
+          "month": "ತಿಂಗಳು", "year": "ವರ್ಷ", "total": "ಒಟ್ಟು"
         };
 
-        const knToEn = {
-          "ಎಲ್ಲಿ": "where",
-          "ಅಪರಾಧ": "crime",
-          "ಸೈಬರ್": "cyber",
-          "ಕಳ್ಳತನ": "theft",
-          "ವಂಚನೆ": "fraud",
-          "ಸಂಘಟಿತ": "organized",
-          "ಬೆಂಗಳೂರು": "bengaluru",
-          "ಮೈಸೂರು": "mysuru",
-          "ಹುಬ್ಬಳ್ಳಿ": "hubli",
-          "ಮಂಗಳೂರು": "mangaluru",
-          "ಬೆಳಗಾವಿ": "belagavi",
-          "ಆರೋಪಿ": "accused",
-          "ಸಂತ್ರಸ್ತ": "victim",
-          "ಪೊಲೀಸ್": "police",
-          "ಠಾಣೆ": "station",
-          "ಅಪಾಯ": "risk",
-          "ಅಂಕ": "score",
-          "ತೋರಿಸಿ": "show",
-          "ನಕ್ಷೆ": "map",
-          "ಇತಿಹಾಸ": "history"
-        };
+        // Build reverse mapping automatically
+        const knToEn = {};
+        Object.entries(enToKn).forEach(([en, kn]) => { knToEn[kn] = en; });
 
         if (f === 'en' && t === 'kn') {
           const words = text.toLowerCase().split(/\s+/);
@@ -256,7 +393,6 @@ class CatalystInstance {
         }
         
         if (f === 'kn' && t === 'en') {
-          // If user type in Kannada, map keywords to English for the parser to understand
           const words = text.split(/\s+/);
           const translated = words.map(w => knToEn[w] || w).join(' ');
           return translated;
@@ -265,11 +401,9 @@ class CatalystInstance {
         return text;
       },
       speechToText: async () => {
-        // Return a default voice transcription
         return "Show me cyber crime incidents in Bengaluru City";
       },
       textToSpeech: async (text) => {
-        // Return base64 voice mock (a small beep or silent wave data)
         return "UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA";
       }
     };

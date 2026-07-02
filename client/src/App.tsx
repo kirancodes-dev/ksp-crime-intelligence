@@ -7,6 +7,7 @@ import { SmartBrowzDashboard } from './pages/SmartBrowzDashboard';
 import { LoginScreen } from './components/LoginScreen/LoginScreen';
 import { CollaborativeWorkspace } from './components/CollaborativeWorkspace/CollaborativeWorkspace';
 import { Clock, UserCheck, LogOut, RefreshCw, Database, ShieldAlert } from 'lucide-react';
+import { api } from './services/api';
 import './App.css';
 
 type UserRole = 'Investigator' | 'Analyst' | 'Supervisor' | 'Policymaker';
@@ -145,40 +146,48 @@ function App() {
     localStorage.removeItem('ksp_user_id');
     localStorage.removeItem('ksp_user_role');
     localStorage.removeItem('ksp_mfa_verified');
+    localStorage.removeItem('ksp_jwt_token');
   };
 
-  const startSyncSimulation = () => {
+  const startRealSync = async () => {
     setIsSyncing(true);
-    setSyncProgress(0);
-    setSyncLogs([]);
+    setSyncProgress(10);
+    setSyncLogs(["[INFO] Handshake request dispatched to CCTNS main frame..."]);
     
-    const logs = [
-      "[INFO] Handshake request dispatched to CCTNS main frame...",
-      "[INFO] Connection approved. Establishing secure end-to-end tunnel...",
-      "[INFO] Querying Karnataka State database for new incident logs...",
-      "[SUCCESS] Found 14 new incidents in Bengaluru City.",
-      "[SUCCESS] Ingested 3 financial hawala transactions for organized crimes.",
-      "[INFO] Ingesting Mysuru and Mangaluru district criminal registry...",
-      "[SUCCESS] Ingested 8 minor theft records and 4 cyber offences.",
-      "[INFO] Re-training Zia AutoML recidivism risk parameters...",
-      "[SUCCESS] Re-trained risk evaluations on 18 recidivists.",
-      "[SUCCESS] System sync complete. Local datastore is 100% updated."
-    ];
-    
-    logs.forEach((log, idx) => {
-      setTimeout(() => {
-        setSyncLogs(prev => [...prev, log]);
-        setSyncProgress(Math.round(((idx + 1) / logs.length) * 100));
-        
-        if (idx === logs.length - 1) {
-          setIsSyncing(false);
-        }
-      }, (idx + 1) * 700);
-    });
+    try {
+      setSyncProgress(30);
+      setSyncLogs(prev => [...prev, "[INFO] Establishing secure end-to-end tunnel..."]);
+      
+      const res = await api.triggerCctnsSync('Manual', userId || 'INV-1001', activeRole || 'Investigator');
+      
+      setSyncProgress(70);
+      setSyncLogs(prev => [...prev, `[INFO] Synchronizing records... Status: ${res.job.status}`]);
+      
+      if (res.success) {
+        setSyncProgress(100);
+        setSyncLogs(prev => [
+          ...prev,
+          `[SUCCESS] Sync complete: ${res.job.records_ingested} records/warrants ingested.`,
+          `[INFO] Mode: ${res.job.mode}. Latency: ${res.job.latency_ms}ms.`
+        ]);
+      } else {
+        setSyncProgress(100);
+        setSyncLogs(prev => [
+          ...prev,
+          `[ERROR] Sync failed.`,
+          ...(res.job.errors || [])
+        ]);
+      }
+    } catch (err: any) {
+      setSyncProgress(100);
+      setSyncLogs(prev => [...prev, `[ERROR] Connection failed: ${err.message}`]);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
-  // Switch to Login screen if not authenticated or role is invalid
-  if (!userId || !activeRole || !mfaVerified || !ROLE_LABELS[activeRole]) {
+  // Switch to Login screen if not authenticated, role is invalid, or JWT token is missing
+  if (!userId || !activeRole || !mfaVerified || !ROLE_LABELS[activeRole] || !localStorage.getItem('ksp_jwt_token')) {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
@@ -275,7 +284,7 @@ function App() {
           <button
             onClick={() => {
               setShowSyncModal(true);
-              startSyncSimulation();
+              startRealSync();
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-lg text-xs font-bold transition cursor-pointer"
           >

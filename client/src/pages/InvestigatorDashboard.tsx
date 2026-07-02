@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import { ChatInterface } from '../components/ChatInterface/ChatInterface';
 import { FinancialFlowGraph } from '../components/Visualizations/FinancialFlowGraph';
 import { SimilarCasesCard } from '../components/Visualizations/SimilarCasesCard';
-import { FileText, Search, User, ShieldAlert, CheckCircle, Clock, AlertTriangle, Landmark, Layers, Printer, Download, Shield, UploadCloud, Fingerprint, Languages, Pin } from 'lucide-react';
+import { FileText, Search, User, ShieldAlert, CheckCircle, Clock, AlertTriangle, Landmark, Layers, Printer, Download, Shield, UploadCloud, Fingerprint, Languages, Pin, Scale } from 'lucide-react';
 
 interface InvestigatorDashboardProps {
   userId: string;
@@ -28,11 +28,33 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
   const [selectedMugshot, setSelectedMugshot] = useState<string | null>(null);
 
   // Phase 2 Tabs and Data States
-  const [activeTab, setActiveTab] = useState<'summary' | 'financial' | 'similar'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'financial' | 'similar' | 'legal'>('summary');
   const [financialData, setFinancialData] = useState<any>(null);
   const [similarData, setSimilarData] = useState<any>(null);
   const [financialLoading, setFinancialLoading] = useState(false);
   const [similarLoading, setSimilarLoading] = useState(false);
+
+  // Legal Compliance Integration States
+  const [courtData, setCourtData] = useState<any>(null);
+  const [prisonData, setPrisonData] = useState<Record<number, any>>({});
+  const [evidenceData, setEvidenceData] = useState<any>(null);
+  const [legalLoading, setLegalLoading] = useState(false);
+  const [evidenceRegistering, setEvidenceRegistering] = useState(false);
+  
+  // Register Evidence Form States
+  const [newEvType, setNewEvType] = useState<'photograph' | 'video' | 'document' | 'forensic'>('photograph');
+  const [newEvName, setNewEvName] = useState('');
+  const [newEvDesc, setNewEvDesc] = useState('');
+  const [newEvHash, setNewEvHash] = useState('');
+
+  // Verify Hash States
+  const [verifyEvId, setVerifyEvId] = useState<number | null>(null);
+  const [verifyEvHash, setVerifyEvHash] = useState('');
+  const [verifyResult, setVerifyResult] = useState<any>(null);
+
+  // BNS Section mapping search
+  const [bnsIpcInput, setBnsIpcInput] = useState('');
+  const [bnsResult, setBnsResult] = useState<any>(null);
 
   useEffect(() => {
     if (selectedFirNumber) {
@@ -90,11 +112,107 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
     }
   };
 
+  const fetchLegalAndEvidence = async () => {
+    if (!caseDetails) return;
+    setLegalLoading(true);
+    try {
+      const courtRes = await api.getCourtStatus(caseDetails.fir_number);
+      if (courtRes.success) {
+        setCourtData(courtRes);
+      }
+
+      const prisonStatuses: Record<number, any> = {};
+      if (caseDetails.accused) {
+        for (const acc of caseDetails.accused) {
+          const prisonRes = await api.getPrisonStatus(acc.id);
+          if (prisonRes.success) {
+            prisonStatuses[acc.id] = prisonRes;
+          }
+        }
+      }
+      setPrisonData(prisonStatuses);
+
+      const evidenceRes = await api.getEvidenceChain(caseDetails.id);
+      if (evidenceRes.success) {
+        setEvidenceData(evidenceRes);
+      }
+    } catch (err) {
+      console.error('Failed to retrieve legal or evidence logs:', err);
+    } finally {
+      setLegalLoading(false);
+    }
+  };
+
+  const handleRegisterEvidence = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!caseDetails || !newEvName || !newEvHash) {
+      alert("Please fill in file name and SHA-256 hash.");
+      return;
+    }
+    setEvidenceRegistering(true);
+    try {
+      const res = await api.registerEvidence(
+        caseDetails.id,
+        newEvType,
+        newEvHash.trim(),
+        newEvName.trim(),
+        newEvDesc.trim()
+      );
+      if (res.success) {
+        alert("Evidence successfully registered with digital chain-of-custody (BSA Sec 63 compliant).");
+        setNewEvName('');
+        setNewEvDesc('');
+        setNewEvHash('');
+        const evidenceRes = await api.getEvidenceChain(caseDetails.id);
+        if (evidenceRes.success) {
+          setEvidenceData(evidenceRes);
+        }
+      } else {
+        alert("Failed to register evidence.");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to register evidence.");
+    } finally {
+      setEvidenceRegistering(false);
+    }
+  };
+
+  const handleVerifyEvidence = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyEvId || !verifyEvHash) {
+      alert("Select evidence and provide the file hash to verify.");
+      return;
+    }
+    try {
+      const res = await api.verifyEvidence(verifyEvId, verifyEvHash.trim());
+      setVerifyResult(res);
+    } catch (err: any) {
+      alert(err.message || "Failed to verify evidence integrity.");
+    }
+  };
+
+  const handleTranslateBns = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bnsIpcInput) return;
+    try {
+      const res = await api.translateBns(bnsIpcInput.trim());
+      if (res.success) {
+        setBnsResult(res.mapping);
+      } else {
+        setBnsResult({ error: 'Section mapping not found.' });
+      }
+    } catch (err: any) {
+      setBnsResult({ error: err.message || 'Lookup failed.' });
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'financial') {
       fetchFinancialTrail();
     } else if (activeTab === 'similar') {
       fetchSimilarCases();
+    } else if (activeTab === 'legal') {
+      fetchLegalAndEvidence();
     }
   }, [activeTab, caseDetails]);
 
@@ -339,6 +457,16 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                   }`}
                 >
                   <Layers size={12} /> Similar Cases
+                </button>
+                <button
+                  onClick={() => setActiveTab('legal')}
+                  className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
+                    activeTab === 'legal'
+                      ? 'border-brand-primary text-white bg-slate-950/40'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Scale size={12} className="text-amber-400" /> Legal &amp; Evidence
                 </button>
               </div>
 
@@ -610,6 +738,308 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                         <Layers size={32} className="text-slate-700" />
                         <p>No similar cases identified in the database.</p>
                       </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'legal' && (
+                  <div className="space-y-6 text-slate-300 text-xs leading-relaxed print:hidden">
+                    {legalLoading ? (
+                      <div className="flex flex-col items-center justify-center py-10 text-slate-400 text-xs gap-3">
+                        <LoaderIcon className="animate-spin text-brand-primary" size={24} />
+                        <span>Fetching legal records and custody logs...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* 1. e-Courts Portal */}
+                        <div className="border border-slate-800 bg-slate-900/20 rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+                            <span className="font-extrabold uppercase text-brand-gold">e-Courts Case Tracking</span>
+                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">Karnataka Judiciary</span>
+                          </div>
+                          {courtData && courtData.icjs_court ? (
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <span className="text-slate-500 uppercase text-[10px] block">Court Name</span>
+                                <strong className="text-white">{courtData.icjs_court.name}</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 uppercase text-[10px] block">Case Number</span>
+                                <strong className="text-white font-mono">{courtData.icjs_court.case_number}</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 uppercase text-[10px] block">Presiding Judge</span>
+                                <strong className="text-white">{courtData.icjs_court.judge}</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 uppercase text-[10px] block">Next Hearing Date</span>
+                                <strong className="text-brand-primary">{courtData.icjs_court.next_hearing}</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 uppercase text-[10px] block">Court Status</span>
+                                <strong className="text-emerald-400">{courtData.icjs_court.status}</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 uppercase text-[10px] block">Charges Framed</span>
+                                <strong className="text-white">{courtData.icjs_court.charges_framed ? 'Yes' : 'No'}</strong>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-slate-500 italic">No e-Courts case status found on record.</p>
+                          )}
+
+                          {/* Local court orders */}
+                          {courtData && courtData.local_orders && courtData.local_orders.length > 0 && (
+                            <div className="pt-2 border-t border-slate-855 space-y-1.5">
+                              <span className="text-[10px] uppercase font-bold text-slate-405 block">Court Order History</span>
+                              <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
+                                {courtData.local_orders.map((order: any) => (
+                                  <div key={order.id} className="bg-slate-950/40 p-2 rounded border border-slate-850 flex justify-between items-center text-[10px]">
+                                    <div>
+                                      <strong className="text-slate-200">{order.order_type}</strong>
+                                      <span className="text-slate-500 block">{order.order_summary}</span>
+                                    </div>
+                                    <span className="text-slate-400 font-mono">{order.order_date}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 2. e-Prisons Custody Tracking */}
+                        <div className="border border-slate-800 bg-slate-900/20 rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between border-b border-slate-855 pb-2">
+                            <span className="font-extrabold uppercase text-brand-gold">e-Prisons Custody Ledger</span>
+                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">Prison Department</span>
+                          </div>
+                          <div className="space-y-2">
+                            {caseDetails.accused && caseDetails.accused.map((acc: any) => {
+                              const prisonInfo = prisonData[acc.id];
+                              return (
+                                <div key={acc.id} className="bg-slate-950/50 p-3 rounded-lg border border-slate-850 space-y-2">
+                                  <div className="flex justify-between items-center">
+                                    <strong className="text-white text-xs">{acc.name}</strong>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                      prisonInfo?.status === 'Incarcerated' 
+                                        ? 'bg-red-950/40 text-red-400 border-red-900/50' 
+                                        : 'bg-emerald-950/40 text-emerald-400 border-emerald-900/50'
+                                    }`}>
+                                      {prisonInfo?.status || 'Unknown'}
+                                    </span>
+                                  </div>
+                                  {prisonInfo && prisonInfo.prison ? (
+                                    <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400">
+                                      <span>Prison: <strong className="text-slate-200">{prisonInfo.prison.name}</strong></span>
+                                      <span>Prisoner ID: <strong className="text-slate-200 font-mono">{prisonInfo.prison.prisoner_id}</strong></span>
+                                      <span>Ward: <strong className="text-slate-200">{prisonInfo.prison.ward}</strong></span>
+                                      <span>Parole: <strong className="text-slate-200">{prisonInfo.prison.next_parole_date}</strong></span>
+                                      <span>Bail Status: <strong className="text-slate-200">{prisonInfo.bail_status}</strong></span>
+                                      <span>Behavior: <strong className="text-slate-200">{prisonInfo.prison.behavior_rating}</strong></span>
+                                    </div>
+                                  ) : (
+                                    <p className="text-[10px] text-slate-500 italic">Bail Status: {prisonInfo?.bail_status || 'Checking registry...'}</p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* 3. Evidence Vault */}
+                        <div className="border border-slate-800 bg-slate-900/20 rounded-lg p-4 space-y-4">
+                          <div className="flex items-center justify-between border-b border-slate-855 pb-2">
+                            <span className="font-extrabold uppercase text-brand-gold">Digital Evidence Vault (BSA Sec 63)</span>
+                            <span className="text-[10px] bg-red-955/40 text-red-400 px-2 py-0.5 rounded font-mono border border-red-900/30">Immutable Ledger</span>
+                          </div>
+
+                          {/* List Registered Evidence */}
+                          {evidenceData && evidenceData.evidence && evidenceData.evidence.length > 0 ? (
+                            <div className="space-y-2">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 block">Registered Evidence Files</span>
+                              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                                {evidenceData.evidence.map((ev: any) => (
+                                  <div key={ev.id} className="bg-slate-950/50 p-2 rounded border border-slate-850 text-[10px] space-y-1">
+                                    <div className="flex justify-between items-center">
+                                      <strong className="text-white">{ev.file_name} ({ev.evidence_type})</strong>
+                                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                        ev.is_verified === 1 
+                                          ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/30' 
+                                          : 'bg-red-955/40 text-red-400 border border-red-900/30'
+                                      }`}>
+                                        {ev.is_verified === 1 ? 'Verified Intact' : 'Untrusted/Compromised'}
+                                      </span>
+                                    </div>
+                                    <div className="text-slate-400 truncate font-mono text-[9px]">SHA256: {ev.file_hash}</div>
+                                    <div className="text-slate-500 text-[9px] flex justify-between">
+                                      <span>Uploaded by: {ev.uploaded_by}</span>
+                                      <span>Date: {new Date(ev.uploaded_at).toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-slate-500 italic">No registered digital evidence records found for this FIR.</p>
+                          )}
+
+                          {/* Register Evidence Form */}
+                          <form onSubmit={handleRegisterEvidence} className="space-y-3 bg-slate-955/30 border border-slate-850 p-3 rounded-lg">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block border-b border-slate-850 pb-1">Register New Electronic Record</span>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[9px] text-slate-500 uppercase font-semibold">Evidence Type</label>
+                                <select
+                                  value={newEvType}
+                                  onChange={(e: any) => setNewEvType(e.target.value)}
+                                  className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary"
+                                >
+                                  <option value="photograph">Photograph</option>
+                                  <option value="video">Video Recording</option>
+                                  <option value="document">Electronic Document</option>
+                                  <option value="forensic">Forensic Report</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[9px] text-slate-500 uppercase font-semibold">File Name</label>
+                                <input
+                                  type="text"
+                                  value={newEvName}
+                                  onChange={(e) => setNewEvName(e.target.value)}
+                                  placeholder="cctv_footage.mp4"
+                                  className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="block text-[9px] text-slate-500 uppercase font-semibold">SHA-256 Checksum Hash</label>
+                              <input
+                                type="text"
+                                value={newEvHash}
+                                onChange={(e) => setNewEvHash(e.target.value)}
+                                placeholder="8f3c7763c5e3a893db... (64 hex characters)"
+                                className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary font-mono"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="block text-[9px] text-slate-500 uppercase font-semibold">Description</label>
+                              <input
+                                type="text"
+                                value={newEvDesc}
+                                onChange={(e) => setNewEvDesc(e.target.value)}
+                                placeholder="Details of capture location/context..."
+                                className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary"
+                              />
+                            </div>
+
+                            <button
+                              type="submit"
+                              disabled={evidenceRegistering}
+                              className="w-full py-1.5 bg-brand-primary hover:bg-brand-primary-light disabled:opacity-50 text-white rounded text-[10px] font-bold cursor-pointer transition text-center shadow"
+                            >
+                              {evidenceRegistering ? 'Signing Ledger...' : 'Secure & Register Electronic Evidence'}
+                            </button>
+                          </form>
+
+                          {/* Verify Evidence Form */}
+                          <form onSubmit={handleVerifyEvidence} className="space-y-3 bg-slate-955/30 border border-slate-850 p-3 rounded-lg">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block border-b border-slate-850 pb-1">Verify File Integrity</span>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[9px] text-slate-500 uppercase font-semibold">Select Evidence</label>
+                                <select
+                                  value={verifyEvId || ''}
+                                  onChange={(e: any) => setVerifyEvId(Number(e.target.value))}
+                                  className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary"
+                                >
+                                  <option value="">-- Choose File --</option>
+                                  {evidenceData?.evidence?.map((ev: any) => (
+                                    <option key={ev.id} value={ev.id}>{ev.file_name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[9px] text-slate-500 uppercase font-semibold">Verify Hash</label>
+                                <input
+                                  type="text"
+                                  value={verifyEvHash}
+                                  onChange={(e) => setVerifyEvHash(e.target.value)}
+                                  placeholder="SHA-256 hash value..."
+                                  className="bg-slate-900 border border-slate-800 text-[10px] text-slate-202 rounded p-1 w-full focus:outline-none focus:border-brand-primary font-mono"
+                                />
+                              </div>
+                            </div>
+
+                            <button
+                              type="submit"
+                              className="w-full py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-300 border border-slate-800 rounded text-[10px] font-bold cursor-pointer transition text-center"
+                            >
+                              Execute Cryptographic Verification
+                            </button>
+
+                            {verifyResult && (
+                              <div className={`p-2 rounded text-[10px] font-bold border ${
+                                verifyResult.match 
+                                  ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30' 
+                                  : 'bg-red-955/40 text-red-400 border-red-900/30'
+                              }`}>
+                                {verifyResult.match 
+                                  ? '✅ MATCHED: File hash matches digital signature. Integrity verified.' 
+                                  : '⚠️ WARNING: Hash mismatch! File has been modified or tampered with.'}
+                              </div>
+                            )}
+                          </form>
+                        </div>
+
+                        {/* 4. BNS Section mapping tool */}
+                        <div className="border border-slate-800 bg-slate-900/20 rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between border-b border-slate-855 pb-2">
+                            <span className="font-extrabold uppercase text-brand-gold">BNS Compliance Mapping Registry</span>
+                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">BNS 2023 Converter</span>
+                          </div>
+
+                          <form onSubmit={handleTranslateBns} className="flex gap-2">
+                            <input
+                              type="text"
+                              value={bnsIpcInput}
+                              onChange={(e) => setBnsIpcInput(e.target.value)}
+                              placeholder="Enter IPC section (e.g. 302, 420)"
+                              className="bg-slate-900 border border-slate-800 focus:border-brand-primary focus:outline-none rounded px-2.5 py-1 text-[10px] text-slate-202 placeholder-slate-600 w-full"
+                            />
+                            <button
+                              type="submit"
+                              className="px-3 py-1 bg-brand-primary hover:bg-brand-primary-light text-white text-[10px] font-bold rounded cursor-pointer transition shrink-0"
+                            >
+                              Translate
+                            </button>
+                          </form>
+
+                          {bnsResult && (
+                            <div className="bg-slate-950/50 p-2.5 rounded border border-slate-850 text-[10px] space-y-1 text-slate-350">
+                              {bnsResult.error ? (
+                                <span className="text-red-450 font-bold">{bnsResult.error}</span>
+                              ) : (
+                                <>
+                                  <div>
+                                    IPC Section: <strong className="text-white">Sec {bnsResult.ipc_section}</strong> &rarr; BNS Section: <strong className="text-brand-gold">Sec {bnsResult.bns_section}</strong>
+                                  </div>
+                                  <div>Category: <strong className="text-white">{bnsResult.category}</strong></div>
+                                  <div>Description: <span className="text-slate-400">{bnsResult.description}</span></div>
+                                  <div>Max Punishment: <strong className="text-slate-200">{bnsResult.max_punishment}</strong></div>
+                                  <div className="flex gap-4 pt-1 font-semibold text-[9px] uppercase">
+                                    <span className={bnsResult.is_cognizable === 1 ? 'text-emerald-400' : 'text-slate-450'}>Cognizable: {bnsResult.is_cognizable === 1 ? 'Yes' : 'No'}</span>
+                                    <span className={bnsResult.is_bailable === 1 ? 'text-emerald-400' : 'text-red-400'}>Bailable: {bnsResult.is_bailable === 1 ? 'Yes' : 'No'}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 )}

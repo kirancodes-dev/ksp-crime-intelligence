@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday My Love 💖</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-inner">
+            <div class="preloader-ring"></div>
+            <div class="preloader-ring"></div>
+            <div class="preloader-ring"></div>
+            <div class="preloader-heart">💝</div>
+        </div>
+        <p class="preloader-text">Preparing something special...</p>
+        <div class="preloader-progress">
+            <div class="preloader-bar" id="preloaderBar"></div>
+        </div>
+    </div>
+
+    <!-- Starfield Canvas -->
+    <canvas id="starCanvas"></canvas>
+
+    <!-- Aurora Background -->
+    <div class="aurora-container">
+        <div class="aurora aurora-1"></div>
+        <div class="aurora aurora-2"></div>
+        <div class="aurora aurora-3"></div>
+    </div>
+
+    <!-- Floating Hearts -->
+    <div class="hearts-container" id="heartsContainer"></div>
+
+    <!-- Progress Bar -->
+    <div class="top-progress" id="topProgress">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Music Toggle -->
+    <button class="music-toggle" id="musicToggle" title="Toggle Music">
+        <div class="music-bars">
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </button>
+
+    <!-- Navigation Dots -->
+    <div class="nav-dots" id="navDots">
+        <span class="dot active" data-slide="0"><span class="dot-label">Welcome</span></span>
+        <span class="dot" data-slide="1"><span class="dot-label">Gift</span></span>
+        <span class="dot" data-slide="2"><span class="dot-label">Memories</span></span>
+        <span class="dot" data-slide="3"><span class="dot-label">Gallery</span></span>
+        <span class="dot" data-slide="4"><span class="dot-label">Letter</span></span>
+        <span class="dot" data-slide="5"><span class="dot-label">Reasons</span></span>
+        <span class="dot" data-slide="6"><span class="dot-label">Journey</span></span>
+        <span class="dot" data-slide="7"><span class="dot-label">Poem</span></span>
+        <span class="dot" data-slide="8"><span class="dot-label">Cake</span></span>
+        <span class="dot" data-slide="9"><span class="dot-label">Forever</span></span>
+    </div>
+
+    <!-- Arrow Navigation -->
+    <button class="nav-arrow nav-prev" id="prevBtn" aria-label="Previous slide">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+    </button>
+    <button class="nav-arrow nav-next" id="nextBtn" aria-label="Next slide">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+    </button>
+
+    <!-- Slide Counter -->
+    <div class="slide-counter" id="slideCounter">
+        <span class="current-num">01</span>
+        <span class="counter-divider">/</span>
+        <span class="total-num">10</span>
+    </div>
+
+    <!-- ==================== SLIDES ==================== -->
+    <div class="slider-wrapper" id="sliderWrapper">
+
+        <!-- SLIDE 1: Grand Opening -->
+        <section class="slide slide-1 active" data-index="0">
+            <div class="slide-content">
+                <div class="sparkle-field" id="sparkleField"></div>
+                <div class="title-container">
+                    <div class="greeting-tag animate-in">✦ A SPECIAL DAY ✦</div>
+                    <h1 class="grand-title animate-in delay-1">
+                        <span class="typewriter-line">Happy</span>
+                        <span class="typewriter-line title-accent">Birthday</span>
+                        <span class="typewriter-line">My Love</span>
+                    </h1>
+                    <div class="heart-divider animate-in delay-2">
+                        <span class="divider-line"></span>
+                        <span class="beating-heart">💖</span>
+                        <span class="divider-line"></span>
+                    </div>
+                    <p class="subtitle animate-in delay-3">Today the world celebrates you ✨</p>
+                    <div class="cta-container animate-in delay-4">
+                        <button class="cta-btn" id="startJourney">
+                            <span>Begin Your Surprise</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="floating-decor">
+                    <div class="float-item f1">🎂</div>
+                    <div class="float-item f2">🎁</div>
+                    <div class="float-item f3">🎈</div>
+                    <div class="float-item f4">🥂</div>
+                    <div class="float-item f5">💫</div>
+                    <div class="float-item f6">🌹</div>
+                    <div class="float-item f7">🦋</div>
+                    <div class="float-item f8">⭐</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 2: Gift Box -->
+        <section class="slide slide-2" data-index="1">
+            <div class="slide-content">
+                <h2 class="section-title animate-in">A Gift For You</h2>
+                <div class="gift-scene animate-in delay-1">
+                    <div class="gift-box" id="giftBox">
+                        <div class="gift-lid" id="giftLid">
+                            <div class="gift-bow">
+                                <div class="bow-left"></div>
+                                <div class="bow-right"></div>
+                                <div class="bow-knot"></div>
+                            </div>
+                        </div>
+                        <div class="gift-body">
+                            <div class="gift-ribbon-v"></div>
+                            <div class="gift-ribbon-h"></div>
+                            <div class="gift-pattern"></div>
+                        </div>
+                        <div class="gift-shadow"></div>
+                    </div>
+                    <button class="open-gift-btn" id="openGiftBtn">
+                        <span>✨ Tap to Open ✨</span>
+                    </button>
+                    <div class="gift-message hidden" id="giftMessage">
+                        <div class="gift-reveal">
+                            <span class="gift-emoji">🌹</span>
+                            <h3>The greatest gift is YOU</h3>
+                            <p>No wrapping paper could contain how much you mean to me</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 3: Photo Memories Filmstrip -->
+        <section class="slide slide-photos-filmstrip" data-index="2">
+            <div class="slide-content filmstrip-content">
+                <h2 class="section-title animate-in">Our Beautiful Memories</h2>
+                <p class="section-sub animate-in delay-1">Every moment with you is a treasure 📸</p>
+                <div class="filmstrip-viewport animate-in delay-2">
+                    <div class="filmstrip-track" id="filmstripTrack">
+                        <!-- Photos 1-15 loaded by JS -->
+                    </div>
+                </div>
+                <div class="filmstrip-viewport filmstrip-reverse animate-in delay-3">
+                    <div class="filmstrip-track reverse" id="filmstripTrack2">
+                        <!-- Photos 16-30 loaded by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4: Photo Gallery -->
+        <section class="slide slide-photos-gallery" data-index="3">
+            <div class="slide-content gallery-content">
+                <h2 class="section-title animate-in">Moments I Cherish</h2>
+                <p class="section-sub animate-in delay-1">Tap any photo to feel the love 💕</p>
+                <div class="gallery-grid animate-in delay-2" id="galleryGrid">
+                    <!-- All 30 photos loaded by JS as polaroid cards -->
+                </div>
+            </div>
+            <!-- Lightbox -->
+            <div class="lightbox hidden" id="lightbox">
+                <button class="lightbox-close" id="lightboxClose">✕</button>
+                <button class="lightbox-prev" id="lightboxPrev">❮</button>
+                <button class="lightbox-next" id="lightboxNext">❯</button>
+                <div class="lightbox-img-wrap">
+                    <img src="" alt="" id="lightboxImg">
+                </div>
+                <div class="lightbox-counter" id="lightboxCounter">1 / 30</div>
+            </div>
+        </section>
+
+        <!-- SLIDE 5: Love Letter -->
+        <section class="slide slide-3" data-index="4">
+            <div class="slide-content">
+                <div class="letter-scene">
+                    <div class="envelope-3d" id="envelope3d">
+                        <div class="env-back"></div>
+                        <div class="env-letter" id="envLetter">
+                            <div class="letter-inner">
+                                <div class="letter-stamp">💌</div>
+                                <h2 class="letter-title">My Dearest Love,</h2>
+                                <div class="letter-body" id="letterBody">
+                                    <p class="letter-line">Every morning I wake up grateful that you exist in this world.</p>
+                                    <p class="letter-line">Your smile is my sunrise, your laughter my favorite song.</p>
+                                    <p class="letter-line">You don't just make my days brighter — you make my whole life meaningful.</p>
+                                    <p class="letter-line">On this special day, I want you to feel as loved and cherished as you make me feel every single day.</p>
+                                    <p class="letter-line sign">Forever & Always Yours 💕</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="env-front">
+                            <div class="env-flap"></div>
+                            <div class="env-seal">💝</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6: Reasons I Love You -->
+        <section class="slide slide-4" data-index="5">
+            <div class="slide-content">
+                <h2 class="section-title animate-in">Why I Love You</h2>
+                <p class="section-sub animate-in delay-1">An infinite list, but here's a start...</p>
+                <div class="love-cards-container">
+                    <div class="love-card animate-in delay-1" style="--card-color: #ff6b9d;">
+                        <div class="card-glow"></div>
+                        <div class="card-icon">😊</div>
+                        <h3>Your Beautiful Smile</h3>
+                        <p>It lights up every room and melts my heart every single time</p>
+                        <div class="card-number">01</div>
+                    </div>
+                    <div class="love-card animate-in delay-2" style="--card-color: #a29bfe;">
+                        <div class="card-glow"></div>
+                        <div class="card-icon">💪</div>
+                        <h3>Your Inner Strength</h3>
+                        <p>You face every challenge with grace and inspire me to be better</p>
+                        <div class="card-number">02</div>
+                    </div>
+                    <div class="love-card animate-in delay-3" style="--card-color: #f9ca24;">
+                        <div class="card-glow"></div>
+                        <div class="card-icon">🤗</div>
+                        <h3>Your Warm Heart</h3>
+                        <p>Every hug feels like coming home to the safest place on earth</p>
+                        <div class="card-number">03</div>
+                    </div>
+                    <div class="love-card animate-in delay-4" style="--card-color: #55efc4;">
+                        <div class="card-glow"></div>
+                        <div class="card-icon">✨</div>
+                        <h3>Your Beautiful Soul</h3>
+                        <p>The kindest, most gorgeous soul I've ever been blessed to know</p>
+                        <div class="card-number">04</div>
+                    </div>
+                    <div class="love-card animate-in delay-5" style="--card-color: #fd79a8;">
+                        <div class="card-glow"></div>
+                        <div class="card-icon">😂</div>
+                        <h3>Your Laughter</h3>
+                        <p>The most beautiful sound in the universe — I'd do anything to hear it</p>
+                        <div class="card-number">05</div>
+                    </div>
+                    <div class="love-card animate-in delay-6" style="--card-color: #74b9ff;">
+                        <div class="card-glow"></div>
+                        <div class="card-icon">🌟</div>
+                        <h3>Everything About You</h3>
+                        <p>Every little thing makes you the most perfect person to me</p>
+                        <div class="card-number">∞</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 7: Our Journey Timeline -->
+        <section class="slide slide-5" data-index="6">
+            <div class="slide-content">
+                <h2 class="section-title animate-in">Our Love Story</h2>
+                <div class="journey-timeline">
+                    <div class="journey-line"></div>
+                    <div class="journey-item animate-in delay-1">
+                        <div class="journey-marker"><div class="marker-ring"></div><span class="marker-emoji">💫</span></div>
+                        <div class="journey-card">
+                            <div class="journey-badge">Chapter 1</div>
+                            <h3>The Day We Met</h3>
+                            <p>Fate brought us together, and my heart knew instantly — this was the beginning of something extraordinary.</p>
+                        </div>
+                    </div>
+                    <div class="journey-item animate-in delay-2">
+                        <div class="journey-marker"><div class="marker-ring"></div><span class="marker-emoji">🌹</span></div>
+                        <div class="journey-card">
+                            <div class="journey-badge">Chapter 2</div>
+                            <h3>Falling In Love</h3>
+                            <p>Every conversation, every moment together made me fall deeper. I couldn't imagine life without you.</p>
+                        </div>
+                    </div>
+                    <div class="journey-item animate-in delay-3">
+                        <div class="journey-marker"><div class="marker-ring"></div><span class="marker-emoji">🏠</span></div>
+                        <div class="journey-card">
+                            <div class="journey-badge">Chapter 3</div>
+                            <h3>Building Together</h3>
+                            <p>Through highs and lows, laughter and tears — every moment with you is a treasure I hold dear.</p>
+                        </div>
+                    </div>
+                    <div class="journey-item animate-in delay-4">
+                        <div class="journey-marker"><div class="marker-ring"></div><span class="marker-emoji">🎂</span></div>
+                        <div class="journey-card">
+                            <div class="journey-badge glow">Today</div>
+                            <h3>Your Birthday 🎉</h3>
+                            <p>Today we celebrate the most wonderful person in the world — YOU.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 8: Poem -->
+        <section class="slide slide-6" data-index="7">
+            <div class="slide-content">
+                <h2 class="section-title animate-in">Words From My Heart</h2>
+                <div class="poem-showcase animate-in delay-1">
+                    <div class="poem-frame">
+                        <div class="poem-corner tl"></div>
+                        <div class="poem-corner tr"></div>
+                        <div class="poem-corner bl"></div>
+                        <div class="poem-corner br"></div>
+                        <div class="poem-lines">
+                            <p class="p-line" style="--i:0">"In a universe of billions,</p>
+                            <p class="p-line" style="--i:1">somehow I found you.</p>
+                            <p class="p-line" style="--i:2">In a world full of ordinary,</p>
+                            <p class="p-line" style="--i:3">you are my extraordinary.</p>
+                            <p class="p-line" style="--i:4">In a sky full of stars,</p>
+                            <p class="p-line" style="--i:5">you shine the brightest by far.</p>
+                            <p class="p-line" style="--i:6">Happy Birthday, my love —</p>
+                            <p class="p-line" style="--i:7">you're heaven's gift from above."</p>
+                        </div>
+                        <div class="poem-author">— Written with all my love 💕</div>
+                    </div>
+                </div>
+                <div class="falling-petals" id="fallingPetals"></div>
+            </div>
+        </section>
+
+        <!-- SLIDE 9: Birthday Cake -->
+        <section class="slide slide-7" data-index="8">
+            <div class="slide-content">
+                <h2 class="section-title animate-in">Make a Wish! 🌟</h2>
+                <div class="cake-scene animate-in delay-1">
+                    <div class="cake-wrapper">
+                        <div class="cake-glow"></div>
+                        <div class="candles-row">
+                            <div class="candle-item"><div class="wick"></div><div class="flame-wrap"><div class="flame" data-flame="1"></div></div><div class="candle-body c1"></div></div>
+                            <div class="candle-item"><div class="wick"></div><div class="flame-wrap"><div class="flame" data-flame="2"></div></div><div class="candle-body c2"></div></div>
+                            <div class="candle-item"><div class="wick"></div><div class="flame-wrap"><div class="flame" data-flame="3"></div></div><div class="candle-body c3"></div></div>
+                            <div class="candle-item"><div class="wick"></div><div class="flame-wrap"><div class="flame" data-flame="4"></div></div><div class="candle-body c4"></div></div>
+                            <div class="candle-item"><div class="wick"></div><div class="flame-wrap"><div class="flame" data-flame="5"></div></div><div class="candle-body c5"></div></div>
+                        </div>
+                        <div class="cake-layer layer-top">
+                            <div class="frosting">
+                                <div class="drip" style="--d:1"></div>
+                                <div class="drip" style="--d:2"></div>
+                                <div class="drip" style="--d:3"></div>
+                                <div class="drip" style="--d:4"></div>
+                                <div class="drip" style="--d:5"></div>
+                                <div class="drip" style="--d:6"></div>
+                            </div>
+                            <div class="cake-text">HBD</div>
+                        </div>
+                        <div class="cake-layer layer-mid">
+                            <div class="layer-deco">♥ ♥ ♥ ♥ ♥</div>
+                        </div>
+                        <div class="cake-layer layer-bot">
+                            <div class="layer-stripe"></div>
+                            <div class="layer-stripe"></div>
+                        </div>
+                        <div class="cake-base"></div>
+                    </div>
+                </div>
+                <button class="blow-candles-btn animate-in delay-2" id="blowCandles">
+                    <span class="btn-sparkle">✨</span>
+                    Close your eyes, make a wish, then tap!
+                    <span class="btn-sparkle">✨</span>
+                </button>
+                <div class="wish-reveal hidden" id="wishReveal">
+                    <p class="wish-line-1">🎉 My wish already came true...</p>
+                    <p class="wish-line-2">Because I have <span class="you-text">YOU</span> 💖</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 10: Grand Finale -->
+        <section class="slide slide-8" data-index="9">
+            <div class="slide-content">
+                <div class="finale-scene">
+                    <div class="crown-float animate-in">👑</div>
+                    <h2 class="finale-title animate-in delay-1">
+                        Happy Birthday<br>
+                        <span class="queen-text">My Queen</span>
+                    </h2>
+                    <div class="finale-message animate-in delay-2">
+                        <p>May every dream you have take flight, may every moment be filled with pure joy, and may you always know just how deeply, completely, and endlessly you are loved.</p>
+                    </div>
+                    <div class="love-meter animate-in delay-3">
+                        <div class="meter-label">Love Level</div>
+                        <div class="meter-bar">
+                            <div class="meter-fill" id="meterFill"></div>
+                            <div class="meter-text">∞ INFINITE</div>
+                        </div>
+                    </div>
+                    <div class="infinite-block animate-in delay-4">
+                        <span class="iloveyou">I Love You</span>
+                        <span class="infinity-symbol">∞</span>
+                    </div>
+                    <div class="finale-hearts">
+                        <span style="--h:0">💕</span>
+                        <span style="--h:1">💖</span>
+                        <span style="--h:2">💗</span>
+                        <span style="--h:3">💝</span>
+                        <span style="--h:4">💘</span>
+                        <span style="--h:5">💕</span>
+                        <span style="--h:6">💖</span>
+                    </div>
+                </div>
+            </div>
+            <canvas id="fireworksCanvas"></canvas>
+            <div class="confetti-box" id="confettiBox"></div>
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
