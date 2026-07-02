@@ -30,7 +30,7 @@ jobs:
         run: cd client && npx tsc --noEmit
 
       - name: Install Backend Dependencies
-        run: cd functions && npm ci
+        run: cd functions/ksp && npm ci
 
   build-and-test:
     name: Build & Test
@@ -49,11 +49,11 @@ jobs:
           cd client && npm ci && npm run build
 
       - name: Install Backend Dependencies
-        run: cd functions && npm ci
+        run: cd functions/ksp && npm ci
 
       - name: Verify Server Starts
         run: |
-          cd functions
+          cd functions/ksp
           timeout 10 node server.js &
           sleep 5
           curl -f http://localhost:3001/api/health/live || exit 1

@@ -1,12 +1,12 @@
 {
   "functions": {
     "targets": [
-      "functions"
+      "ksp"
     ],
     "ignore": [
       "**/node_modules/**",
       "node_modules"
     ],
-    "source": "."
+    "source": "functions"
   }
 }
