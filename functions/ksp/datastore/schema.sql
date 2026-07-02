@@ -249,6 +249,31 @@ CREATE TABLE IF NOT EXISTS BNS_Mapping (
     is_bailable INTEGER DEFAULT 0
 );
 
+-- 16. LLMMemory Table (Memory Management)
+CREATE TABLE IF NOT EXISTS LLMMemory (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    metadata TEXT NOT NULL DEFAULT '{}',
+    user_id TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    created_by TEXT NOT NULL,
+    updated_by TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+-- 17. DeployedAgents Table (A2A Gateway)
+CREATE TABLE IF NOT EXISTS DeployedAgents (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL,
+    protocol_version TEXT NOT NULL DEFAULT '1.0',
+    owner_id TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
 -- ============================================================================
 -- Indexes for performance
 -- ============================================================================
@@ -276,3 +301,8 @@ CREATE INDEX IF NOT EXISTS idx_witness_fir ON WitnessStatements(fir_id);
 CREATE INDEX IF NOT EXISTS idx_bns_ipc ON BNS_Mapping(ipc_section);
 CREATE INDEX IF NOT EXISTS idx_bns_section ON BNS_Mapping(bns_section);
 CREATE INDEX IF NOT EXISTS idx_audit_hash ON AuditLog(integrity_hash);
+CREATE INDEX IF NOT EXISTS idx_memory_user ON LLMMemory(user_id);
+CREATE INDEX IF NOT EXISTS idx_memory_team ON LLMMemory(team_id);
+CREATE INDEX IF NOT EXISTS idx_agent_owner ON DeployedAgents(owner_id);
+CREATE INDEX IF NOT EXISTS idx_agent_team ON DeployedAgents(team_id);
+

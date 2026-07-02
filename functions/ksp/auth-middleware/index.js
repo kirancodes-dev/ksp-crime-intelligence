@@ -18,7 +18,7 @@ const PUBLIC_ROUTES = [
 
 module.exports = (req, res, next) => {
   // Allow public routes without auth
-  const isPublic = PUBLIC_ROUTES.some(route => req.path === route || req.path.startsWith(route + '/'));
+  const isPublic = PUBLIC_ROUTES.some(route => req.path === route || req.path.startsWith(route + '/')) || req.path.includes('/.well-known/');
   if (isPublic) {
     // Set a default guest user context for public routes
     req.user = {

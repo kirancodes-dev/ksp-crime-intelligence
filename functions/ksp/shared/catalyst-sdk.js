@@ -178,7 +178,6 @@ class CatalystInstance {
 
           // ====================================================================
           // Phase 1: Officers Table (Authentication & RLS)
-          // ====================================================================
           this.db.run(`
             CREATE TABLE IF NOT EXISTS Officers (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -194,6 +193,36 @@ class CatalystInstance {
               created_at TEXT NOT NULL DEFAULT (datetime('now')),
               failed_login_attempts INTEGER DEFAULT 0,
               locked_until TEXT
+            )
+          `);
+
+          // ====================================================================
+          // Gateway Schema: LLMMemory and DeployedAgents
+          // ====================================================================
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS LLMMemory (
+              key TEXT PRIMARY KEY,
+              value TEXT NOT NULL,
+              metadata TEXT NOT NULL DEFAULT '{}',
+              user_id TEXT NOT NULL,
+              team_id TEXT NOT NULL,
+              created_by TEXT NOT NULL,
+              updated_by TEXT NOT NULL,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          `);
+
+          this.db.run(`
+            CREATE TABLE IF NOT EXISTS DeployedAgents (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              url TEXT NOT NULL,
+              protocol_version TEXT NOT NULL DEFAULT '1.0',
+              owner_id TEXT NOT NULL,
+              team_id TEXT NOT NULL,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
             )
           `);
 

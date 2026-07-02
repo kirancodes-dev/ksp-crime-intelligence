@@ -1066,6 +1066,371 @@ app.get('/api/health/live', (req, res) => {
   res.json(health.isLive());
 });
 
+// --- LLM MEMORY & AGENT GATEWAY (A2A PROTOCOL) ENDPOINTS ---
+
+const crypto = require('crypto');
+
+// Middleware to parse and load officer access level for Memory/A2A APIs
+const getAccessLevel = (role) => {
+  if (role === 'Supervisor' || role === 'Policymaker') return 'admin';
+  if (role === 'Analyst') return 'team_admin';
+  return 'user'; // Investigator
+};
+
+// Helper to check if officer is allowed to write/delete an entry
+const canWriteEntry = (officer, entry) => {
+  const access = getAccessLevel(officer.role);
+  if (access === 'admin') return true;
+  if (access === 'team_admin') {
+    return entry.user_id === officer.userId || entry.team_id === officer.district;
+  }
+  return entry.user_id === officer.userId;
+};
+
+// Helper to check if officer is allowed to read an entry
+const canReadEntry = (officer, entry) => {
+  const access = getAccessLevel(officer.role);
+  if (access === 'admin') return true;
+  return entry.user_id === officer.userId || entry.team_id === officer.district;
+};
+
+// Helper to check if officer is allowed to invoke/view an agent
+const canAccessAgent = (officer, agent) => {
+  const access = getAccessLevel(officer.role);
+  if (access === 'admin') return true;
+  return agent.owner_id === officer.userId || agent.team_id === officer.district;
+};
+
+// 1. Create Memory Entry
+app.post(['/v1/memory', '/api/v1/memory'], async (req, res) => {
+  try {
+    const { key, value, metadata } = req.body;
+    if (!key || value === undefined) {
+      return res.status(400).json({ error: 'Fields key and value are required.' });
+    }
+
+    const db = catalyst.datastore();
+    const existing = await db.execute('SELECT * FROM LLMMemory WHERE key = ?', [key]);
+    if (existing.length > 0) {
+      return res.status(409).json({ error: `Memory entry with key '${key}' already exists. Use PUT to update.` });
+    }
+
+    const isoStr = new Date().toISOString();
+    const newEntry = {
+      key,
+      value,
+      metadata: typeof metadata === 'object' ? JSON.stringify(metadata) : '{}',
+      user_id: req.user.userId,
+      team_id: req.user.district,
+      created_by: req.user.userId,
+      updated_by: req.user.userId,
+      created_at: isoStr,
+      updated_at: isoStr
+    };
+
+    await db.execute(
+      `INSERT INTO LLMMemory (key, value, metadata, user_id, team_id, created_by, updated_by, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newEntry.key, newEntry.value, newEntry.metadata, newEntry.user_id, newEntry.team_id, newEntry.created_by, newEntry.updated_by, newEntry.created_at, newEntry.updated_at]
+    );
+
+    res.status(201).json({
+      ...newEntry,
+      metadata: typeof metadata === 'object' ? metadata : {}
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Read Memory Entry
+app.get(['/v1/memory/:key', '/api/v1/memory/:key'], async (req, res) => {
+  try {
+    const key = req.params.key;
+    const db = catalyst.datastore();
+    const rows = await db.execute('SELECT * FROM LLMMemory WHERE key = ?', [key]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: `Memory entry with key '${key}' not found.` });
+    }
+
+    const entry = rows[0];
+    if (!canReadEntry(req.user, entry)) {
+      return res.status(403).json({ error: 'Access denied to this memory entry.' });
+    }
+
+    res.json({
+      ...entry,
+      metadata: JSON.parse(entry.metadata || '{}')
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Update/Upsert Memory Entry
+app.put(['/v1/memory/:key', '/api/v1/memory/:key'], async (req, res) => {
+  try {
+    const key = req.params.key;
+    const { value, metadata } = req.body;
+    
+    const db = catalyst.datastore();
+    const rows = await db.execute('SELECT * FROM LLMMemory WHERE key = ?', [key]);
+    const isoStr = new Date().toISOString();
+
+    if (rows.length === 0) {
+      const newEntry = {
+        key,
+        value: value || '',
+        metadata: typeof metadata === 'object' ? JSON.stringify(metadata) : '{}',
+        user_id: req.user.userId,
+        team_id: req.user.district,
+        created_by: req.user.userId,
+        updated_by: req.user.userId,
+        created_at: isoStr,
+        updated_at: isoStr
+      };
+
+      await db.execute(
+        `INSERT INTO LLMMemory (key, value, metadata, user_id, team_id, created_by, updated_by, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [newEntry.key, newEntry.value, newEntry.metadata, newEntry.user_id, newEntry.team_id, newEntry.created_by, newEntry.updated_by, newEntry.created_at, newEntry.updated_at]
+      );
+
+      return res.json({
+        ...newEntry,
+        metadata: typeof metadata === 'object' ? metadata : {}
+      });
+    }
+
+    const entry = rows[0];
+    if (!canWriteEntry(req.user, entry)) {
+      return res.status(403).json({ error: 'Access denied to write this memory entry.' });
+    }
+
+    const updatedValue = value !== undefined ? value : entry.value;
+    const updatedMetadata = typeof metadata === 'object' ? JSON.stringify(metadata) : entry.metadata;
+
+    await db.execute(
+      `UPDATE LLMMemory SET value = ?, metadata = ?, updated_by = ?, updated_at = ? WHERE key = ?`,
+      [updatedValue, updatedMetadata, req.user.userId, isoStr, key]
+    );
+
+    res.json({
+      key,
+      value: updatedValue,
+      metadata: typeof metadata === 'object' ? metadata : JSON.parse(entry.metadata || '{}'),
+      user_id: entry.user_id,
+      team_id: entry.team_id,
+      created_by: entry.created_by,
+      updated_by: req.user.userId,
+      created_at: entry.created_at,
+      updated_at: isoStr
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. List Memory Entries
+app.get(['/v1/memory', '/api/v1/memory'], async (req, res) => {
+  try {
+    const { key_prefix } = req.query;
+    const db = catalyst.datastore();
+    
+    let query = 'SELECT * FROM LLMMemory';
+    let params = [];
+    
+    if (key_prefix) {
+      query += ' WHERE key LIKE ?';
+      params.push(key_prefix + '%');
+    }
+
+    const rows = await db.execute(query, params);
+    const visibleRows = rows.filter(row => canReadEntry(req.user, row)).map(row => ({
+      ...row,
+      metadata: JSON.parse(row.metadata || '{}')
+    }));
+
+    res.json({
+      memories: visibleRows,
+      total_count: visibleRows.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. Delete Memory Entry
+app.delete(['/v1/memory/:key', '/api/v1/memory/:key'], async (req, res) => {
+  try {
+    const key = req.params.key;
+    const db = catalyst.datastore();
+    const rows = await db.execute('SELECT * FROM LLMMemory WHERE key = ?', [key]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: `Memory entry with key '${key}' not found.` });
+    }
+
+    const entry = rows[0];
+    if (!canWriteEntry(req.user, entry)) {
+      return res.status(403).json({ error: 'Access denied to delete this memory entry.' });
+    }
+
+    await db.execute('DELETE FROM LLMMemory WHERE key = ?', [key]);
+    res.json({
+      key,
+      deleted: true
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. Register Agent
+app.post(['/v1/agents', '/api/v1/agents'], async (req, res) => {
+  try {
+    const { agent_name, agent_card_params } = req.body;
+    if (!agent_name || !agent_card_params || !agent_card_params.url) {
+      return res.status(400).json({ error: 'agent_name and agent_card_params (with url) are required.' });
+    }
+
+    const db = catalyst.datastore();
+    const existing = await db.execute('SELECT * FROM DeployedAgents WHERE id = ?', [agent_name]);
+    if (existing.length > 0) {
+      return res.status(409).json({ error: `Agent with name '${agent_name}' already exists.` });
+    }
+
+    const isoStr = new Date().toISOString();
+    const newAgent = {
+      id: agent_name,
+      name: agent_card_params.name || agent_name,
+      url: agent_card_params.url,
+      protocol_version: agent_card_params.protocolVersion || '1.0',
+      owner_id: req.user.userId,
+      team_id: req.user.district,
+      created_at: isoStr,
+      updated_at: isoStr
+    };
+
+    await db.execute(
+      `INSERT INTO DeployedAgents (id, name, url, protocol_version, owner_id, team_id, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newAgent.id, newAgent.name, newAgent.url, newAgent.protocol_version, newAgent.owner_id, newAgent.team_id, newAgent.created_at, newAgent.updated_at]
+    );
+
+    res.status(201).json({
+      agent_name: newAgent.id,
+      agent_card_params: {
+        name: newAgent.name,
+        url: newAgent.url,
+        protocolVersion: newAgent.protocol_version
+      },
+      owner_id: newAgent.owner_id,
+      team_id: newAgent.team_id
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 7. List Registered Agents
+app.get(['/v1/agents', '/api/v1/agents'], async (req, res) => {
+  try {
+    const db = catalyst.datastore();
+    const rows = await db.execute('SELECT * FROM DeployedAgents');
+    const visibleAgents = rows.filter(agent => canAccessAgent(req.user, agent)).map(agent => ({
+      agent_name: agent.id,
+      agent_card_params: {
+        name: agent.name,
+        url: agent.url,
+        protocolVersion: agent.protocol_version
+      },
+      owner_id: agent.owner_id,
+      team_id: agent.team_id
+    }));
+
+    res.json({
+      agents: visibleAgents,
+      total_count: visibleAgents.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8. Discovery Endpoints
+app.get([
+  '/a2a/:agent_id/.well-known/agent.json',
+  '/a2a/:agent_id/.well-known/agent-card.json',
+  '/api/a2a/:agent_id/.well-known/agent.json',
+  '/api/a2a/:agent_id/.well-known/agent-card.json'
+], async (req, res) => {
+  try {
+    const agentId = req.params.agent_id;
+    const db = catalyst.datastore();
+    const rows = await db.execute('SELECT * FROM DeployedAgents WHERE id = ?', [agentId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: `Agent '${agentId}' not found.` });
+    }
+
+    const agent = rows[0];
+    res.json({
+      name: agent.name,
+      url: agent.url,
+      protocolVersion: agent.protocol_version
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 9. Main A2A Proxy Invocation
+app.post([
+  '/a2a/:agent_id',
+  '/a2a/:agent_id/message/send',
+  '/v1/a2a/:agent_id/message/send',
+  '/api/a2a/:agent_id',
+  '/api/a2a/:agent_id/message/send',
+  '/api/v1/a2a/:agent_id/message/send'
+], async (req, res) => {
+  try {
+    const agentId = req.params.agent_id;
+    const db = catalyst.datastore();
+    const rows = await db.execute('SELECT * FROM DeployedAgents WHERE id = ?', [agentId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: `Agent '${agentId}' not found.` });
+    }
+
+    const agent = rows[0];
+    if (!canAccessAgent(req.user, agent)) {
+      return res.status(403).json({ error: 'Access denied to this agent.' });
+    }
+
+    const upstreamUrl = agent.url;
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-LiteLLM-Trace-Id': req.headers['x-litellm-trace-id'] || crypto.randomUUID(),
+      'X-LiteLLM-Agent-Id': agentId
+    };
+
+    if (req.headers['authorization']) {
+      headers['Authorization'] = req.headers['authorization'];
+    }
+
+    const response = await fetch(upstreamUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(req.body)
+    });
+
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    res.status(500).json({ error: `Failed to proxy to upstream agent: ${err.message}` });
+  }
+});
+
+
 // Serve SPA index.html for all non-API routes (client-side routing)
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientDistPath, 'index.html'));
