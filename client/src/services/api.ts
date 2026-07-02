@@ -1,4 +1,28 @@
-const BASE_URL = '/api';
+const getBaseUrl = () => {
+  // If running locally (Vite dev server or local production server)
+  if (
+    import.meta.env.DEV || 
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1'
+  ) {
+    return '/api';
+  }
+  
+  // If running in Catalyst production:
+  // 1. If accessed via the function URL directly (e.g. /server/functions/)
+  const path = window.location.pathname;
+  if (path.includes('/server/')) {
+    const match = path.match(/^(\/server\/[^/]+)/);
+    if (match) {
+      return `${match[1]}/api`;
+    }
+  }
+  
+  // 2. If accessed via Catalyst Slate / Hosting (root url), default to the "functions" prefix
+  return '/server/functions/api';
+};
+
+const BASE_URL = getBaseUrl();
 
 export interface ChatResponse {
   success: boolean;

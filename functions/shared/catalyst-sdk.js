@@ -2,7 +2,36 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const dbPath = path.join(__dirname, '..', '..', 'datastore', 'ksp_crime.db');
+// Helper to resolve paths to either local dev (../../datastore) or bundled function path (../datastore)
+function resolveDataPath(...parts) {
+  const bundledPath = path.join(__dirname, '..', 'datastore', ...parts);
+  if (fs.existsSync(bundledPath)) {
+    return bundledPath;
+  }
+  return path.join(__dirname, '..', '..', 'datastore', ...parts);
+}
+
+// Detect Catalyst production environment or serverless runtime
+const isCatalyst = !!process.env.CATALYST_ENVIRONMENT;
+let activeDbPath;
+
+if (isCatalyst) {
+  activeDbPath = '/tmp/ksp_crime.db';
+  const sourceDbPath = resolveDataPath('ksp_crime.db');
+  
+  // Copy the database to /tmp if it doesn't exist
+  if (!fs.existsSync(activeDbPath)) {
+    try {
+      console.log(`Catalyst environment detected. Copying database from ${sourceDbPath} to ${activeDbPath}...`);
+      fs.copyFileSync(sourceDbPath, activeDbPath);
+      console.log('Database copy to /tmp successful.');
+    } catch (err) {
+      console.error('Failed to copy database to /tmp:', err);
+    }
+  }
+} else {
+  activeDbPath = resolveDataPath('ksp_crime.db');
+}
 
 class DatastoreTable {
   constructor(db, tableName) {
@@ -42,7 +71,7 @@ class CatalystInstance {
     this._initPending = 0;
     this._initDone = false;
 
-    this.db = new sqlite3.Database(dbPath, (err) => {
+    this.db = new sqlite3.Database(activeDbPath, (err) => {
       if (err) {
         console.error('Failed to open SQLite database in Catalyst SDK:', err);
         if (this._readyResolve) this._readyResolve();
@@ -60,7 +89,7 @@ class CatalystInstance {
         };
 
         // Run schema.sql on first startup to create all core tables
-        const schemaPath = path.join(__dirname, '..', '..', 'datastore', 'schema.sql');
+        const schemaPath = resolveDataPath('schema.sql');
         if (fs.existsSync(schemaPath)) {
           this._initPending++;
           const schema = fs.readFileSync(schemaPath, 'utf8');
@@ -248,7 +277,7 @@ class CatalystInstance {
           this.db.get("SELECT COUNT(*) as count FROM BNS_Mapping", (err, row) => {
             if (!err && row && row.count === 0) {
               try {
-                const bnsPath = path.join(__dirname, '..', '..', 'datastore', 'seed', 'bns_mapping.json');
+                const bnsPath = resolveDataPath('seed', 'bns_mapping.json');
                 if (fs.existsSync(bnsPath)) {
                   const bnsData = JSON.parse(fs.readFileSync(bnsPath, 'utf8'));
                   const stmt = this.db.prepare('INSERT INTO BNS_Mapping (ipc_section, bns_section, description, category, max_punishment, is_cognizable, is_bailable) VALUES (?, ?, ?, ?, ?, ?, ?)');
