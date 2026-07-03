@@ -4,7 +4,6 @@
       "ksp"
     ],
     "ignore": [
-      "**/node_modules/**",
       "functions/ksp/datastore/*.db-wal",
       "functions/ksp/datastore/*.db-shm"
     ],
