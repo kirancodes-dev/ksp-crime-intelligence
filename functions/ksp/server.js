@@ -25,6 +25,19 @@ const cctnsEtl = require('./cctns-client/etl-pipeline');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Strip Zoho Catalyst Advanced I/O routing prefix if present
+app.use((req, res, next) => {
+  if (req.url.startsWith('/server/ksp')) {
+    req.url = req.url.slice(11);
+  } else if (req.url.startsWith('/ksp')) {
+    req.url = req.url.slice(4);
+  }
+  if (!req.url.startsWith('/')) {
+    req.url = '/' + req.url;
+  }
+  next();
+});
+
 // 1. Rate Limiting Middleware
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -1557,10 +1570,15 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`========================================================`);
-  console.log(` Catalyst Functions Server running on port ${PORT}`);
-  console.log(` Connect to: http://localhost:${PORT}`);
-  console.log(`========================================================`);
-});
+// Start the server (only if run directly, i.e., in local development)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`========================================================`);
+    console.log(` Catalyst Functions Server running on port ${PORT}`);
+    console.log(` Connect to: http://localhost:${PORT}`);
+    console.log(`========================================================`);
+  });
+}
+
+// Export the Express app for Zoho Catalyst Advanced I/O runner
+module.exports = app;
