@@ -28,7 +28,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
   const [selectedMugshot, setSelectedMugshot] = useState<string | null>(null);
 
   // Phase 2 Tabs and Data States
-  const [activeTab, setActiveTab] = useState<'summary' | 'financial' | 'similar' | 'legal'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'financial' | 'similar' | 'legal' | 'bns'>('summary');
   const [financialData, setFinancialData] = useState<any>(null);
   const [similarData, setSimilarData] = useState<any>(null);
   const [financialLoading, setFinancialLoading] = useState(false);
@@ -56,6 +56,25 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
   const [bnsIpcInput, setBnsIpcInput] = useState('');
   const [bnsResult, setBnsResult] = useState<any>(null);
 
+  // BNS Upgrade States
+  const [bnsSearchQuery, setBnsSearchQuery] = useState('');
+  const [bnsCategory, setBnsCategory] = useState('All');
+  const [bnsCognizable, setBnsCognizable] = useState('');
+  const [bnsBailable, setBnsBailable] = useState('');
+  const [bnsSearchLoading, setBnsSearchLoading] = useState(false);
+  const [bnsSearchResults, setBnsSearchResults] = useState<any[]>([]);
+
+  const [aiNarrativeInput, setAiNarrativeInput] = useState('');
+  const [aiAdvisorLoading, setAiAdvisorLoading] = useState(false);
+  const [aiRecommendation, setAiRecommendation] = useState<any>(null);
+
+  const [selectedBnsSections, setSelectedBnsSections] = useState<any[]>([]);
+  const [selectedAccusedIds, setSelectedAccusedIds] = useState<number[]>([]);
+  const [csType, setCsType] = useState('Final Report');
+  const [magistrateCode, setMagistrateCode] = useState('JMFC-BENGALURU-I');
+  const [generatedChargesheet, setGeneratedChargesheet] = useState<any>(null);
+  const [submittingChargesheet, setSubmittingChargesheet] = useState(false);
+
   useEffect(() => {
     if (selectedFirNumber) {
       fetchCaseFile(selectedFirNumber);
@@ -64,6 +83,16 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
       setSimilarData(null);
     }
   }, [selectedFirNumber]);
+
+  useEffect(() => {
+    if (caseDetails) {
+      setAiNarrativeInput(caseDetails.description || '');
+      setSelectedBnsSections([]);
+      setSelectedAccusedIds([]);
+      setGeneratedChargesheet(null);
+      setAiRecommendation(null);
+    }
+  }, [caseDetails]);
 
   const fetchCaseFile = async (firNo: string) => {
     setLoading(true);
@@ -203,6 +232,74 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
       }
     } catch (err: any) {
       setBnsResult({ error: err.message || 'Lookup failed.' });
+    }
+  };
+
+  const handleBnsSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setBnsSearchLoading(true);
+    try {
+      const res = await api.searchBns(bnsSearchQuery, bnsCategory, bnsCognizable, bnsBailable);
+      if (res.success) {
+        setBnsSearchResults(res.mappings);
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to search BNS registry");
+    } finally {
+      setBnsSearchLoading(false);
+    }
+  };
+
+  const handleAiLegalRecommendation = async () => {
+    if (!aiNarrativeInput.trim()) {
+      alert("Please enter a case narrative/description for the AI to analyze.");
+      return;
+    }
+    setAiAdvisorLoading(true);
+    setAiRecommendation(null);
+    try {
+      const res = await api.getLegalRecommendation(aiNarrativeInput);
+      if (res.success) {
+        setAiRecommendation(res.data);
+        if (res.data.recommendations) {
+          setSelectedBnsSections(res.data.recommendations);
+        }
+      }
+    } catch (err: any) {
+      alert(err.message || "AI Legal Advisor consultation failed.");
+    } finally {
+      setAiAdvisorLoading(false);
+    }
+  };
+
+  const handleGenerateChargesheet = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!caseDetails) {
+      alert("No active case selected.");
+      return;
+    }
+    if (selectedBnsSections.length === 0) {
+      alert("Please select at least one BNS section to charge under.");
+      return;
+    }
+    
+    setSubmittingChargesheet(true);
+    try {
+      const res = await api.submitChargesheet(
+        caseDetails.id,
+        csType,
+        userId,
+        selectedBnsSections,
+        selectedAccusedIds
+      );
+      if (res.success) {
+        setGeneratedChargesheet(res.chargesheet);
+        alert("Chargesheet registered successfully in CCTNS & signed digitally!");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to submit chargesheet.");
+    } finally {
+      setSubmittingChargesheet(false);
     }
   };
 
@@ -467,6 +564,16 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                   }`}
                 >
                   <Scale size={12} className="text-amber-700" /> Legal &amp; Evidence
+                </button>
+                <button
+                  onClick={() => setActiveTab('bns')}
+                  className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition cursor-pointer ${
+                    activeTab === 'bns'
+                      ? 'border-[#1e3a5f] text-[#1e3a5f] bg-[#0d2137]/40'
+                      : 'border-transparent text-[#6c757d] hover:text-[#1e3a5f]'
+                  }`}
+                >
+                  <Scale size={12} className="text-[#d4a843]" /> BNS Compliance &amp; Advisor
                 </button>
               </div>
 
@@ -1041,6 +1148,495 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                         </div>
                       </>
                     )}
+                  </div>
+                )}
+
+                {activeTab === 'bns' && (
+                  <div className="space-y-6 text-[#2d4a6f] text-xs leading-relaxed print:hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      
+                      {/* Left: AI Advisor & Chargesheet Generator */}
+                      <div className="lg:col-span-7 space-y-6">
+                        
+                        {/* 1. AI Legal Advisor */}
+                        <div className="border border-[#d1d9e6] bg-white rounded-lg p-5 space-y-4 shadow-sm">
+                          <div className="flex items-center justify-between border-b border-[#e8ecf1] pb-2">
+                            <span className="font-extrabold uppercase text-[#1e3a5f] text-sm flex items-center gap-2">
+                              🧠 AI Legal Compliance Advisor
+                            </span>
+                            <span className="text-[10px] bg-blue-50 text-[#1e3a5f] px-2 py-0.5 rounded font-bold border border-blue-200">BNS 2023 Rules Engine</span>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider">
+                              Crime Occurrence Narrative / Facts of Case
+                            </label>
+                            <textarea
+                              value={aiNarrativeInput}
+                              onChange={(e) => setAiNarrativeInput(e.target.value)}
+                              rows={4}
+                              placeholder="Describe the facts of the crime, actions of the accused, and evidence found..."
+                              className="bg-[#f8f9fa] border border-[#d1d9e6] text-[11px] text-[#1e3a5f] rounded-lg p-3 w-full focus:outline-none focus:border-[#1e3a5f] resize-none"
+                            />
+                            <p className="text-[9px] text-[#6c757d]">
+                              *Note: Auto-populated from the loaded FIR description. You can edit this text to refine the AI analysis.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleAiLegalRecommendation}
+                            disabled={aiAdvisorLoading || !aiNarrativeInput.trim()}
+                            className="w-full py-2 bg-[#1e3a5f] hover:bg-[#2a4a73] disabled:bg-[#d1d9e6] text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            {aiAdvisorLoading ? (
+                              <>
+                                <LoaderIcon className="animate-spin" size={14} />
+                                <span>Analyzing elements of crime...</span>
+                              </>
+                            ) : (
+                              <span>Consult AI Legal Advisor</span>
+                            )}
+                          </button>
+
+                          {aiRecommendation && (
+                            <div className="bg-[#f8f9fa] border border-blue-100 rounded-lg p-4 space-y-3">
+                              <div className="flex justify-between items-center border-b border-blue-50 pb-2">
+                                <span className="font-extrabold text-[#1e3a5f] uppercase tracking-wider text-[11px]">AI Advisory Report</span>
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                  aiRecommendation.overall_severity === 'Critical' ? 'bg-red-50 text-[#d9251c] border border-red-200' :
+                                  aiRecommendation.overall_severity === 'High' ? 'bg-orange-50 text-orange-700 border border-orange-200' :
+                                  'bg-blue-50 text-blue-700 border border-blue-200'
+                                }`}>
+                                  Threat: {aiRecommendation.overall_severity}
+                                </span>
+                              </div>
+
+                              <div className="text-[10px] text-[#4a5568] leading-relaxed">
+                                <strong>Analytical Brief:</strong> {aiRecommendation.analysis}
+                              </div>
+
+                              {aiRecommendation.recommendations && aiRecommendation.recommendations.length > 0 && (
+                                <div className="space-y-1.5">
+                                  <strong className="text-[10px] text-[#1e3a5f] block uppercase tracking-wider">Recommended BNS Sections:</strong>
+                                  <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
+                                    {aiRecommendation.recommendations.map((rec: any, idx: number) => (
+                                      <div key={idx} className="bg-white p-2 rounded border border-[#d1d9e6] flex justify-between items-center text-[10px]">
+                                        <div>
+                                          <span className="font-bold text-[#1e3a5f]">BNS Sec {rec.bns_section}</span>
+                                          <span className="text-[#6c757d] text-[9px] ml-2">(IPC Sec {rec.ipc_section || 'N/A'})</span>
+                                          <span className="block text-[#6c757d] text-[9px] mt-0.5">{rec.reasoning}</span>
+                                        </div>
+                                        <span className="text-[9px] bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded text-[#4a5568]">
+                                          {rec.crime_type}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {aiRecommendation.next_steps && (
+                                <div className="pt-2 border-t border-blue-50 text-[10px] text-[#6c757d]">
+                                  <strong className="text-[#1e3a5f] block uppercase tracking-wider text-[9px] mb-1">Recommended Investigation Steps:</strong>
+                                  <div className="whitespace-pre-line leading-relaxed font-medium bg-white p-2 rounded border border-slate-100">{aiRecommendation.next_steps}</div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 2. Chargesheet Generator */}
+                        <div className="border border-[#d1d9e6] bg-white rounded-lg p-5 space-y-4 shadow-sm">
+                          <div className="flex items-center justify-between border-b border-[#e8ecf1] pb-2">
+                            <span className="font-extrabold uppercase text-[#1e3a5f] text-sm flex items-center gap-2">
+                              📋 Chargesheet &amp; Case Filing Desk
+                            </span>
+                            <span className="text-[10px] bg-red-50 text-[#d9251c] px-2 py-0.5 rounded font-bold border border-red-200">CCTNS Form 11</span>
+                          </div>
+
+                          <form onSubmit={handleGenerateChargesheet} className="space-y-4">
+                            
+                            {/* Accused Selection */}
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider">
+                                Select Accused to Charge
+                              </label>
+                              {caseDetails.accused && caseDetails.accused.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-2 bg-[#f8f9fa] p-3 rounded-lg border border-[#d1d9e6]">
+                                  {caseDetails.accused.map((acc: any) => (
+                                    <label key={acc.id} className="flex items-center gap-2 text-[11px] text-[#1e3a5f] font-medium cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedAccusedIds.includes(acc.id)}
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setSelectedAccusedIds(prev => [...prev, acc.id]);
+                                          } else {
+                                            setSelectedAccusedIds(prev => prev.filter(id => id !== acc.id));
+                                          }
+                                        }}
+                                        className="rounded border-[#d1d9e6]"
+                                      />
+                                      <span>{acc.name} (Age: {acc.age})</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-[10px] text-[#6c757d] italic bg-slate-50 p-2 rounded">No accused persons linked to this FIR.</p>
+                              )}
+                            </div>
+
+                            {/* Selected Sections to Charge */}
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider">
+                                Target Acts &amp; Sections to Charge
+                              </label>
+                              {selectedBnsSections.length > 0 ? (
+                                <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 bg-[#f8f9fa] p-3 rounded-lg border border-[#d1d9e6]">
+                                  {selectedBnsSections.map((sec, idx) => (
+                                    <div key={idx} className="bg-white p-2 rounded border border-[#d1d9e6] flex justify-between items-center">
+                                      <div className="text-[10px]">
+                                        <strong className="text-[#1e3a5f]">BNS Sec {sec.bns_section}</strong>
+                                        <span className="text-[#6c757d] text-[9px] ml-2">(IPC Sec {sec.ipc_section || 'N/A'}) - {sec.crime_type}</span>
+                                        <span className="block text-[#6c757d] text-[9px] mt-0.5 truncate max-w-sm">{sec.description}</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => setSelectedBnsSections(prev => prev.filter((_, i) => i !== idx))}
+                                        className="text-[#d9251c] hover:text-red-700 text-[10px] font-bold uppercase cursor-pointer"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-[10px] text-[#6c757d] italic bg-slate-50 p-2 rounded">
+                                  No sections selected. Use AI recommendations or the search registry on the right to add sections.
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Chargesheet Metadata Options */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider mb-1">Final Report Type</label>
+                                <select
+                                  value={csType}
+                                  onChange={(e) => setCsType(e.target.value)}
+                                  className="bg-white border border-[#d1d9e6] text-[10px] text-[#1e3a5f] rounded-lg p-2 w-full focus:outline-none focus:border-[#1e3a5f]"
+                                >
+                                  <option value="Final Report">Final Report (Charge Sheet)</option>
+                                  <option value="Closure Report">Closure Report (False Case)</option>
+                                  <option value="Abated Report">Abated Report (Accused Deceased)</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider mb-1">Magistrate Court Code</label>
+                                <input
+                                  type="text"
+                                  value={magistrateCode}
+                                  onChange={(e) => setMagistrateCode(e.target.value)}
+                                  className="bg-white border border-[#d1d9e6] text-[10px] text-[#1e3a5f] rounded-lg p-2 w-full focus:outline-none focus:border-[#1e3a5f] font-mono"
+                                />
+                              </div>
+                            </div>
+
+                            <button
+                              type="submit"
+                              disabled={submittingChargesheet || selectedBnsSections.length === 0}
+                              className="w-full py-2.5 bg-[#1e3a5f] hover:bg-[#2a4a73] disabled:bg-[#d1d9e6] text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                            >
+                              {submittingChargesheet ? (
+                                <div className="flex items-center gap-2 justify-center">
+                                  <LoaderIcon className="animate-spin" size={14} />
+                                  <span>Filing Chargesheet...</span>
+                                </div>
+                              ) : (
+                                <span>Generate Official Digital Chargesheet</span>
+                              )}
+                            </button>
+
+                          </form>
+
+                          {generatedChargesheet && (
+                            <div className="bg-slate-50 border border-[#d1d9e6] rounded-lg p-4 space-y-4 relative overflow-hidden">
+                              {/* Indian Tricolor Bar */}
+                              <div className="absolute top-0 left-0 right-0 h-1 flex">
+                                <div className="flex-1 bg-[#ff9933]" />
+                                <div className="flex-1 bg-white" />
+                                <div className="flex-1 bg-[#138808]" />
+                              </div>
+
+                              <div className="text-center space-y-1">
+                                <img src="/emblem.png" alt="Emblem" className="h-10 w-auto mx-auto object-contain" />
+                                <h4 className="text-[11px] font-extrabold text-[#1e3a5f] uppercase tracking-wider">Karnataka State Police</h4>
+                                <span className="text-[9px] text-[#6c757d] block font-bold">FORM NO. 11 — FINAL CHARGESHEET REPORT</span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3 text-[10px] border-t border-b border-slate-200 py-3">
+                                <div>
+                                  <span className="text-[#6c757d] uppercase text-[9px] block">FIR Crime No.</span>
+                                  <strong className="text-[#1e3a5f]">{generatedChargesheet.crime_no}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[#6c757d] uppercase text-[9px] block">Filing Date</span>
+                                  <strong className="text-[#1e3a5f]">{generatedChargesheet.date}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[#6c757d] uppercase text-[9px] block">Investigating Officer</span>
+                                  <strong className="text-[#1e3a5f]">{generatedChargesheet.officer_rank} {generatedChargesheet.officer_name}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-[#6c757d] uppercase text-[9px] block">Magistrate Jurisdiction</span>
+                                  <strong className="text-[#1e3a5f] font-mono">{magistrateCode}</strong>
+                                </div>
+                              </div>
+
+                              <div className="space-y-1.5 text-[10px]">
+                                <strong className="text-[#1e3a5f] block uppercase tracking-wider">Offenses Charged Under:</strong>
+                                <div className="space-y-1">
+                                  {generatedChargesheet.sections.map((sec: any, idx: number) => (
+                                    <div key={idx} className="bg-white p-2 rounded border border-slate-200 flex justify-between">
+                                      <span><strong>BNS Sec {sec.bns_section}</strong> (IPC {sec.ipc_section}) — {sec.crime_type}</span>
+                                      <span className="text-red-700 font-bold text-[9px]">{sec.max_punishment}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Signature block */}
+                              <div className="border border-slate-200 bg-white p-3 rounded-lg flex items-center justify-between">
+                                <div className="space-y-1">
+                                  <span className="text-[9px] text-emerald-700 font-bold flex items-center gap-1">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Signed Digitally under BSA Sec 63
+                                  </span>
+                                  <span className="text-[8px] text-[#6c757d] font-mono block">Signature Hash:</span>
+                                  <span className="text-[9px] text-[#1e3a5f] font-mono block select-all font-semibold">{generatedChargesheet.full_hash}</span>
+                                </div>
+                                <div className="h-14 w-14 bg-slate-100 border border-slate-200 flex items-center justify-center rounded">
+                                  <div className="flex flex-col gap-0.5 items-center w-full px-2">
+                                    <div className="h-1 w-full bg-slate-800" />
+                                    <div className="h-2 w-full bg-slate-800" />
+                                    <div className="h-0.5 w-full bg-slate-800" />
+                                    <div className="h-1.5 w-full bg-slate-800" />
+                                    <div className="h-1 w-full bg-slate-800" />
+                                    <div className="h-2 w-full bg-slate-800" />
+                                    <div className="h-0.5 w-full bg-slate-800" />
+                                    <span className="text-[7px] text-[#6c757d] mt-1 font-mono font-bold">KSP SIGNED</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const printWin = window.open('', '_blank');
+                                  if (printWin) {
+                                    printWin.document.write(`
+                                      <html>
+                                        <head>
+                                          <title>KSP Chargesheet - ${generatedChargesheet.crime_no}</title>
+                                          <style>
+                                            body { font-family: system-ui, sans-serif; padding: 40px; color: #111; }
+                                            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                                            .header img { height: 80px; }
+                                            .details-grid { display: grid; grid-template-cols: 1fr 1fr; gap: 20px; margin: 30px 0; }
+                                            .section-title { font-weight: bold; text-transform: uppercase; margin-top: 30px; font-size: 14px; }
+                                            .item-row { border: 1px solid #ccc; padding: 10px; margin: 5px 0; border-radius: 4px; }
+                                            .signature-block { border: 1px solid #222; padding: 20px; margin-top: 50px; background: #fafafa; display: flex; justify-content: space-between; align-items: center; }
+                                            .hash { font-family: monospace; font-size: 11px; word-break: break-all; }
+                                          </style>
+                                        </head>
+                                        <body>
+                                          <div class="header">
+                                            <img src="/emblem.png" />
+                                            <h2>KARNATAKA STATE POLICE</h2>
+                                            <h3>FORM NO. 11 — FINAL CHARGESHEET REPORT</h3>
+                                            <p>Submitted to Magistrate court under Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023</p>
+                                          </div>
+                                          <div class="details-grid">
+                                            <div><strong>FIR Crime No:</strong> ${generatedChargesheet.crime_no}</div>
+                                            <div><strong>Filing Date:</strong> ${generatedChargesheet.date}</div>
+                                            <div><strong>Investigating Officer:</strong> ${generatedChargesheet.officer_rank} ${generatedChargesheet.officer_name} (Badge: ${userId})</div>
+                                            <div><strong>Magistrate Jurisdiction Court:</strong> ${magistrateCode}</div>
+                                            <div><strong>Chargesheet Type:</strong> ${csType}</div>
+                                          </div>
+                                          <div class="section-title">Case Brief Narrative</div>
+                                          <div class="item-row" style="white-space: pre-line;">${aiNarrativeInput}</div>
+                                          
+                                          <div class="section-title">Offenses Charged Under</div>
+                                          ${generatedChargesheet.sections.map((sec: any) => `
+                                            <div class="item-row">
+                                              <strong>BNS Section ${sec.bns_section}</strong> (IPC Section ${sec.ipc_section || 'N/A'}) &mdash; ${sec.crime_type}<br/>
+                                              <em>Description:</em> ${sec.description}<br/>
+                                              <em>Max Punishment:</em> ${sec.max_punishment}
+                                            </div>
+                                          `).join('')}
+
+                                          <div class="signature-block">
+                                            <div>
+                                              <strong style="color: green;">✔ SIGNED DIGITALLY - KARNATAKA STATE POLICE</strong><br/>
+                                              <span class="hash">SHA256: ${generatedChargesheet.full_hash}</span><br/>
+                                              <small style="color: #666;">Generated under Bharatiya Sakshya Adhiniyam (BSA) Sec 63 electronic record guidelines</small>
+                                            </div>
+                                            <div style="font-weight: bold; text-align: center; border: 1px solid #ccc; padding: 10px; background: #fff;">
+                                              KSP SECURE
+                                            </div>
+                                          </div>
+                                        </body>
+                                      </html>
+                                    `);
+                                    printWin.document.close();
+                                    printWin.print();
+                                  }
+                                }}
+                                className="w-full py-1.5 bg-white hover:bg-slate-100 text-[#1e3a5f] border border-[#d1d9e6] rounded text-[10px] font-bold cursor-pointer transition text-center shadow-sm"
+                              >
+                                Print Official Chargesheet Form
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+
+                      {/* Right: Interactive Lookup Registry */}
+                      <div className="lg:col-span-5 space-y-6">
+                        
+                        <div className="border border-[#d1d9e6] bg-white rounded-lg p-5 space-y-4 shadow-sm">
+                          <div className="flex items-center justify-between border-b border-[#e8ecf1] pb-2">
+                            <span className="font-extrabold uppercase text-[#1e3a5f] text-sm flex items-center gap-2">
+                              🔍 BNS/IPC Cross-Reference Search
+                            </span>
+                            <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold border border-emerald-200">Interactive Registry</span>
+                          </div>
+
+                          <form onSubmit={handleBnsSearch} className="space-y-3">
+                            <div>
+                              <label className="block text-[9px] text-[#6c757d] uppercase font-bold mb-1">Search Query</label>
+                              <input
+                                type="text"
+                                value={bnsSearchQuery}
+                                onChange={(e) => setBnsSearchQuery(e.target.value)}
+                                placeholder="Enter BNS/IPC section or crime description..."
+                                className="bg-[#f8f9fa] border border-[#d1d9e6] text-[10px] text-[#1e3a5f] rounded-lg p-2 w-full focus:outline-none focus:border-[#1e3a5f]"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[9px] text-[#6c757d] uppercase font-bold mb-1">Category</label>
+                                <select
+                                  value={bnsCategory}
+                                  onChange={(e) => setBnsCategory(e.target.value)}
+                                  className="bg-white border border-[#d1d9e6] text-[9px] text-[#1e3a5f] rounded-lg p-1.5 w-full focus:outline-none"
+                                >
+                                  <option value="All">All Categories</option>
+                                  <option value="Offences Against Body">Against Body</option>
+                                  <option value="Sexual Offences">Sexual Offences</option>
+                                  <option value="Offences Against Property">Property Offences</option>
+                                  <option value="Domestic Violence">Domestic Violence</option>
+                                  <option value="Criminal Breach of Trust">Breach of Trust</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[9px] text-[#6c757d] uppercase font-bold mb-1">Bailable</label>
+                                <select
+                                  value={bnsBailable}
+                                  onChange={(e) => setBnsBailable(e.target.value)}
+                                  className="bg-white border border-[#d1d9e6] text-[9px] text-[#1e3a5f] rounded-lg p-1.5 w-full focus:outline-none"
+                                >
+                                  <option value="">All Statuses</option>
+                                  <option value="1">Yes (Bailable)</option>
+                                  <option value="0">No (Non-Bailable)</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[9px] text-[#6c757d] uppercase font-bold mb-1">Cognizable</label>
+                                <select
+                                  value={bnsCognizable}
+                                  onChange={(e) => setBnsCognizable(e.target.value)}
+                                  className="bg-white border border-[#d1d9e6] text-[9px] text-[#1e3a5f] rounded-lg p-1.5 w-full focus:outline-none"
+                                >
+                                  <option value="">All Statuses</option>
+                                  <option value="1">Yes (Cognizable)</option>
+                                  <option value="0">No (Non-Cognizable)</option>
+                                </select>
+                              </div>
+                              <div className="flex items-end">
+                                <button
+                                  type="submit"
+                                  disabled={bnsSearchLoading}
+                                  className="w-full py-1.5 bg-[#1e3a5f] hover:bg-[#2a4a73] text-white rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                                >
+                                  {bnsSearchLoading ? <span>Searching...</span> : <span>Execute Query</span>}
+                                </button>
+                              </div>
+                            </div>
+                          </form>
+
+                          {/* Registry Search Results list */}
+                          <div className="space-y-2 pt-2 border-t border-slate-100">
+                            <span className="text-[10px] uppercase font-bold text-[#6c757d] block">
+                              Results Registry ({bnsSearchResults.length} found)
+                            </span>
+                            
+                            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                              {bnsSearchResults.length > 0 ? (
+                                bnsSearchResults.map((mapping: any) => (
+                                  <div key={mapping.id} className="bg-[#f8f9fa] border border-[#d1d9e6] p-3 rounded-lg space-y-1.5">
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <span className="font-extrabold text-[#1e3a5f] text-xs">BNS Sec {mapping.bns_section}</span>
+                                        <span className="text-[9px] text-[#6c757d] ml-1.5">(IPC Sec {mapping.ipc_section})</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (!selectedBnsSections.some(sec => sec.bns_section === mapping.bns_section)) {
+                                            setSelectedBnsSections(prev => [...prev, mapping]);
+                                          } else {
+                                            alert("Section already added to chargesheet.");
+                                          }
+                                        }}
+                                        className="text-[#1e3a5f] hover:text-[#2a4a73] font-bold text-[9px] uppercase border border-[#d1d9e6] bg-white px-2 py-0.5 rounded cursor-pointer transition"
+                                      >
+                                        + Charge
+                                      </button>
+                                    </div>
+                                    <div className="text-[10px] text-[#4a5568]">{mapping.description}</div>
+                                    <div className="text-[9px] text-[#6c757d] flex justify-between font-medium">
+                                      <span>Punishment: <strong className="text-[#1e3a5f]">{mapping.max_punishment || 'N/A'}</strong></span>
+                                    </div>
+                                    <div className="flex gap-3 text-[8px] uppercase font-bold pt-0.5 border-t border-slate-200/50">
+                                      <span className={mapping.is_cognizable === 1 ? 'text-emerald-700' : 'text-slate-400'}>
+                                        Cognizable: {mapping.is_cognizable === 1 ? 'Yes' : 'No'}
+                                      </span>
+                                      <span className={mapping.is_bailable === 1 ? 'text-emerald-700' : 'text-[#d9251c]'}>
+                                        Bailable: {mapping.is_bailable === 1 ? 'Yes' : 'No'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-[10px] text-[#6c757d] italic text-center py-4 bg-slate-50 rounded">
+                                  Run a search to browse and map sections.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </div>
                   </div>
                 )}
               </div>

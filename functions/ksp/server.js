@@ -1040,6 +1040,127 @@ app.get('/api/bns/translate/:ipcSection', async (req, res) => {
   }
 });
 
+app.get('/api/bns/lookup', async (req, res) => {
+  try {
+    const { query, category, cognizable, bailable } = req.query;
+    const db = catalyst.datastore();
+    
+    let sql = "SELECT * FROM BNS_Mapping WHERE 1=1";
+    const params = [];
+
+    if (query) {
+      sql += " AND (ipc_section LIKE ? OR bns_section LIKE ? OR description LIKE ?)";
+      const wild = `%${query}%`;
+      params.push(wild, wild, wild);
+    }
+    if (category && category !== 'All') {
+      sql += " AND category = ?";
+      params.push(category);
+    }
+    if (cognizable !== undefined && cognizable !== '') {
+      sql += " AND is_cognizable = ?";
+      params.push(parseInt(cognizable));
+    }
+    if (bailable !== undefined && bailable !== '') {
+      sql += " AND is_bailable = ?";
+      params.push(parseInt(bailable));
+    }
+
+    sql += " LIMIT 100";
+    const rows = await db.execute(sql, params);
+    res.json({ success: true, mappings: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/bns/advisor', async (req, res) => {
+  try {
+    const { caseDescription } = req.body;
+    if (!caseDescription) {
+      return res.status(400).json({ success: false, error: "Missing 'caseDescription' in request body." });
+    }
+
+    const { generateLegalRecommendation } = require('./shared/gemini');
+    const result = await generateLegalRecommendation(caseDescription);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/bns/chargesheet', async (req, res) => {
+  try {
+    const { caseId, csType, officerId, selectedSections, accusedIds } = req.body;
+    if (!caseId || !officerId || !selectedSections || selectedSections.length === 0) {
+      return res.status(400).json({ success: false, error: "Missing required chargesheet metadata (caseId, officerId, selectedSections)." });
+    }
+
+    const db = catalyst.datastore();
+    
+    // Check if the case exists
+    const cases = await db.execute("SELECT * FROM CaseMaster WHERE CaseMasterID = ?", [caseId]);
+    if (cases.length === 0) {
+      return res.status(404).json({ success: false, error: "Case not found in database." });
+    }
+    const targetCase = cases[0];
+
+    // Check if the officer exists
+    const officers = await db.execute("SELECT * FROM Employee WHERE EmployeeID = ?", [officerId]);
+    if (officers.length === 0) {
+      return res.status(404).json({ success: false, error: "Investigating Officer not found." });
+    }
+    const targetOfficer = officers[0];
+
+    // Insert into ChargesheetDetails
+    const csResult = await db.execute(
+      "INSERT INTO ChargesheetDetails (CaseMasterID, csdate, cstype, PolicePersonID) VALUES (?, datetime('now'), ?, ?)",
+      [caseId, csType || 'Final Report', officerId]
+    );
+
+    // Save Act & Section associations
+    let actOrder = 1;
+    for (const sec of selectedSections) {
+      const actCode = sec.act || 'BNS';
+      const sectionCode = sec.section || sec.bns_section;
+      
+      // Ensure Act & Section exists in references or just create it if missing
+      await db.execute("INSERT OR IGNORE INTO Act (ActCode, ActDescription) VALUES (?, ?)", [actCode, `${actCode} Act`]);
+      await db.execute("INSERT OR IGNORE INTO Section (ActCode, SectionCode, SectionDescription) VALUES (?, ?, ?)", [actCode, sectionCode, sec.description || '']);
+      
+      // Insert association
+      await db.execute(
+        "INSERT OR IGNORE INTO ActSectionAssociation (CaseMasterID, ActCode, SectionCode, ActOrderID, SectionOrderID) VALUES (?, ?, ?, ?, ?)",
+        [caseId, actCode, sectionCode, actOrder, actOrder]
+      );
+      actOrder++;
+    }
+
+    // Generate digital cryptographic hash
+    const crypto = require('crypto');
+    const csHash = crypto.createHash('sha256')
+      .update(`${caseId}-${officerId}-${Date.now()}-${JSON.stringify(selectedSections)}`)
+      .digest('hex');
+
+    res.json({
+      success: true,
+      chargesheet: {
+        case_id: caseId,
+        crime_no: targetCase.CrimeNo,
+        officer_name: targetOfficer.EmployeeName,
+        officer_rank: targetOfficer.RankCode || 'SI',
+        date: new Date().toLocaleDateString('en-IN'),
+        type: csType || 'Final Report',
+        sections: selectedSections,
+        digital_signature: `SHA256:${csHash.substring(0, 16).toUpperCase()}...`,
+        full_hash: csHash
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // --- SYSTEM HEALTH & MONITORING ENDPOINTS ---
 

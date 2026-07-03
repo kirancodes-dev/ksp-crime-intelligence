@@ -1069,8 +1069,197 @@ async function generateNarrativeStream(queryText, toolName, retrievedData, onTok
   return { success: true, provider: 'mock' };
 }
 
+async function generateLegalRecommendation(caseNarrative) {
+  const systemPrompt = `You are the AI Legal Advisor for the Karnataka State Police.
+Your task is to analyze the brief facts / narrative of a crime, identify the key criminal elements, and map them to the corresponding sections of the Bharatiya Nyaya Sanhita (BNS), 2023.
+
+For context, here are some common BNS and IPC section mappings:
+- Murder: IPC 302 -> BNS 103 (Punishment: Death or life imprisonment, Cognizable: Yes, Bailable: No)
+- Culpable Homicide: IPC 304 -> BNS 105 (Punishment: Life imprisonment or 10 years, Cognizable: Yes, Bailable: No)
+- Attempt to Murder: IPC 307 -> BNS 109 (Punishment: Life imprisonment, Cognizable: Yes, Bailable: No)
+- Hurt / Grievous Hurt: IPC 323/324/325 -> BNS 115/117 (Punishment: Up to 7 years, Cognizable: Yes, Bailable: Yes/No depending on severity)
+- Rape: IPC 376 -> BNS 64 (Punizable: Life imprisonment, Cognizable: Yes, Bailable: No)
+- Assault on Woman (Modesty): IPC 354 -> BNS 74 (Punishment: 5 years, Cognizable: Yes, Bailable: No)
+- Theft: IPC 379 -> BNS 303 (Punishment: 3 years, Cognizable: Yes, Bailable: Yes)
+- Theft in Dwelling House: IPC 380 -> BNS 305 (Punishment: 7 years, Cognizable: Yes, Bailable: No)
+- Extortion: IPC 384 -> BNS 308 (Punishment: 7 years, Cognizable: Yes, Bailable: Yes/No depending on severity)
+- Robbery: IPC 392 -> BNS 309 (Punishment: 10 years, Cognizable: Yes, Bailable: No)
+- Dacoity: IPC 395 -> BNS 310 (Punishment: Life imprisonment, Cognizable: Yes, Bailable: No)
+- Cheating: IPC 420 -> BNS 318 (Punishment: 7 years, Cognizable: Yes, Bailable: No)
+- Criminal Breach of Trust: IPC 406 -> BNS 316 (Punishment: 3 years, Cognizable: Yes, Bailable: Yes)
+- Criminal Trespass / House Trespass: IPC 447/448 -> BNS 329 (Cognizable: Yes, Bailable: Yes)
+- Cruelty by Husband/Relatives: IPC 498A -> BNS 85 (Punishment: 3 years, Cognizable: Yes, Bailable: No)
+- Dowry Death: IPC 304B -> BNS 80 (Punishment: Life/7 years, Cognizable: Yes, Bailable: No)
+
+Based on the narrative provided, suggest the most applicable BNS sections.
+You MUST respond with a JSON object in this format (do not include any markdown wrappers, or if you do, wrap it strictly in a valid JSON block):
+{
+  "analysis": "A brief analysis of the criminal elements found in the facts.",
+  "recommendations": [
+    {
+      "bns_section": "303",
+      "ipc_section": "379",
+      "crime_type": "Theft",
+      "reasoning": "Explain why this section applies based on facts.",
+      "severity": "High",
+      "max_punishment": "3 years",
+      "is_cognizable": 1,
+      "is_bailable": 1
+    }
+  ],
+  "overall_severity": "Critical",
+  "next_steps": "Investigator action items."
+}
+`;
+
+  const userMessage = `Case Narrative: "${caseNarrative}"`;
+  
+  // Try live LLM call first
+  const result = await callLLM(systemPrompt, userMessage, true);
+  if (result.success) {
+    try {
+      const recommendation = parseJsonResponse(result.content);
+      return { success: true, data: recommendation, provider: result.provider };
+    } catch (err) {
+      console.warn("AI Legal Advisor JSON parse failed. Falling back to rule-based parser.");
+    }
+  }
+
+  // Rule-based Fallback Parser
+  const text = caseNarrative.toLowerCase();
+  const recommendations = [];
+  let overallSeverity = 'Medium';
+  let analysis = 'Analyzed via Karnataka State Police Local Rule-Based NLP engine. Identified elements matching key BNS 2023 acts.';
+  let nextSteps = '1. Secure scene and gather witnesses.\n2. Obtain local CCTV recordings.\n3. Log details in evidence registry.';
+
+  if (text.includes('kill') || text.includes('murder') || text.includes('dead') || text.includes('death')) {
+    recommendations.push({
+      bns_section: '103',
+      ipc_section: '302',
+      crime_type: 'Murder',
+      reasoning: 'Facts indicate elements of culpable homicide amounting to murder.',
+      severity: 'Critical',
+      max_punishment: 'Death or Life Imprisonment',
+      is_cognizable: 1,
+      is_bailable: 0
+    });
+    overallSeverity = 'Critical';
+    nextSteps = '1. Cordon crime scene immediately.\n2. Dispatch forensic units and request autopsy report.\n3. Secure statement from first responder.';
+  }
+
+  if (text.includes('attempt') && (text.includes('murder') || text.includes('kill'))) {
+    recommendations.push({
+      bns_section: '109',
+      ipc_section: '307',
+      crime_type: 'Attempt to Murder',
+      reasoning: 'Act done with intention to cause death, which failed.',
+      severity: 'High',
+      max_punishment: 'Life Imprisonment',
+      is_cognizable: 1,
+      is_bailable: 0
+    });
+    overallSeverity = 'High';
+  }
+
+  if (text.includes('cheat') || text.includes('phish') || text.includes('sms') || text.includes('fraud') || text.includes('scam') || text.includes('net-banking')) {
+    recommendations.push({
+      bns_section: '318',
+      ipc_section: '420',
+      crime_type: 'Cheating',
+      reasoning: 'Deceptive inducement to deliver property or transfer funds online.',
+      severity: 'High',
+      max_punishment: '7 years',
+      is_cognizable: 1,
+      is_bailable: 0
+    });
+    overallSeverity = 'High';
+    nextSteps = '1. Issue notice to Bank node to freeze suspect accounts.\n2. Trace IP headers and phone subscriber registration logs.\n3. Retrieve server access trail logs.';
+  }
+
+  if (text.includes('theft') || text.includes('snatch') || text.includes('steal') || text.includes('gold') || text.includes('jewelry') || text.includes('chain')) {
+    recommendations.push({
+      bns_section: '303',
+      ipc_section: '379',
+      crime_type: 'Theft',
+      reasoning: 'Dishonest removal of moveable property from possession of owner.',
+      severity: 'Medium',
+      max_punishment: '3 years',
+      is_cognizable: 1,
+      is_bailable: 1
+    });
+    
+    if (text.includes('house') || text.includes('door') || text.includes('lock') || text.includes('break')) {
+      recommendations.push({
+        bns_section: '305',
+        ipc_section: '380',
+        crime_type: 'Theft in dwelling house',
+        reasoning: 'Theft committed inside a residential building or dwelling.',
+        severity: 'High',
+        max_punishment: '7 years',
+        is_cognizable: 1,
+        is_bailable: 0
+      });
+      overallSeverity = 'High';
+    }
+  }
+
+  if (text.includes('assault') || text.includes('beat') || text.includes('hit') || text.includes('rod') || text.includes('attack')) {
+    recommendations.push({
+      bns_section: '115',
+      ipc_section: '323',
+      crime_type: 'Voluntarily causing hurt',
+      reasoning: 'Physical battery causing bodily pain or injury.',
+      severity: 'Medium',
+      max_punishment: '1 year',
+      is_cognizable: 1,
+      is_bailable: 1
+    });
+    
+    if (text.includes('fracture') || text.includes('severe') || text.includes('iron') || text.includes('weapon')) {
+      recommendations.push({
+        bns_section: '117',
+        ipc_section: '325',
+        crime_type: 'Voluntarily causing grievous hurt',
+        reasoning: 'Battery resulting in bone fracture or severe physical incapacitation.',
+        severity: 'High',
+        max_punishment: '7 years',
+        is_cognizable: 1,
+        is_bailable: 0
+      });
+      overallSeverity = 'High';
+    }
+  }
+
+  // Default if no keywords matched
+  if (recommendations.length === 0) {
+    recommendations.push({
+      bns_section: '296',
+      ipc_section: '290',
+      crime_type: 'Public Nuisance',
+      reasoning: 'General disturbance of public order or generic offense facts.',
+      severity: 'Low',
+      max_punishment: 'Fine',
+      is_cognizable: 0,
+      is_bailable: 1
+    });
+    overallSeverity = 'Low';
+  }
+
+  return {
+    success: true,
+    data: {
+      analysis,
+      recommendations,
+      overall_severity: overallSeverity,
+      next_steps: nextSteps
+    },
+    provider: 'local-rules'
+  };
+}
+
 module.exports = {
   routeQuery,
   generateNarrative,
-  generateNarrativeStream
+  generateNarrativeStream,
+  generateLegalRecommendation
 };

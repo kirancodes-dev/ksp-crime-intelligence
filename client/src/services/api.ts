@@ -687,5 +687,43 @@ export const api = {
       throw new Error('Failed to translate IPC section to BNS');
     }
     return response.json();
+  },
+
+  async searchBns(query?: string, category?: string, cognizable?: number | string, bailable?: number | string): Promise<any> {
+    const params = new URLSearchParams();
+    if (query) params.append('query', query);
+    if (category) params.append('category', category);
+    if (cognizable !== undefined && cognizable !== '') params.append('cognizable', String(cognizable));
+    if (bailable !== undefined && bailable !== '') params.append('bailable', String(bailable));
+
+    const response = await secureFetch(`${BASE_URL}/bns/lookup?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error('Failed to search BNS mapping registry');
+    }
+    return response.json();
+  },
+
+  async getLegalRecommendation(caseDescription: string): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/bns/advisor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseDescription })
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch legal advisor recommendation');
+    }
+    return response.json();
+  },
+
+  async submitChargesheet(caseId: number, csType: string, officerId: string, selectedSections: any[], accusedIds: number[]): Promise<any> {
+    const response = await secureFetch(`${BASE_URL}/bns/chargesheet`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caseId, csType, officerId, selectedSections, accusedIds })
+    });
+    if (!response.ok) {
+      throw new Error('Failed to register chargesheet');
+    }
+    return response.json();
   }
 };
