@@ -14,7 +14,7 @@ module.exports = async (targetName = "") => {
     // Fetch a list of accused offenders
     let sql = `
       SELECT a.*, f.fir_number, f.crime_type, f.status as fir_status
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
     `;
     

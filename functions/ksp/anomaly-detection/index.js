@@ -7,7 +7,7 @@ module.exports = async () => {
     // 1. Identify active high-risk offenders (risk score > 0.65)
     const activeHighRiskOffenders = await db.execute(`
       SELECT name, age, gang_affiliation, MAX(risk_score) as risk_score, COUNT(fir_id) as case_count
-      FROM Accused
+      FROM FIR_Accused
       WHERE risk_score > 0.65
       GROUP BY name
       ORDER BY risk_score DESC

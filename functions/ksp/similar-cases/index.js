@@ -12,7 +12,7 @@ module.exports = async (firId) => {
     const targetFir = targetResults[0];
 
     // Get accused for the target FIR
-    const targetAccused = await db.execute('SELECT * FROM Accused WHERE fir_id = ?', [firId]);
+    const targetAccused = await db.execute('SELECT * FROM FIR_Accused WHERE fir_id = ?', [firId]);
     const targetAccusedNames = targetAccused.map(a => a.name);
     const targetGangs = targetAccused
       .map(a => a.gang_affiliation)
@@ -57,7 +57,7 @@ module.exports = async (firId) => {
       }
 
       // Shared accused / gang affiliation: +0.2
-      const candidateAccused = await db.execute('SELECT * FROM Accused WHERE fir_id = ?', [candidate.id]);
+      const candidateAccused = await db.execute('SELECT * FROM FIR_Accused WHERE fir_id = ?', [candidate.id]);
       const candidateAccusedNames = candidateAccused.map(a => a.name);
       const candidateGangs = candidateAccused
         .map(a => a.gang_affiliation)

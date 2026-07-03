@@ -60,7 +60,7 @@ module.exports = async (queryText, userId, role) => {
         else if (query.includes("subhash") || query.includes("patil")) targetName = "Subhash Patil";
         else if (query.includes("rupa") || query.includes("naik")) targetName = "Rupa Naik";
         else {
-          const accusedList = await db.execute("SELECT name FROM Accused GROUP BY name");
+          const accusedList = await db.execute("SELECT name FROM FIR_Accused GROUP BY name");
           for (let acc of accusedList) {
             if (query.includes(acc.name.toLowerCase().split(' ')[0])) {
               targetName = acc.name;
@@ -192,9 +192,9 @@ module.exports = async (queryText, userId, role) => {
 
       const accusedWithFirs = await db.execute(`
         SELECT a.name, a.gang_affiliation, a.prior_convictions, a.risk_score, f.fir_number, f.crime_type, f.district, f.police_station
-        FROM Accused a
+        FROM FIR_Accused a
         JOIN FIR f ON a.fir_id = f.id
-        WHERE a.name IN (SELECT name FROM Accused GROUP BY name HAVING COUNT(fir_id) > 1) 
+        WHERE a.name IN (SELECT name FROM FIR_Accused GROUP BY name HAVING COUNT(fir_id) > 1) 
            OR a.gang_affiliation IS NOT NULL
         LIMIT 30
       `);
@@ -506,7 +506,7 @@ module.exports = async (queryText, userId, role) => {
             ELSE 'Senior (50+)'
           END as age_group,
           COUNT(*) as count
-        FROM Accused a
+        FROM FIR_Accused a
         ${joinClause}
         ${whereClause}
         GROUP BY age_group
@@ -515,7 +515,7 @@ module.exports = async (queryText, userId, role) => {
 
       const genderSplit = await db.execute(`
         SELECT a.gender, COUNT(*) as count
-        FROM Accused a
+        FROM FIR_Accused a
         ${joinClause}
         ${whereClause}
         GROUP BY a.gender
@@ -524,7 +524,7 @@ module.exports = async (queryText, userId, role) => {
 
       const educationLevels = await db.execute(`
         SELECT a.education_level, COUNT(*) as count
-        FROM Accused a
+        FROM FIR_Accused a
         ${joinClause}
         ${whereClause ? whereClause + " AND a.education_level IS NOT NULL " : " WHERE a.education_level IS NOT NULL "}
         GROUP BY a.education_level
@@ -533,7 +533,7 @@ module.exports = async (queryText, userId, role) => {
 
       const migrationStatus = await db.execute(`
         SELECT a.migration_status as status, COUNT(*) as count
-        FROM Accused a
+        FROM FIR_Accused a
         ${joinClause}
         ${whereClause}
         GROUP BY status
@@ -678,8 +678,8 @@ module.exports = async (queryText, userId, role) => {
         const targetFir = firMatch[1].toUpperCase();
         const firRows = await db.execute(`
           SELECT f.*, 
-                 (SELECT GROUP_CONCAT(name, ', ') FROM Accused WHERE fir_id = f.id) as accused_names,
-                 (SELECT GROUP_CONCAT(name, ', ') FROM Victim WHERE fir_id = f.id) as victim_names
+                 (SELECT GROUP_CONCAT(name, ', ') FROM FIR_Accused WHERE fir_id = f.id) as accused_names,
+                 (SELECT GROUP_CONCAT(name, ', ') FROM FIR_Victim WHERE fir_id = f.id) as victim_names
           FROM FIR f
           WHERE f.fir_number = ?
         `, [targetFir]);
@@ -758,7 +758,7 @@ module.exports = async (queryText, userId, role) => {
       if (scope && scope.type !== 'statewide') {
         const suspectCases = await db.execute(`
           SELECT f.district, f.police_station 
-          FROM Accused a
+          FROM FIR_Accused a
           JOIN FIR f ON a.fir_id = f.id
           WHERE a.name LIKE ?
         `, [`%${targetSuspect}%`]);
@@ -797,8 +797,8 @@ module.exports = async (queryText, userId, role) => {
         const filteredMatches = [];
         for (const candidateMatch of result.matches) {
           const suspectCases = await db.execute(`
-            SELECT f.district, f.police_station 
-            FROM Accused a
+            SELECT f.district, f.police_station
+            FROM FIR_Accused a
             JOIN FIR f ON a.fir_id = f.id
             WHERE a.name LIKE ?
           `, [`%${candidateMatch.name}%`]);

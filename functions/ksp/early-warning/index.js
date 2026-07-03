@@ -21,7 +21,7 @@ module.exports = async (scope = null) => {
              GROUP_CONCAT(DISTINCT f.fir_number) as fir_numbers,
              GROUP_CONCAT(DISTINCT f.district) as districts,
              GROUP_CONCAT(DISTINCT f.crime_type) as crime_types
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE 1=1 ${scopeFilter}
       GROUP BY a.name
@@ -56,7 +56,7 @@ module.exports = async (scope = null) => {
              GROUP_CONCAT(DISTINCT f.district) as districts,
              GROUP_CONCAT(DISTINCT a.name) as members,
              MAX(a.risk_score) as max_risk
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE a.gang_affiliation IS NOT NULL ${scopeFilter}
       GROUP BY a.gang_affiliation
@@ -142,7 +142,7 @@ module.exports = async (scope = null) => {
              MIN(a.risk_score) as initial_risk,
              MAX(a.risk_score) as current_risk,
              GROUP_CONCAT(DISTINCT f.date_reported ORDER BY f.date_reported) as dates
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE 1=1 ${scopeFilter}
       GROUP BY a.name

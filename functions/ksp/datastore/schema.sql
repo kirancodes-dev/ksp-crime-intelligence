@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS Warrants (
     assigned_officer TEXT,
     notes TEXT,
     FOREIGN KEY(fir_id) REFERENCES FIR(id) ON DELETE CASCADE,
-    FOREIGN KEY(accused_id) REFERENCES Accused(id),
+    FOREIGN KEY(accused_id) REFERENCES FIR_Accused(id),
     FOREIGN KEY(court_order_id) REFERENCES CourtOrders(id)
 );
 
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS CourtOrders (
     order_summary TEXT,
     sentence_details TEXT,
     FOREIGN KEY(fir_id) REFERENCES FIR(id) ON DELETE CASCADE,
-    FOREIGN KEY(accused_id) REFERENCES Accused(id)
+    FOREIGN KEY(accused_id) REFERENCES FIR_Accused(id)
 );
 
 -- 13. EvidenceChain Table (Digital Chain-of-Custody)
@@ -282,9 +282,9 @@ CREATE INDEX IF NOT EXISTS idx_fir_crime_type ON FIR(crime_type);
 CREATE INDEX IF NOT EXISTS idx_fir_date ON FIR(date_reported);
 CREATE INDEX IF NOT EXISTS idx_fir_station ON FIR(police_station);
 CREATE INDEX IF NOT EXISTS idx_fir_bns ON FIR(bns_section);
-CREATE INDEX IF NOT EXISTS idx_accused_name ON Accused(name);
-CREATE INDEX IF NOT EXISTS idx_accused_gang ON Accused(gang_affiliation);
-CREATE INDEX IF NOT EXISTS idx_accused_risk ON Accused(risk_score);
+CREATE INDEX IF NOT EXISTS idx_accused_name ON FIR_Accused(name);
+CREATE INDEX IF NOT EXISTS idx_accused_gang ON FIR_Accused(gang_affiliation);
+CREATE INDEX IF NOT EXISTS idx_accused_risk ON FIR_Accused(risk_score);
 CREATE INDEX IF NOT EXISTS idx_location_coords ON Location(latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_location_district ON Location(district);
 CREATE INDEX IF NOT EXISTS idx_financial_fir ON FinancialTransaction(fir_id);

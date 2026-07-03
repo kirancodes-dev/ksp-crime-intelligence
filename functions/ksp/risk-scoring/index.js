@@ -8,7 +8,7 @@ module.exports = async (accusedName, modifiers = {}, scope = null) => {
     // Use REPLACE to handle LLM-generated names that may differ from DB (e.g., quotes around aliases)
     const accusedRecords = await db.execute(`
       SELECT a.*, f.fir_number, f.crime_type, f.district, f.police_station, f.date_reported
-      FROM Accused a
+      FROM FIR_Accused a
       JOIN FIR f ON a.fir_id = f.id
       WHERE a.name LIKE ?
          OR REPLACE(a.name, '''', '') LIKE ?
@@ -178,7 +178,7 @@ module.exports = async (accusedName, modifiers = {}, scope = null) => {
 
     const moPatterns = await db.execute(`
       SELECT f.modus_operandi, COUNT(*) as count
-      FROM Accused a JOIN FIR f ON a.fir_id = f.id
+      FROM FIR_Accused a JOIN FIR f ON a.fir_id = f.id
       WHERE a.name LIKE ? OR REPLACE(a.name, '''', '') LIKE ?
       GROUP BY f.modus_operandi ORDER BY count DESC
     `, [`%${accusedName}%`, `%${accusedName}%`]);

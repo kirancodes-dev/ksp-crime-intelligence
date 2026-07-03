@@ -8,8 +8,8 @@ module.exports = async (firId) => {
     if (firs.length === 0) return { success: false, error: "FIR not found" };
     const fir = firs[0];
 
-    const accused = await db.execute("SELECT * FROM Accused WHERE fir_id = ?", [firId]);
-    const victims = await db.execute("SELECT * FROM Victim WHERE fir_id = ?", [firId]);
+    const accused = await db.execute("SELECT * FROM FIR_Accused WHERE fir_id = ?", [firId]);
+    const victims = await db.execute("SELECT * FROM FIR_Victim WHERE fir_id = ?", [firId]);
     const locations = await db.execute("SELECT * FROM Location WHERE fir_id = ?", [firId]);
     const financials = await db.execute("SELECT * FROM FinancialTransaction WHERE fir_id = ?", [firId]);
     const caseLinks = await db.execute(`
