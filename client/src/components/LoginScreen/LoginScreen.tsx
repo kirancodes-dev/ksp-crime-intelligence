@@ -49,6 +49,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     return () => clearInterval(timer);
   }, [step, countdown]);
 
+  // Direct login — bypasses backend auth for prototype demo
+  const directLogin = (badge: string) => {
+    const officer = MOCK_CREDENTIALS[badge];
+    if (officer) {
+      localStorage.setItem('ksp_jwt_token', 'demo-token-' + badge);
+      onLoginSuccess(officer.userId, officer.role);
+    }
+  };
+
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -71,16 +80,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    // Try backend auth first; fall back to direct login for prototype
     try {
       setIsSubmitting(true);
       const res = await api.login(cleanBadge, password);
       if (res.success && res.token) {
-        // Store temp details to verify OTP step
         localStorage.setItem('ksp_jwt_token', res.token);
         localStorage.setItem('ksp_temp_user_id', res.user.userId);
         localStorage.setItem('ksp_temp_user_role', res.user.role);
-        
-        // Proceed to MFA step
         setStep('otp');
         setCountdown(30);
         setCanResend(false);
@@ -88,7 +95,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         setError(res.error || 'Authentication failed. Please verify credentials.');
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication connection failed. Please check backend server.');
+      // Backend unreachable — use direct login for prototype demo
+      const officer = MOCK_CREDENTIALS[cleanBadge];
+      if (officer && password === 'ksp2026') {
+        localStorage.setItem('ksp_jwt_token', 'demo-token-' + cleanBadge);
+        onLoginSuccess(officer.userId, officer.role);
+        return;
+      }
+      setError('Invalid Badge ID or password.');
     } finally {
       setIsSubmitting(false);
     }
@@ -270,15 +284,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                     <KeyRound size={14} /> {isSubmitting ? 'Authenticating...' : 'Verify Credentials'}
                   </button>
                   
-                  {/* Quick credentials references */}
+                  {/* Quick credentials references — click to log in directly */}
                   <div className="border-t border-[#e8ecf1] pt-4 mt-2">
                     <span className="block text-[9px] text-[#6c757d] font-bold uppercase tracking-wider mb-2">
-                      Authorized Reference Badges (Password: ksp2026)
+                      Click a Badge to Enter as That Role
                     </span>
                     <div className="grid grid-cols-2 gap-2 text-[9px]">
                       <button
                         type="button"
-                        onClick={() => { setBadgeId('INV-1001'); setPassword('ksp2026'); }}
+                        onClick={() => directLogin('INV-1001')}
                         className="text-left bg-[#f8f9fa] hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#4a5568] p-1.5 rounded cursor-pointer transition text-xs"
                       >
                         <span className="font-mono text-[#1e3a5f] block">INV-1001</span>
@@ -286,7 +300,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setBadgeId('ANA-2001'); setPassword('ksp2026'); }}
+                        onClick={() => directLogin('ANA-2001')}
                         className="text-left bg-[#f8f9fa] hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#4a5568] p-1.5 rounded cursor-pointer transition text-xs"
                       >
                         <span className="font-mono text-[#1e3a5f] block">ANA-2001</span>
@@ -294,7 +308,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setBadgeId('SUP-3001'); setPassword('ksp2026'); }}
+                        onClick={() => directLogin('SUP-3001')}
                         className="text-left bg-[#f8f9fa] hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#4a5568] p-1.5 rounded cursor-pointer transition text-xs"
                       >
                         <span className="font-mono text-[#1e3a5f] block">SUP-3001</span>
@@ -302,7 +316,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setBadgeId('POL-4001'); setPassword('ksp2026'); }}
+                        onClick={() => directLogin('POL-4001')}
                         className="text-left bg-[#f8f9fa] hover:bg-[#eef2f7] border border-[#d1d9e6] text-[#4a5568] p-1.5 rounded cursor-pointer transition text-xs"
                       >
                         <span className="font-mono text-[#1e3a5f] block">POL-4001</span>
