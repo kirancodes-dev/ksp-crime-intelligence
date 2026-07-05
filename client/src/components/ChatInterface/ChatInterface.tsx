@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { api } from '../../services/api';
+import { api, BASE_URL } from '../../services/api';
 import type { EvidenceSource } from '../../services/api';
 import { VoiceInput } from '../VoiceInput/VoiceInput';
 import { HotspotMap } from '../Visualizations/HotspotMap';
@@ -130,7 +130,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessages(prev => [...prev, initialSystemMessage]);
 
     try {
-      const response = await fetch(`/api/chat/stream`, {
+      const response = await fetch(`${BASE_URL}/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

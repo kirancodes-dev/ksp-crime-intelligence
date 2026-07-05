@@ -22,7 +22,7 @@ const getBaseUrl = () => {
   return '/server/ksp/api';
 };
 
-const BASE_URL = getBaseUrl();
+export const BASE_URL = getBaseUrl();
 
 export interface ChatResponse {
   success: boolean;

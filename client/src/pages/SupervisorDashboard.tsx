@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, BASE_URL } from '../services/api';
 import type { AuditLogEntry, AnomalyAlert } from '../services/api';
 import { WarrantDesk } from '../components/WarrantDesk/WarrantDesk';
 import { IntelligenceBrief } from '../components/IntelligenceBrief/IntelligenceBrief';
@@ -128,7 +128,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
     }
     setSubmittingOverride(true);
     try {
-      const response = await fetch('/api/audit-logs/override', {
+      const response = await fetch(`${BASE_URL}/audit-logs/override`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
