@@ -8,5 +8,8 @@
       "functions/ksp/datastore/*.db-shm"
     ],
     "source": "functions"
+  },
+  "client": {
+    "source": "dist"
   }
 }
