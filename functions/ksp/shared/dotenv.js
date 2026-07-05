@@ -3,8 +3,21 @@ const path = require('path');
 
 function config() {
   try {
-    const envPath = path.join(__dirname, '..', '..', '.env');
-    if (fs.existsSync(envPath)) {
+    const paths = [
+      path.join(__dirname, '..', '.env'),
+      path.join(__dirname, '..', '..', '.env'),
+      path.join(__dirname, '..', '..', '..', '.env')
+    ];
+    
+    let envPath = null;
+    for (const p of paths) {
+      if (fs.existsSync(p)) {
+        envPath = p;
+        break;
+      }
+    }
+
+    if (envPath) {
       const content = fs.readFileSync(envPath, 'utf-8');
       content.split(/\r?\n/).forEach(line => {
         // Strip comments and spaces
