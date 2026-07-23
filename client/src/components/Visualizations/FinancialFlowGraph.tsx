@@ -62,7 +62,10 @@ export const FinancialFlowGraph: React.FC<FinancialFlowGraphProps> = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const formattedNodes = data.nodes.map(node => {
+    const nodesList = data?.nodes || [];
+    const edgesList = data?.edges || [];
+
+    const formattedNodes = nodesList.map(node => {
       const color = getNodeColor(node.type);
       return {
         id: node.id,
@@ -86,7 +89,7 @@ export const FinancialFlowGraph: React.FC<FinancialFlowGraphProps> = ({
       };
     });
 
-    const formattedEdges = data.edges.map(edge => {
+    const formattedEdges = edgesList.map(edge => {
       const isSuspicious = edge.color === 'red' || edge.color === '#ef4444';
       return {
         from: edge.from,

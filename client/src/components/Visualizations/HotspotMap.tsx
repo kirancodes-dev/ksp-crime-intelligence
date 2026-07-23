@@ -95,8 +95,8 @@ export const HotspotMap: React.FC<HotspotMapProps> = ({ incidents, onFirSelect, 
           </div>
           <div class="space-y-1.5 text-slate-700 font-medium">
             <div><span class="text-[#6c757d] font-bold">Type:</span> <strong class="text-slate-900">${inc.crime_type}</strong></div>
-            <div><span class="text-[#6c757d] font-bold">District:</span> <span>${inc.district}</span></div>
-            <div><span class="text-[#6c757d] font-bold">Station:</span> <span>${inc.district.split(' ')[0]} Central PS</span></div>
+            <div><span class="text-[#6c757d] font-bold">District:</span> <span>${inc.district || 'Karnataka'}</span></div>
+            <div><span class="text-[#6c757d] font-bold">Station:</span> <span>${(inc.district || 'Karnataka').split(' ')[0]} Central PS</span></div>
             <div><span class="text-[#6c757d] font-bold">Date:</span> <span>${inc.date_reported}</span></div>
             <div class="pt-1 border-t border-slate-100 text-[#6c757d]"><span class="text-[#6c757d] font-bold">Address:</span> ${inc.address}</div>
           </div>

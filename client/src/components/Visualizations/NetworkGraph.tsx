@@ -34,8 +34,11 @@ export const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect }
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const nodesList = data?.nodes || [];
+    const edgesList = data?.edges || [];
+
     // Map raw nodes into vis-network visual options
-    const formattedNodes = data.nodes.map(node => {
+    const formattedNodes = nodesList.map(node => {
       if (node.type === 'person') {
         const isGang = node.group === 'gang';
         const colorVal = node.score && node.score >= 0.7 
@@ -84,7 +87,7 @@ export const NetworkGraph: React.FC<NetworkGraphProps> = ({ data, onNodeSelect }
       }
     });
 
-    const formattedEdges = data.edges.map(edge => ({
+    const formattedEdges = edgesList.map(edge => ({
       from: edge.from,
       to: edge.to,
       label: edge.label,

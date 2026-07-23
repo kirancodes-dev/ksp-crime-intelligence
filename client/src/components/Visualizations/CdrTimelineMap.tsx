@@ -69,6 +69,8 @@ export const CdrTimelineMap: React.FC<CdrTimelineMapProps> = ({ data, mapId }) =
       polylineRef.current = null;
     }
 
+    if (!data || !data.breadcrumbs) return;
+
     if (data.breadcrumbs && data.breadcrumbs.length > 0) {
       const coords = data.breadcrumbs.map(b => [b.lat, b.lng] as [number, number]);
 

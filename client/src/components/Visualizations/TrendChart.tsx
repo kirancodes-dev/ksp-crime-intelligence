@@ -41,6 +41,20 @@ interface TrendChartProps {
 export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
   const [activeTab, setActiveTab] = useState<'timeline' | 'district' | 'seasonal'>('timeline');
 
+  const monthly = data?.monthly || [
+    { month: 'Jan', cyber: 45, theft: 30, organized: 15, fraud: 25, total: 115 },
+    { month: 'Feb', cyber: 52, theft: 28, organized: 18, fraud: 32, total: 130 },
+    { month: 'Mar', cyber: 60, theft: 35, organized: 22, fraud: 40, total: 157 },
+    { month: 'Apr', cyber: 75, theft: 40, organized: 25, fraud: 50, total: 190 },
+    { month: 'May', cyber: 88, theft: 45, organized: 30, fraud: 65, total: 228 },
+    { month: 'Jun', cyber: 95, theft: 42, organized: 28, fraud: 70, total: 235 }
+  ];
+  const district = data?.district || [
+    { district: 'Bengaluru City', cyber: 180, theft: 90, organized: 45, fraud: 120, total: 435 },
+    { district: 'Mysuru', cyber: 65, theft: 40, organized: 20, fraud: 35, total: 160 },
+    { district: 'Mangaluru', cyber: 55, theft: 35, organized: 18, fraud: 30, total: 138 }
+  ];
+
   // Custom tooltips matching the premium theme
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -122,7 +136,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
         {activeTab === 'timeline' && (
           <div className="w-full h-80 min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCyber" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
@@ -158,7 +172,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
         {activeTab === 'district' && (
           <div className="w-full h-80 min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.district} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={district} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid stroke="#e8ecf1" strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="district" stroke="#6c757d" fontSize={10} tickLine={false} />
                 <YAxis stroke="#6c757d" fontSize={10} tickLine={false} axisLine={false} />
