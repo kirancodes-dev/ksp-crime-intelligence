@@ -248,9 +248,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
       }
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'An error occurred during query execution.');
-      setMessages(prev => prev.filter(m => m.id !== systemMsgId || m.text !== 'Thinking...'));
+      console.warn('Streaming failed, attempting non-streaming API fallback:', err);
+      try {
+        const fallback = await api.submitChat(trimmed, userId, role, sessionId);
+        const suggestions = followUpMap[fallback.tool] || followUpMap['text'];
+        setMessages(prev => prev.map(m => m.id === systemMsgId ? {
+          ...m,
+          text: fallback.narrative,
+          toolResult: fallback.tool !== 'text' ? {
+            tool: fallback.tool as ToolType,
+            data: fallback.data
+          } : undefined,
+          evidenceSources: fallback.evidenceSources,
+          llmMode: fallback.llmMode || 'live',
+          followUpSuggestions: suggestions
+        } : m));
+      } catch (fallbackErr: any) {
+        setError(fallbackErr.message || 'An error occurred during query execution.');
+        setMessages(prev => prev.filter(m => m.id !== systemMsgId || m.text !== 'Thinking...'));
+      }
     } finally {
       setIsLoading(false);
     }
