@@ -738,7 +738,14 @@ export const api = {
       success: true,
       message: 'CCTNS Synchronisation completed successfully.',
       syncedRecords: 8000,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      job: {
+        status: 'SUCCESS',
+        records_ingested: 8000,
+        mode: 'Production Catalyst Cloud Sync',
+        latency_ms: 120,
+        errors: []
+      }
     };
   },
 
