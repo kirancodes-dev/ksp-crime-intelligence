@@ -126,10 +126,10 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
         </div>
 
         <div class="section">
-          <div class="section-title">Pinned Investigative Assets (${pinnedAssets.length})</div>
+          <div class="section-title">Pinned Investigative Assets (${(pinnedAssets || []).length})</div>
           <div>
-            ${pinnedAssets.length > 0 
-              ? pinnedAssets.map(a => `<span class="asset-tag">${a.asset_type.toUpperCase()}: ${a.asset_id}</span>`).join('')
+            ${(pinnedAssets || []).length > 0 
+              ? (pinnedAssets || []).map(a => `<span class="asset-tag">${(a.asset_type || '').toUpperCase()}: ${a.asset_id}</span>`).join('')
               : '<span style="font-size: 12px; color: #94a3b8; italic">No assets pinned to workspace.</span>'
             }
           </div>
@@ -138,7 +138,7 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
         <div class="section">
           <div class="section-title">Active Station Roster (Access Audit)</div>
           <div style="font-size: 12px; line-height: 1.5;">
-            ${activeTeam.map(t => `• <strong>${t.name}</strong> (${t.role}) - Badge: ${t.badge} (${t.status})<br/>`).join('')}
+            ${(activeTeam || []).map(t => `• <strong>${t.name}</strong> (${t.role}) - Badge: ${t.badge} (${t.status})<br/>`).join('')}
           </div>
         </div>
 
@@ -262,7 +262,7 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {activeTeam.map((member, idx) => (
+                {(activeTeam || []).map((member, idx) => (
                   <div key={idx} className="flex justify-between items-center p-2.5 bg-white border border-slate-150 rounded-lg text-xs">
                     <div>
                       <strong className="text-slate-800 text-[12px]">{member.name}</strong>
@@ -286,17 +286,17 @@ export const CollaborativeWorkspace: React.FC<CollaborativeWorkspaceProps> = ({
           <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 h-fit space-y-4">
             <span className="text-[11px] uppercase font-extrabold text-[#6c757d] tracking-wider flex items-center gap-1.5 border-b border-slate-200 pb-2">
               <Pin size={12} className="text-[#1e3a5f]" />
-              Pinned case assets ({pinnedAssets.length})
+              Pinned case assets ({(pinnedAssets || []).length})
             </span>
 
-            {pinnedAssets.length === 0 ? (
+            {(pinnedAssets || []).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-[#6c757d] text-xs italic">
                 <span>No assets pinned to desk.</span>
                 <span className="text-[10px] text-[#6c757d] mt-1">Pin cases/suspects from their dockets to see them here.</span>
               </div>
             ) : (
               <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                {pinnedAssets.map((asset) => (
+                {(pinnedAssets || []).map((asset) => (
                   <div key={asset.id} className="p-3 bg-white border border-slate-200 rounded-lg hover:border-slate-350 transition relative group">
                     
                     <button
