@@ -245,7 +245,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
     cdrMarkersRef.current.forEach(m => m.remove());
     cdrMarkersRef.current = [];
 
-    if (cdrTimelineData && cdrTimelineData.breadcrumbs?.length > 0 && cdrMapInstanceRef.current) {
+    if (cdrTimelineData && Array.isArray(cdrTimelineData.breadcrumbs) && cdrTimelineData.breadcrumbs.length > 0 && cdrMapInstanceRef.current) {
       const coords = cdrTimelineData.breadcrumbs.map((b: any) => [b.lat, b.lng] as [number, number]);
       
       cdrPathLayerRef.current = L.polyline(coords, { color: '#2563eb', weight: 3, dashArray: '5, 5' }).addTo(cdrMapInstanceRef.current);
@@ -418,9 +418,10 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
             {/* Heatmap District Intensity Panel */}
             {heatmapEnabled && (() => {
               // Compute per-district counts from incidents
+              const incList = Array.isArray(incidents) ? incidents : [];
               const districtCounts: Record<string, number> = {};
-              incidents.forEach((inc: any) => {
-                const d = inc.district || 'Unknown';
+              incList.forEach((inc: any) => {
+                const d = inc?.district || 'Unknown';
                 districtCounts[d] = (districtCounts[d] || 0) + 1;
               });
               const maxCount = Math.max(1, ...Object.values(districtCounts));

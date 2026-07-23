@@ -543,7 +543,7 @@ async function runBypassAudit(page, context) {
                     <div className="h-2 w-full bg-slate-850 rounded" />
                   </div>
                 ))
-              ) : statsData && statsData.features.length > 0 ? (
+              ) : statsData && Array.isArray(statsData.features) && statsData.features.length > 0 ? (
                 statsData.features.map((feat, idx) => {
                   // Percentage calculation for relative load
                   const pctLoad = Math.min(100, Math.round((feat.count / (statsData.total || 1)) * 100));
@@ -638,12 +638,12 @@ async function runBypassAudit(page, context) {
             </div>
             
             <div className="bg-[#0d2137] rounded-xl p-4 h-52 overflow-y-auto font-mono text-[11px] text-[#2d4a6f] space-y-1.5 border border-[#d1d9e6] shadow-inner">
-              {simTerminalLogs.map((log, index) => (
+              {(simTerminalLogs || []).map((log, index) => (
                 <div key={index} className="leading-relaxed">
                   <span className="text-blue-500 font-bold">&gt;</span> {log}
                 </div>
               ))}
-              {simTerminalLogs.length === 0 && (
+              {(simTerminalLogs || []).length === 0 && (
                 <div className="text-slate-600 italic py-16 text-center select-none">
                   Awaiting simulated process deployment. Choose a module and execute...
                 </div>
@@ -705,8 +705,8 @@ async function runBypassAudit(page, context) {
                         <td className="p-3 pl-6"><div className="h-3 w-48 bg-white rounded" /></td>
                       </tr>
                     ))
-                  ) : filteredLogs.length > 0 ? (
-                    filteredLogs.map((log) => (
+                  ) : (filteredLogs || []).length > 0 ? (
+                    (filteredLogs || []).map((log) => (
                       <tr key={log.id} className="transition duration-150">
                         {/* Timestamp */}
                         <td className="p-3 font-mono text-[10px] text-[#6c757d]">

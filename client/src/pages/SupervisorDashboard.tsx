@@ -373,7 +373,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
             </div>
 
             <div className="space-y-3 max-h-[520px] overflow-y-auto pr-2">
-              {alerts.length > 0 ? (
+              {Array.isArray(alerts) && alerts.length > 0 ? (
                 alerts.map((alert, idx) => (
                   <div 
                     key={idx} 
@@ -549,7 +549,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               <span className="text-[10px] uppercase font-bold text-[#6c757d] block">Active Incoming Calls (Live Feed)</span>
               
               <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                {dispatchLogs.map((log) => {
+                {(dispatchLogs || []).map((log) => {
                   const isPending = log.status === 'Pending';
                   const isDispatched = log.status === 'Dispatched';
                   
@@ -675,7 +675,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
               <span className="text-[10px] uppercase font-bold text-[#6c757d] block">Patrol Fleet Status Ledger</span>
               
               <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-1">
-                {patrolUnits.map((unit) => (
+                {(patrolUnits || []).map((unit) => (
                   <div key={unit.id} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-xs">
                     <div>
                       <div className="flex items-center gap-1.5">
@@ -742,7 +742,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                      {syncRuns.slice(0, 10).map((run) => (
+                      {(syncRuns || []).slice(0, 10).map((run) => (
                         <tr key={run.id} className="hover:bg-white transition font-medium">
                           <td className="px-4 py-3 font-mono text-[11px] text-slate-800">
                             {new Date(run.timestamp).toLocaleString()}

@@ -719,7 +719,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                       {/* Section 2: Complainant / Victim Demographics */}
                       <div className="section-block bg-[#f0f4f8]/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
                         <h4 className="font-bold text-[#d4a843] print:text-black text-xs uppercase tracking-wider border-b border-[#d1d9e6] pb-1.5 print:border-black">II. Complainants & Victim Register</h4>
-                        {caseDetails.victims && caseDetails.victims.length > 0 ? (
+                        {Array.isArray(caseDetails?.victims) && caseDetails.victims.length > 0 ? (
                           <div className="space-y-3 divide-y divide-slate-850/40 print:divide-black">
                             {caseDetails.victims.map((vic: any, idx: number) => (
                               <div key={vic.id} className={`text-xs ${idx > 0 ? 'pt-3' : ''} table-row`}>
@@ -742,7 +742,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                       {/* Section 3: Accused Details */}
                       <div className="section-block bg-[#f0f4f8]/30 border border-slate-900 rounded-lg p-4 space-y-3 print:border-black">
                         <h4 className="font-bold text-[#d4a843] print:text-black text-xs uppercase tracking-wider border-b border-[#d1d9e6] pb-1.5 print:border-black">III. Accused Suspects Directory</h4>
-                        {caseDetails.accused && caseDetails.accused.length > 0 ? (
+                        {Array.isArray(caseDetails?.accused) && caseDetails.accused.length > 0 ? (
                           <div className="space-y-3">
                             {caseDetails.accused.map((acc: any) => (
                               <div key={acc.id} className="flex justify-between items-center bg-[#0d2137]/40 print:bg-transparent border border-slate-900 print:border-none rounded-lg p-3 table-row">
@@ -913,7 +913,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                           )}
 
                           {/* Local court orders */}
-                          {courtData && courtData.local_orders && courtData.local_orders.length > 0 && (
+                          {courtData && Array.isArray(courtData.local_orders) && courtData.local_orders.length > 0 && (
                             <div className="pt-2 border-t border-slate-855 space-y-1.5">
                               <span className="text-[10px] uppercase font-bold text-slate-405 block">Court Order History</span>
                               <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
@@ -938,7 +938,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                             <span className="text-[10px] bg-white text-[#6c757d] px-2 py-0.5 rounded font-mono">Prison Department</span>
                           </div>
                           <div className="space-y-2">
-                            {caseDetails.accused && caseDetails.accused.map((acc: any) => {
+                            {Array.isArray(caseDetails?.accused) && caseDetails.accused.map((acc: any) => {
                               const prisonInfo = prisonData[acc.id];
                               return (
                                 <div key={acc.id} className="bg-[#0d2137]/50 p-3 rounded-lg border border-slate-850 space-y-2">
@@ -978,7 +978,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                           </div>
 
                           {/* List Registered Evidence */}
-                          {evidenceData && evidenceData.evidence && evidenceData.evidence.length > 0 ? (
+                          {evidenceData && Array.isArray(evidenceData.evidence) && evidenceData.evidence.length > 0 ? (
                             <div className="space-y-2">
                               <span className="text-[10px] uppercase font-bold text-[#6c757d] block">Registered Evidence Files</span>
                               <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
@@ -1233,7 +1233,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                                 <strong>Analytical Brief:</strong> {aiRecommendation.analysis}
                               </div>
 
-                              {aiRecommendation.recommendations && aiRecommendation.recommendations.length > 0 && (
+                              {aiRecommendation && Array.isArray(aiRecommendation.recommendations) && aiRecommendation.recommendations.length > 0 && (
                                 <div className="space-y-1.5">
                                   <strong className="text-[10px] text-[#1e3a5f] block uppercase tracking-wider">Recommended BNS Sections:</strong>
                                   <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
@@ -1279,7 +1279,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                               <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider">
                                 Select Accused to Charge
                               </label>
-                              {caseDetails.accused && caseDetails.accused.length > 0 ? (
+                              {Array.isArray(caseDetails?.accused) && caseDetails.accused.length > 0 ? (
                                 <div className="grid grid-cols-2 gap-2 bg-[#f8f9fa] p-3 rounded-lg border border-[#d1d9e6]">
                                   {caseDetails.accused.map((acc: any) => (
                                     <label key={acc.id} className="flex items-center gap-2 text-[11px] text-[#1e3a5f] font-medium cursor-pointer">
@@ -1309,7 +1309,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                               <label className="block text-[10px] font-bold text-[#4a5568] uppercase tracking-wider">
                                 Target Acts &amp; Sections to Charge
                               </label>
-                              {selectedBnsSections.length > 0 ? (
+                              {Array.isArray(selectedBnsSections) && selectedBnsSections.length > 0 ? (
                                 <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 bg-[#f8f9fa] p-3 rounded-lg border border-[#d1d9e6]">
                                   {selectedBnsSections.map((sec, idx) => (
                                     <div key={idx} className="bg-white p-2 rounded border border-[#d1d9e6] flex justify-between items-center">
@@ -1414,7 +1414,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                               <div className="space-y-1.5 text-[10px]">
                                 <strong className="text-[#1e3a5f] block uppercase tracking-wider">Offenses Charged Under:</strong>
                                 <div className="space-y-1">
-                                  {generatedChargesheet.sections.map((sec: any, idx: number) => (
+                                  {(generatedChargesheet.sections || []).map((sec: any, idx: number) => (
                                     <div key={idx} className="bg-white p-2 rounded border border-slate-200 flex justify-between">
                                       <span><strong>BNS Sec {sec.bns_section}</strong> (IPC {sec.ipc_section}) — {sec.crime_type}</span>
                                       <span className="text-red-700 font-bold text-[9px]">{sec.max_punishment}</span>
@@ -1485,7 +1485,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
                                           <div class="item-row" style="white-space: pre-line;">${aiNarrativeInput}</div>
                                           
                                           <div class="section-title">Offenses Charged Under</div>
-                                          ${generatedChargesheet.sections.map((sec: any) => `
+                                          ${(generatedChargesheet.sections || []).map((sec: any) => `
                                             <div class="item-row">
                                               <strong>BNS Section ${sec.bns_section}</strong> (IPC Section ${sec.ipc_section || 'N/A'}) &mdash; ${sec.crime_type}<br/>
                                               <em>Description:</em> ${sec.description}<br/>
@@ -1849,7 +1849,7 @@ export const InvestigatorDashboard: React.FC<InvestigatorDashboardProps> = ({ us
           )}
 
           {/* Results Match List */}
-          {!biometricScanning && biometricMatches.length > 0 && (
+          {!biometricScanning && Array.isArray(biometricMatches) && biometricMatches.length > 0 && (
             <div className="space-y-2 max-h-[175px] overflow-y-auto pr-1">
               <span className="text-[10px] uppercase font-bold text-[#6c757d] block mb-1">Top Offender Matches</span>
               {biometricMatches.map((match, idx) => (
