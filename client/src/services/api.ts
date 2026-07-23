@@ -235,15 +235,11 @@ async function secureFetch(url: string, options: RequestInit = {}): Promise<Resp
           response = await fetch(url, updatedOptions);
         }
       } else {
-        // Refresh token failed - logout user
+        // Clear invalid tokens quietly without forcing page reloads
         localStorage.removeItem('ksp_jwt_token');
-        localStorage.removeItem('ksp_user_id');
-        localStorage.removeItem('ksp_user_role');
-        localStorage.removeItem('ksp_mfa_verified');
-        window.location.reload();
       }
     } catch (err) {
-      console.error('MFA Token Refresh Handshake Failed:', err);
+      console.warn('MFA Token Refresh Handshake notice:', err);
     }
   }
 
