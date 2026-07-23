@@ -2,15 +2,17 @@
  * Simulated OCR & Vernacular Translation engine for KSP Portal
  */
 module.exports = async (fileName, fileType, base64Data) => {
-  // Simulate network or OCR processing delay
+  // Simulate processing delay
   await new Promise(resolve => setTimeout(resolve, 1200));
 
-  // Determine mock output based on filename keywords or random choice
+  // Determine output based on filename keywords
   const name = fileName.toLowerCase();
   
   if (name.includes('threat') || name.includes('warning')) {
     return {
       success: true,
+      mode: "DEMO_SIMULATOR",
+      data_source: "SYNTHETIC_DATASET",
       rawKannada: "ಎಚ್ಚರಿಕೆ! ಮುಂದಿನ ವಾರದಲ್ಲಿ ಹಣ ನೀಡದಿದ್ದರೆ ಪರಿಣಾಮ ಎದುರಿಸಬೇಕಾಗುತ್ತದೆ. ರಮೇಶ್ ಕುಮಾರ್ ನಮಗೆ ಸಹಾಯ ಮಾಡುತ್ತಿದ್ದಾನೆ.",
       translatedEnglish: "Warning! If money is not paid by next week, you will face the consequences. Ramesh Kumar is helping us.",
       detectedLanguage: "kn",

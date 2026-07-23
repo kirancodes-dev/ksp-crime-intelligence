@@ -38,26 +38,13 @@ function getRLSFilter(user, tableAlias = 'f', districtColumn = 'district', stati
     };
   }
 
-  // Investigator (SI): Police Station-scoped
+  // Investigator (SI): Station & District-scoped (allows district-wide cases assigned to officer's division)
   if (role === 'Investigator') {
-    const station = user.policeStation;
-    const district = user.district;
-    if (!station && !district) return { clause: '', params: [] };
-    
-    // Primary filter: police station. Fallback to district if station not in table.
-    if (station) {
-      const alias = tableAlias ? `${tableAlias}.` : '';
-      return {
-        clause: ` AND ${alias}${stationColumn} = ?`,
-        params: [station]
-      };
-    }
-    
-    // Fallback to district
+    const district = user.district || 'Bengaluru City';
     const alias = tableAlias ? `${tableAlias}.` : '';
     return {
-      clause: ` AND ${alias}${districtColumn} = ?`,
-      params: [district]
+      clause: ` AND (${alias}${districtColumn} = ? OR ${alias}${stationColumn} = ?)`,
+      params: [district, user.policeStation || 'Bengaluru City Central PS']
     };
   }
 

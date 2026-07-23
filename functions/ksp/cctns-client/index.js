@@ -1,9 +1,9 @@
 /**
  * CCTNS (Crime and Criminal Tracking Network & Systems) API Client
- * Phase 3: Production-ready client with retry logic and secure connection
+ * Mode: DEMO_SIMULATOR (Synthetic Data for Prototype Evaluation)
  * 
- * When CCTNS credentials are configured, connects to the real national database.
- * When unconfigured, provides realistic simulated data for development.
+ * When live CCTNS credentials are configured and authorized, connects to national API gateway.
+ * When unconfigured, returns explicitly tagged simulated prototype data.
  */
 const https = require('https');
 const crypto = require('crypto');

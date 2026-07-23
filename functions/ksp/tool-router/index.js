@@ -7,27 +7,30 @@ const earlyWarning = require('../early-warning/index');
 const caseSummary = require('../case-summary/index');
 const gemini = require('../shared/gemini');
 
-module.exports = async (queryText, userId, role) => {
+module.exports = async (queryText, userId, role, userContext = null) => {
   try {
     const db = catalyst.datastore();
     const query = queryText.toLowerCase();
 
-    // Row-Level Security (RLS) jurisdiction scopes
-    const rlsScopes = {
-      'INV-1002': { type: 'station', value: 'Majestic Bus Terminus', label: 'police station Majestic Bus Terminus' },
-      'ANA-2041': { type: 'district', value: 'Bengaluru City', label: 'district Bengaluru City' },
-      'SUP-3001': { type: 'district', value: 'Bengaluru City', label: 'district Bengaluru City' },
-      'POL-4001': { type: 'statewide', label: 'state-wide Karnataka' }
-    };
+    // Dynamic Row-Level Security (RLS) jurisdiction scope evaluation
+    if (!userId || !role) {
+      throw new Error('SECURITY VIOLATION: Missing user identity context in tool router execution.');
+    }
 
-    let scope = rlsScopes[userId];
-    if (!scope) {
-      if (role === 'Policymaker') {
-        scope = rlsScopes['POL-4001'];
-      } else if (role === 'Supervisor' || role === 'Analyst') {
-        scope = rlsScopes['SUP-3001'];
+    let scope;
+    if (role === 'Policymaker') {
+      scope = { type: 'statewide', label: 'state-wide Karnataka' };
+    } else if (role === 'Supervisor' || role === 'Analyst') {
+      const district = (userContext && userContext.district) ? userContext.district : 'Bengaluru City';
+      scope = { type: 'district', value: district, label: `district ${district}` };
+    } else {
+      // Investigator default scope (station level if provided, else district)
+      const station = (userContext && userContext.policeStation) ? userContext.policeStation : null;
+      const district = (userContext && userContext.district) ? userContext.district : 'Bengaluru City';
+      if (station) {
+        scope = { type: 'station', value: station, label: `police station ${station}` };
       } else {
-        scope = rlsScopes['POL-4001'];
+        scope = { type: 'district', value: district, label: `district ${district}` };
       }
     }
 

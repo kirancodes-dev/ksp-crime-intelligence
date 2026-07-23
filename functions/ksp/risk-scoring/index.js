@@ -45,89 +45,73 @@ module.exports = async (accusedName, modifiers = {}, scope = null) => {
     
     const districtStats = socioInfo.length > 0 ? socioInfo[0] : null;
 
-    // Calculate risk factors breakdown
+    // Calculate investigative priority factors breakdown (evidence & case history grounded)
     const factors = [];
     if (priorConvictions > 0) {
       factors.push({
-        factor: "Criminal History",
+        factor: "Criminal Record History",
         impact: "High",
-        detail: `${priorConvictions} prior conviction(s) registered.`
+        detail: `${priorConvictions} prior conviction(s) verified in CCTNS records.`
       });
     } else {
       factors.push({
-        factor: "Criminal History",
+        factor: "Criminal Record History",
         impact: "Low",
-        detail: "No prior convictions registered."
+        detail: "No prior verified convictions in record database."
       });
     }
 
     if (gangAffiliation) {
       factors.push({
-        factor: "Syndicate Alliance",
+        factor: "Syndicate Linkage",
         impact: "High",
-        detail: `Affiliated with organized syndicate: '${gangAffiliation}'.`
+        detail: `Verified association with organized syndicate: '${gangAffiliation}'.`
       });
     }
 
-    if (age && age < 25) {
-      factors.push({
-        factor: "Age Demographics",
-        impact: "Medium",
-        detail: "Young offender age group (under 25) linked to high recidivism."
-      });
-    }
-
-    if (districtStats && districtStats.unemployment_rate > 6.0) {
-      factors.push({
-        factor: "Environmental Index",
-        impact: "Medium",
-        detail: `Active in district with high unemployment (${districtStats.unemployment_rate}%).`
-      });
-    }
-
-    // Apply modifiers dynamically if selected
+    // Apply evidence-grounded case modifiers if specified
     if (modifiers.warrant) {
       riskScore = Math.min(1.0, riskScore + 0.25);
       factors.push({
-        factor: "Active Warrant",
+        factor: "Active Judicial Warrant",
         impact: "Critical",
-        detail: "Accused is currently absconding with an active arrest warrant."
+        detail: "Active arrest warrant outstanding issued by competent court."
       });
     }
     if (modifiers.weapon) {
       riskScore = Math.min(1.0, riskScore + 0.15);
       factors.push({
-        factor: "Weapon Association",
+        factor: "Weapon Seizure Linkage",
         impact: "High",
-        detail: "Accused has a history of violent offences involving illegal firearms or weapons."
+        detail: "Case evidence includes illegal firearms or seized offensive weapons."
       });
     }
     if (modifiers.hawala) {
       riskScore = Math.min(1.0, riskScore + 0.20);
       factors.push({
-        factor: "Hawala Linkage",
+        factor: "Financial Trail Anomaly",
         impact: "High",
-        detail: "Suspicious bank accounts and hawala transaction lines are linked to the accused."
+        detail: "High-value suspicious transactions and hawala channels linked to case."
       });
     }
     if (modifiers.history) {
       riskScore = Math.min(1.0, riskScore + 0.15);
       factors.push({
-        factor: "Habitual Offender",
+        factor: "Repeat Case Pattern",
         impact: "High",
-        detail: "Classified as a habitual repeat offender with high recidivism risk."
+        detail: "Multiple similar modus-operandi incidents recorded across police stations."
       });
     }
 
-    // Determine threat level and recommendations
-    let threatLevel = "Low";
-    let recommendation = "Routine monitoring during patrol rounds.";
+    // Determine case investigative priority (Human-in-the-loop oversight compliant)
+    let threatLevel = "Standard";
+    let recommendation = "Routine case file monitoring and verification of evidence chain.";
     if (riskScore >= 0.7) {
-      threatLevel = "Critical";
-      recommendation = "Immediate intelligence intercept, active surveillance, deny bail recommendations.";
+      threatLevel = "High Priority";
+      recommendation = "High-priority investigative review: Verify outstanding warrants, coordinate multi-station intelligence, and present evidence dossier to senior investigating officer.";
     } else if (riskScore >= 0.4) {
-      threatLevel = "Medium";
-      recommendation = "Periodic check-ins, record monitoring, update history sheet.";
+      threatLevel = "Medium Priority";
+      recommendation = "Standard investigative review: Update case history sheets, verify witness statements, and monitor related syndicate linkages.";
     }
 
     // Compile profile
@@ -139,8 +123,8 @@ module.exports = async (accusedName, modifiers = {}, scope = null) => {
       address: primaryRecord.address,
       gang_affiliation: gangAffiliation,
       prior_convictions: priorConvictions,
-      overall_score: riskScore,
-      threat_level: threatLevel,
+      investigative_priority_score: riskScore,
+      priority_classification: threatLevel,
       factors: factors,
       recommendation: recommendation,
       behavioral_profile: {},

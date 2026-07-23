@@ -298,11 +298,11 @@ function App() {
             {/* Divider */}
             <div className="hidden lg:block w-px h-6 bg-[#d1d9e6]"></div>
 
-            {/* CCTNS Status indicator */}
-            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 text-[11px] text-emerald-700 font-bold uppercase tracking-wider">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="hidden sm:inline">CCTNS Link: Connected</span>
-              <span className="sm:hidden">CCTNS Active</span>
+            {/* CCTNS Status indicator (DEMO_SIMULATOR) */}
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-lg px-2.5 py-1 text-[11px] text-amber-800 font-bold uppercase tracking-wider">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+              <span className="hidden sm:inline">CCTNS Simulator: Synthetic Data</span>
+              <span className="sm:hidden">Simulator</span>
             </div>
 
             {/* Sync Button */}

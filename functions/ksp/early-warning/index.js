@@ -44,8 +44,8 @@ module.exports = async (scope = null) => {
         districts: offender.districts ? offender.districts.split(',') : [],
         crime_types: offender.crime_types ? offender.crime_types.split(',') : [],
         recommendation: severity === 'Critical'
-          ? `IMMEDIATE: Deploy surveillance on ${offender.name}. Alert all stations in ${offender.districts}. Coordinate with anti-gang unit.`
-          : `Priority monitoring. Flag for next bail hearing review. Update history sheet.`
+          ? `IMMEDIATE: Deploy investigative review for ${offender.name}. Alert stations in ${offender.districts}. Coordinate with anti-gang unit.`
+          : `Priority case monitoring. Verify evidence chain and update history sheet.`
       });
     });
 

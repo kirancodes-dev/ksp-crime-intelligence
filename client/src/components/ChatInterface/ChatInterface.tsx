@@ -130,10 +130,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessages(prev => [...prev, initialSystemMessage]);
 
     try {
+      const token = localStorage.getItem('ksp_jwt_token') || '';
       const response = await fetch(`${BASE_URL}/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
           'X-User-Id': userId,
           'X-User-Role': role,
         },

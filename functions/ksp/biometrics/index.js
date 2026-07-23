@@ -32,6 +32,8 @@ module.exports = async (targetName = "") => {
     if (records.length === 0) {
       return {
         success: true,
+        mode: "DEMO_SIMULATOR",
+        data_source: "SYNTHETIC_DATASET",
         matches: []
       };
     }

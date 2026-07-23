@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "test": "node test/auth.test.js && node test/datastore.test.js && node test/rag_contract.test.js && node test/ethical_ai.test.js",
     "install:linux": "rm -rf node_modules/sqlite3 && npm_config_platform=linux npm_config_arch=x64 npm install sqlite3"
   },
   "dependencies": {

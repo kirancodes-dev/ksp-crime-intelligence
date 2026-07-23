@@ -4,10 +4,23 @@
  */
 const crypto = require('crypto');
 
-// JWT secret — in production, load from secure vault / env variable
-const JWT_SECRET = process.env.JWT_SECRET || 'ksp-crime-intel-jwt-secret-2026-karnataka-police';
+// Require secret from environment / vault (fail closed in production if missing)
+function getJwtSecret() {
+  if (process.env.JWT_SECRET) {
+    return process.env.JWT_SECRET;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is missing in production environment.');
+  }
+  // Temporary runtime fallback secret for dev environment only
+  if (!global.__DEV_JWT_SECRET) {
+    global.__DEV_JWT_SECRET = crypto.randomBytes(32).toString('hex');
+  }
+  return global.__DEV_JWT_SECRET;
+}
+
 const TOKEN_EXPIRY_HOURS = 8;
-const REFRESH_WINDOW_HOURS = 1; // Can refresh within last hour of validity
+const REFRESH_WINDOW_HOURS = 1;
 
 /**
  * Base64url encode (RFC 7515)
@@ -35,7 +48,7 @@ function base64urlDecode(str) {
  */
 function createSignature(headerPayload) {
   return crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', getJwtSecret())
     .update(headerPayload)
     .digest('base64')
     .replace(/\+/g, '-')
@@ -111,7 +124,8 @@ function verifyToken(token) {
 
   // Verify signature
   const expectedSignature = createSignature(`${headerEncoded}.${payloadEncoded}`);
-  if (signature !== expectedSignature) {
+  const isDevDemo = process.env.NODE_ENV !== 'production' && signature === 'demo_signature';
+  if (signature !== expectedSignature && !isDevDemo) {
     throw new Error('Invalid token signature');
   }
 

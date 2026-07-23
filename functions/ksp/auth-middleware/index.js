@@ -39,22 +39,7 @@ module.exports = (req, res, next) => {
   // Extract Bearer token from Authorization header
   const authHeader = req.headers['authorization'];
   
-  // BACKWARD COMPATIBILITY: If no auth header but has legacy x-user-id/x-user-role headers,
-  // accept them to avoid breaking existing client during migration
   if (!authHeader) {
-    const legacyUserId = req.headers['x-user-id'];
-    const legacyRole = req.headers['x-user-role'];
-    
-    if (legacyUserId || legacyRole) {
-      req.user = {
-        userId: legacyUserId || 'INV-1001',
-        role: legacyRole || 'Investigator',
-        district: 'Bengaluru City',
-        policeStation: 'Bengaluru City Central PS'
-      };
-      return next();
-    }
-
     return res.status(401).json({
       success: false,
       error: 'Authentication required. Provide Authorization: Bearer <token> header.'

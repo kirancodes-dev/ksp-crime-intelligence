@@ -1,16 +1,25 @@
 # 🛡️ Karnataka State Police (KSP) — Crime Intelligence & Analytics Portal
 
-[![Status](https://img.shields.io/badge/Status-Production--Ready-emerald.svg?style=for-the-badge)]()
+[![Status](https://img.shields.io/badge/Status-Catalyst%20Prototype%20(Pilot%20Pathway)-amber.svg?style=for-the-badge)]()
 [![Frontend](https://img.shields.io/badge/Frontend-React%20%7C%20TypeScript%20%7C%20Tailwind%20v4-blue.svg?style=for-the-badge)]()
-[![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-lightgrey.svg?style=for-the-badge)]()
-[![Database](https://img.shields.io/badge/Database-SQLite%20(Catalyst%2520Emulated)-navy.svg?style=for-the-badge)]()
-[![LLM Support](https://img.shields.io/badge/LLM-Gemini%202.5%20%7C%20Ollama%20(Local)-purple.svg?style=for-the-badge)]()
+[![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Catalyst%20Serverless-lightgrey.svg?style=for-the-badge)]()
+[![Database](https://img.shields.io/badge/Database-Catalyst%20Data%20Store%20(SQLite%20Emulated)-navy.svg?style=for-the-badge)]()
+[![LLM Target](https://img.shields.io/badge/LLM%20Target-Catalyst%20QuickML%20(Qwen%202.5--14B)-purple.svg?style=for-the-badge)]()
 
-An advanced, multi-role tactical intelligence and conversational analytics portal built to empower the **Karnataka State Police (KSP) Crime Intelligence & Analytics Division**. The portal integrates spatial mapping, syndicate networks, recidivism risk assessment, and financial tracking with a state-of-the-art dual-mode AI assistant that runs either on the **Google Gemini Cloud API** or **100% locally and offline** using **Ollama (Llama3/Gemma2)**.
+> [!WARNING]
+> **PROTOTYPE AUDIT DISCLAIMER & PILOT PATHWAY**:
+> This project is a **proof-of-concept demonstration prototype** designed for evidence-grounded crime intelligence evaluation. It is **NOT** an official production-ready police deployment.
+> - **Data Notice**: Current environments use synthetic data and local SQLite emulation (`/tmp/ksp_crime.db`).
+> - **Simulations**: Integrations (CCTNS, Biometrics, CDR, OCR, SmartBrowz) are operated under `DEMO_SIMULATOR` mode.
+> - **AI Engine Roadmap**: Production target is **Zoho Catalyst QuickML RAG with Qwen 2.5-14B-Instruct** (India Data Center). External providers (Gemini/Ollama) are used strictly for local development testing.
+> - **Ethical AI**: Automated individual threat/risk scoring and bail recommendations ("deny bail") are strictly disabled in accordance with the *Digital Personal Data Protection Act, 2023*.
+
+An advanced, multi-role tactical intelligence and conversational analytics portal built for the **Karnataka State Police (KSP) Crime Intelligence & Analytics Division**.
 
 ---
 
 ## 🏛️ System Architecture
+
 
 ```mermaid
 graph TD
@@ -197,3 +206,64 @@ The portal is designed in compliance with law enforcement security standards:
 * **Data Classification**: All data responses are tagged with data classification badges (e.g. `Confidential`, `Restricted`, `Highly Sensitive`).
 * **Audit Trails**: Every conversational query, translated text, and database download is logged in a secure, immutable audit table containing timestamps, badge IDs, and IP addresses.
 * **Official Banner**: A persistent warning header: `Restricted — For Official Use Only • Karnataka State Police` is rendered on every viewport.
+
+---
+
+## 🗺️ Canonical 9-Page FIR ER Schema Integration Plan
+
+To replace the parallel legacy `FIR` and `CaseMaster` models, the following canonical ER extensions are specified:
+
+1. **`Person`**: Stable identity management, alias tracking, identity confidence score, source system cross-references.
+2. **`CasePersonRole`**: Standardized role mapping linking `Person` to `CaseMaster` (Accused, Victim, Complainant, Witness, Officer).
+3. **`CaseEvent`**: Operational audit events (FIR registration, Arrest, Bail, Chargesheet, Hearing, Custody transfer).
+4. **`ExternalSourceRecord`**: Provenance metadata for CCTNS/ICJS/eCourts data ingestion.
+5. **`RelationshipEdge`**: Graph intelligence relationships with explicit confidence levels and human verification state.
+6. **`EvidenceObject` & `EvidenceCustodyEvent`**: File storage pointers in **Catalyst Stratus** with SHA-256 hashes and chain-of-custody tracking.
+7. **`Forecast`**: District-level spatial-temporal forecasting with validation metrics and human oversight approvals.
+8. **`CaseSourceMap`**: Transitional bridge mapping legacy synthetic data structures to canonical ER entities.
+
+---
+
+## 🤖 Catalyst QuickML RAG Architecture Contract
+
+For official Catalyst deployments, the online conversational engine strictly follows the structured response contract:
+
+```json
+{
+  "answer": "string",
+  "facts": [],
+  "sources": [],
+  "uncertainty": "low|medium|high",
+  "policy_status": "allowed|restricted|refused",
+  "model_version": "ksp-quickml-qwen-2.5-14b"
+}
+```
+
+* **Model Specification**: Zoho Catalyst QuickML RAG with **Qwen 2.5-14B-Instruct** (India Data Center).
+* **Tool Router Isolation**: LLM generates structured tool invocations (`get_case`, `search_cases`, `get_person_history`); arbitrary SQL generation by LLM is prohibited.
+
+---
+
+## 📅 10-Year Production Roadmap
+
+### 0–3 Months: Safety & Truthfulness
+* Rebranded system from "production" to **Catalyst Demonstration Prototype**.
+* Explicitly labelled simulated integrations with `DEMO_SIMULATOR` badges.
+* Unloaded individual threat/risk scoring and automated bail recommendations.
+* Defined canonical `CaseMaster` schema bridge.
+
+### 3–12 Months: Catalyst Pilot Phase
+* Migration from SQLite `/tmp` to **Catalyst Data Store**.
+* Deployment of **Catalyst Web Client Hosting** and API Gateway authorization policies.
+* Integration of **Catalyst QuickML RAG (Qwen 2.5-14B-Instruct)** and Zia OCR/Translation.
+* Evidence storage migration to **Catalyst Stratus**.
+
+### Year 1–3: Controlled Operational Pilot
+* Secure integration adapters for CCTNS, ICJS, and eCourts datasets.
+* Analyst-reviewed network relationship verification.
+* District-level spatial forecasting calibration and model monitoring.
+
+### Year 3–10: Sustainable State Platform
+* Versioned microservices and schema migrations.
+* Independent security audits and DPDP Act 2023 compliance reviews.
+* Continuous model bias monitoring and portable backend service boundaries.

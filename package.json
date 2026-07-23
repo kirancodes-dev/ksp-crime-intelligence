@@ -7,9 +7,10 @@
     "install:client": "npm install --prefix client",
     "install:server": "npm install --prefix functions/ksp",
     "build": "npm run install:client && npm run build --prefix client",
+    "test": "npm run test --prefix functions/ksp",
     "start": "node functions/ksp/server.js",
     "seed": "python3 datastore/seed/generate_synthetic_data.py",
-    "dev": "concurrently \"npm run dev --prefix client\" \"node functions/ksp/server.js\""
+    "dev": "concurrently \"npm run dev --prefix client\" \"node --watch functions/ksp/server.js\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

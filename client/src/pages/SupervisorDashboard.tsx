@@ -128,10 +128,12 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
     }
     setSubmittingOverride(true);
     try {
+      const token = localStorage.getItem('ksp_jwt_token') || '';
       const response = await fetch(`${BASE_URL}/audit-logs/override`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
           'X-User-Id': userId,
           'X-User-Role': role
         },

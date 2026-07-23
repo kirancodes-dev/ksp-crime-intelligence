@@ -49,11 +49,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     return () => clearInterval(timer);
   }, [step, countdown]);
 
+  // Helper to create a valid structured demo JWT token for local evaluation
+  const createDemoJwtToken = (officer: LoginUser) => {
+    const b64 = (obj: any) => btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const header = { alg: 'HS256', typ: 'JWT' };
+    const payload = {
+      sub: officer.userId,
+      name: officer.name,
+      rank: officer.rank,
+      role: officer.role,
+      district: 'Bengaluru City',
+      policeStation: 'Bengaluru City Central PS',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 86400
+    };
+    return `${b64(header)}.${b64(payload)}.demo_signature`;
+  };
+
   // Direct login — bypasses backend auth for prototype demo
   const directLogin = (badge: string) => {
     const officer = MOCK_CREDENTIALS[badge];
     if (officer) {
-      localStorage.setItem('ksp_jwt_token', 'demo-token-' + badge);
+      localStorage.setItem('ksp_jwt_token', createDemoJwtToken(officer));
       onLoginSuccess(officer.userId, officer.role);
     }
   };
@@ -98,7 +115,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       // Backend unreachable — use direct login for prototype demo
       const officer = MOCK_CREDENTIALS[cleanBadge];
       if (officer && password === 'ksp2026') {
-        localStorage.setItem('ksp_jwt_token', 'demo-token-' + cleanBadge);
+        localStorage.setItem('ksp_jwt_token', createDemoJwtToken(officer));
         onLoginSuccess(officer.userId, officer.role);
         return;
       }
@@ -214,6 +231,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             {/* Card Body */}
             <div className="p-6">
               
+              {/* Prototype Disclaimer Banner */}
+              <div className="mb-4 bg-amber-50 border border-amber-300 text-amber-900 p-2.5 rounded-lg flex items-center gap-2 text-[11px] font-medium">
+                <AlertTriangle size={14} className="shrink-0 text-amber-600" />
+                <span><strong>Demonstration Prototype</strong> — Operates on synthetic data and local emulated services.</span>
+              </div>
               {/* Error Alert Box */}
               {error && (
                 <div className="mb-5 bg-red-50 border border-red-200 text-[#d9251c] p-3 rounded-lg flex items-start gap-2.5 text-xs">

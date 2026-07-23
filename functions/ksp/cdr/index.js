@@ -10,6 +10,8 @@ module.exports = async (suspectName = "Rupa Naik") => {
   if (name.includes('ramesh')) {
     return {
       success: true,
+      mode: "DEMO_SIMULATOR",
+      data_source: "SYNTHETIC_DATASET",
       suspect: "Ramesh Kumar",
       phone: "+91 98450 12345",
       imei: "358291048291048",
