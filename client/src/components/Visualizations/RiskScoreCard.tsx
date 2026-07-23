@@ -258,7 +258,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
           <ShieldAlert size={16} className="text-[#1e3a5f]" /> Key Risk Factors
         </h3>
         <div className="space-y-3">
-          {profile.factors.map((f, index) => (
+          {(profile?.factors || []).map((f, index) => (
             <div key={index} className="flex items-start gap-3 bg-slate-50 border border-slate-100 rounded-lg p-3">
               <span className={`text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded shrink-0 mt-0.5 ${
                 f.impact === 'Critical' || f.impact === 'High' ? 'bg-red-50 text-red-700 border border-red-200' :
@@ -382,7 +382,7 @@ export const RiskScoreCard: React.FC<RiskScoreCardProps> = ({ profile, onFirSele
       )}
 
       {/* Linked Incidents */}
-      {profile.incidents && profile.incidents.length > 0 && (
+      {Array.isArray(profile?.incidents) && profile.incidents.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-[#6c757d] uppercase tracking-wider mb-3 border-b border-slate-100 pb-1">
             Linked Investigations ({profile.incidents.length})

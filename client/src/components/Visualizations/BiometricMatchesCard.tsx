@@ -46,14 +46,14 @@ export const BiometricMatchesCard: React.FC<BiometricMatchesCardProps> = ({ data
         </span>
       </div>
 
-      {data.matches.length === 0 ? (
+      {(data?.matches || []).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6 text-[#6c757d] text-xs">
           <AlertTriangle className="h-8 w-8 text-slate-600 mb-2" />
           <span>No suspect mugshot matches found in KSP database registries.</span>
         </div>
       ) : (
         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-          {data.matches.map((match, idx) => (
+          {(data?.matches || []).map((match, idx) => (
             <div 
               key={idx} 
               className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white border border-[#d1d9e6] p-4 rounded-lg text-xs hover:border-[#1e3a5f]/45 transition gap-3"

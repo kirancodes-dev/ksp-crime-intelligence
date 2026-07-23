@@ -73,7 +73,7 @@ export const OcrAnalysisCard: React.FC<OcrAnalysisCardProps> = ({ data }) => {
               <User size={10} className="text-[#1e3a5f]" /> Accused / Suspects
             </span>
             <div className="text-xs font-bold text-[#1e3a5f]">
-              {data.entities.suspects.length > 0 ? (
+              {Array.isArray(data?.entities?.suspects) && data.entities.suspects.length > 0 ? (
                 data.entities.suspects.map((s, i) => (
                   <span key={i} className="inline-block bg-blue-500/10 text-[#2a4a73] border border-blue-500/25 px-1.5 py-0.5 rounded text-[11px]">
                     {s}
@@ -90,7 +90,7 @@ export const OcrAnalysisCard: React.FC<OcrAnalysisCardProps> = ({ data }) => {
               <MapPin size={10} className="text-emerald-700" /> Locations
             </span>
             <div className="text-xs font-bold text-[#1e3a5f]">
-              {data.entities.locations.length > 0 ? (
+              {Array.isArray(data?.entities?.locations) && data.entities.locations.length > 0 ? (
                 data.entities.locations.map((l, i) => (
                   <span key={i} className="inline-block bg-emerald-500/10 text-emerald-700 border border-emerald-500/25 px-1.5 py-0.5 rounded text-[11px]">
                     {l}

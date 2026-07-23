@@ -142,7 +142,7 @@ export const DispatchConsoleCard: React.FC<DispatchConsoleCardProps> = ({ data }
             KSP Fleet Registry Status
           </span>
           <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
-            {data.units.map((unit) => (
+            {(data?.units || []).map((unit) => (
               <div 
                 key={unit.id} 
                 className="flex items-center justify-between p-2.5 bg-white border border-[#d1d9e6] rounded-lg text-xs"

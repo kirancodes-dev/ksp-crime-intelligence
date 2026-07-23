@@ -45,7 +45,20 @@ const severityBg: Record<string, string> = {
 };
 
 export const EarlyWarningPanel: React.FC<EarlyWarningPanelProps> = ({ data }) => {
-  const { alerts, summary } = data;
+  const alerts = Array.isArray(data?.alerts) ? data.alerts : [];
+  const summary = data?.summary || {
+    total_alerts: 0,
+    critical_count: 0,
+    high_count: 0,
+    repeat_offenders: 0,
+    active_gangs: 0,
+    mo_clusters: 0,
+    geo_hotspots: 0,
+    escalations: 0,
+    temporal_surges: 0,
+    recommendations: []
+  };
+  const recommendations = Array.isArray(summary?.recommendations) ? summary.recommendations : [];
 
   return (
     <div className="w-full max-w-3xl mx-auto my-4 space-y-4">
@@ -56,42 +69,42 @@ export const EarlyWarningPanel: React.FC<EarlyWarningPanelProps> = ({ data }) =>
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
           <div className="bg-red-900/20 rounded-lg p-2.5 text-center border border-red-800/30">
-            <div className="text-lg font-bold text-[#d9251c]">{summary.critical_count}</div>
+            <div className="text-lg font-bold text-[#d9251c]">{summary.critical_count || 0}</div>
             <div className="text-[9px] text-[#6c757d] uppercase">Critical</div>
           </div>
           <div className="bg-amber-50 rounded-lg p-2.5 text-center border border-amber-800/30">
-            <div className="text-lg font-bold text-amber-700">{summary.high_count}</div>
+            <div className="text-lg font-bold text-amber-700">{summary.high_count || 0}</div>
             <div className="text-[9px] text-[#6c757d] uppercase">High</div>
           </div>
           <div className="bg-slate-700/30 rounded-lg p-2.5 text-center border border-[#d1d9e6]/30">
-            <div className="text-lg font-bold text-[#1e3a5f]">{summary.total_alerts}</div>
+            <div className="text-lg font-bold text-[#1e3a5f]">{summary.total_alerts || 0}</div>
             <div className="text-[9px] text-[#6c757d] uppercase">Total Alerts</div>
           </div>
           <div className="bg-blue-50 rounded-lg p-2.5 text-center border border-blue-800/30">
-            <div className="text-lg font-bold text-[#1e3a5f]">{summary.repeat_offenders + summary.active_gangs}</div>
+            <div className="text-lg font-bold text-[#1e3a5f]">{(summary.repeat_offenders || 0) + (summary.active_gangs || 0)}</div>
             <div className="text-[9px] text-[#6c757d] uppercase">Threats</div>
           </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-1.5 text-center">
           <div className="bg-[#f0f4f8]/50 rounded p-1.5">
-            <div className="text-xs font-bold text-[#1e3a5f]">{summary.repeat_offenders}</div>
+            <div className="text-xs font-bold text-[#1e3a5f]">{summary.repeat_offenders || 0}</div>
             <div className="text-[8px] text-[#6c757d]">Repeat Offenders</div>
           </div>
           <div className="bg-[#f0f4f8]/50 rounded p-1.5">
-            <div className="text-xs font-bold text-[#1e3a5f]">{summary.active_gangs}</div>
+            <div className="text-xs font-bold text-[#1e3a5f]">{summary.active_gangs || 0}</div>
             <div className="text-[8px] text-[#6c757d]">Active Gangs</div>
           </div>
           <div className="bg-[#f0f4f8]/50 rounded p-1.5">
-            <div className="text-xs font-bold text-[#1e3a5f]">{summary.mo_clusters}</div>
+            <div className="text-xs font-bold text-[#1e3a5f]">{summary.mo_clusters || 0}</div>
             <div className="text-[8px] text-[#6c757d]">MO Clusters</div>
           </div>
           <div className="bg-[#f0f4f8]/50 rounded p-1.5">
-            <div className="text-xs font-bold text-[#1e3a5f]">{summary.geo_hotspots}</div>
+            <div className="text-xs font-bold text-[#1e3a5f]">{summary.geo_hotspots || 0}</div>
             <div className="text-[8px] text-[#6c757d]">Geo Hotspots</div>
           </div>
           <div className="bg-[#f0f4f8]/50 rounded p-1.5">
-            <div className="text-xs font-bold text-[#1e3a5f]">{summary.temporal_surges}</div>
+            <div className="text-xs font-bold text-[#1e3a5f]">{summary.temporal_surges || 0}</div>
             <div className="text-[8px] text-[#6c757d]">Temporal Surges</div>
           </div>
         </div>
@@ -124,11 +137,11 @@ export const EarlyWarningPanel: React.FC<EarlyWarningPanelProps> = ({ data }) =>
       </div>
 
       {/* Strategic Recommendations */}
-      {summary.recommendations.length > 0 && (
+      {recommendations.length > 0 && (
         <div className="bg-emerald-50 border border-emerald-800/30 rounded-lg p-4">
           <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2">Strategic Recommendations</h4>
           <div className="space-y-1">
-            {summary.recommendations.map((rec, idx) => (
+            {recommendations.map((rec, idx) => (
               <p key={idx} className="text-[11px] text-emerald-700">• {rec}</p>
             ))}
           </div>

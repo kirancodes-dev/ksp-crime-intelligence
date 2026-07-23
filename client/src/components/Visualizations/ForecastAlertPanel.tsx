@@ -145,18 +145,18 @@ const ForecastCard: React.FC<{ forecast: Forecast }> = ({ forecast }) => {
             className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-[#2d4a6f] hover:bg-white/40 transition"
           >
             <span className="flex items-center gap-1.5">
-              <Database size={12} className="text-emerald-700" /> Data Sources ({forecast.data_sources.length})
+              <Database size={12} className="text-emerald-700" /> Data Sources ({Array.isArray(forecast.data_sources) ? forecast.data_sources.length : (typeof forecast.data_sources === 'string' ? forecast.data_sources.split(',').length : 0)})
             </span>
             {expanded === 'sources' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
           {expanded === 'sources' && (
             <div className="px-3 pb-3 border-t border-[#d1d9e6]/40 pt-2 flex flex-wrap gap-1.5">
-              {forecast.data_sources.map((src, i) => (
+              {(Array.isArray(forecast.data_sources) ? forecast.data_sources : (typeof forecast.data_sources === 'string' ? forecast.data_sources.split(',') : [])).map((src, i) => (
                 <span
                   key={i}
                   className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 font-medium"
                 >
-                  {src}
+                  {typeof src === 'string' ? src.trim() : src}
                 </span>
               ))}
             </div>
@@ -168,8 +168,9 @@ const ForecastCard: React.FC<{ forecast: Forecast }> = ({ forecast }) => {
 };
 
 export const ForecastAlertPanel: React.FC<ForecastAlertPanelProps> = ({ forecasts }) => {
-  const criticalCount = forecasts.filter(f => f.risk_level === 'Critical').length;
-  const highCount = forecasts.filter(f => f.risk_level === 'High').length;
+  const safeForecasts = Array.isArray(forecasts) ? forecasts : [];
+  const criticalCount = safeForecasts.filter(f => f.risk_level === 'Critical').length;
+  const highCount = safeForecasts.filter(f => f.risk_level === 'High').length;
 
   return (
     <div className="card-panel rounded-lg p-6 text-[#1e3a5f] w-full my-4">
@@ -198,7 +199,7 @@ export const ForecastAlertPanel: React.FC<ForecastAlertPanelProps> = ({ forecast
 
       {/* Forecast Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {forecasts.map((forecast, index) => (
+        {safeForecasts.map((forecast, index) => (
           <ForecastCard key={index} forecast={forecast} />
         ))}
       </div>

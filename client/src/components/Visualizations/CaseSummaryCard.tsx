@@ -22,8 +22,29 @@ interface CaseSummaryCardProps {
 }
 
 export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
-  const { summary, riskAssessment } = data;
-  const { overview, financial, network } = summary;
+  const summary = data?.summary || {
+    executive: 'No executive summary available.',
+    overview: { fir_number: 'N/A' },
+    victims: [],
+    suspects: [],
+    financial: { total_transactions: 0, total_amount: 0, suspicious_count: 0, suspicious_amount: 0 },
+    network: { linked_cases: [] },
+    leads: [],
+    evidence: []
+  };
+  const riskAssessment = data?.riskAssessment || {
+    overall: 0.5,
+    level: 'Medium',
+    factors: []
+  };
+  const overview = summary.overview || { fir_number: 'N/A' };
+  const financial = summary.financial || { total_transactions: 0, total_amount: 0, suspicious_count: 0, suspicious_amount: 0 };
+  const network = summary.network || { linked_cases: [] };
+  const factors = Array.isArray(riskAssessment?.factors) ? riskAssessment.factors : [];
+  const suspects = Array.isArray(summary?.suspects) ? summary.suspects : [];
+  const linkedCases = Array.isArray(network?.linked_cases) ? network.linked_cases : [];
+  const evidenceList = Array.isArray(summary?.evidence) ? summary.evidence : [];
+  const leadsList = Array.isArray(summary?.leads) ? summary.leads : [];
 
   return (
     <div className="w-full max-w-3xl mx-auto my-4 space-y-4">
@@ -47,11 +68,11 @@ export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
             riskAssessment.level === 'Critical' ? 'text-[#d9251c]' :
             riskAssessment.level === 'Medium' ? 'text-amber-700' : 'text-emerald-700'
           } />
-          <h4 className="text-xs font-bold uppercase tracking-wider text-[#1e3a5f]">Overall Risk: {riskAssessment.level} ({(riskAssessment.overall * 100).toFixed(0)}%)</h4>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#1e3a5f]">Overall Risk: {riskAssessment.level} ({((riskAssessment.overall || 0) * 100).toFixed(0)}%)</h4>
         </div>
-        {riskAssessment.factors.length > 0 && (
+        {factors.length > 0 && (
           <div className="space-y-1">
-            {riskAssessment.factors.map((f, idx) => (
+            {factors.map((f, idx) => (
               <div key={idx} className="flex items-center gap-2 text-[11px]">
                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                   f.impact === 'Critical' ? 'bg-red-500/20 text-[#d9251c]' :
@@ -66,13 +87,13 @@ export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
       </div>
 
       {/* Suspects */}
-      {summary.suspects.length > 0 && (
+      {suspects.length > 0 && (
         <div className="bg-white border border-[#d1d9e6] rounded-lg p-4">
           <h4 className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Users size={12} /> Suspects ({summary.suspects.length})
+            <Users size={12} /> Suspects ({suspects.length})
           </h4>
           <div className="space-y-2">
-            {summary.suspects.map((s, idx) => (
+            {suspects.map((s, idx) => (
               <div key={idx} className="bg-[#f0f4f8]/50 rounded-lg p-3 border border-[#d1d9e6]">
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-[#1e3a5f]">{s.name}</span>
@@ -80,7 +101,7 @@ export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
                     s.threat_level === 'Critical' ? 'bg-red-500/20 text-[#d9251c]' :
                     s.threat_level === 'Medium' ? 'bg-amber-500/20 text-amber-700' :
                     'bg-emerald-500/20 text-emerald-700'
-                  }`}>{s.threat_level} ({(s.risk_score * 100).toFixed(0)}%)</span>
+                  }`}>{s.threat_level} ({((s.risk_score || 0) * 100).toFixed(0)}%)</span>
                 </div>
                 <div className="flex gap-3 mt-1 text-[10px] text-[#6c757d]">
                   {s.age && <span>Age: {s.age}</span>}
@@ -95,7 +116,7 @@ export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
       )}
 
       {/* Financial Intelligence */}
-      {financial.total_transactions > 0 && (
+      {(financial.total_transactions || 0) > 0 && (
         <div className="bg-white border border-[#d1d9e6] rounded-lg p-4">
           <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2 flex items-center gap-2">
             <Landmark size={12} /> Financial Intelligence
@@ -106,15 +127,15 @@ export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
               <div className="text-[8px] text-[#6c757d]">Transactions</div>
             </div>
             <div className="bg-[#f0f4f8]/50 rounded p-2 text-center">
-              <div className="text-xs font-bold text-[#1e3a5f]">Rs {financial.total_amount.toLocaleString('en-IN')}</div>
+              <div className="text-xs font-bold text-[#1e3a5f]">Rs {(financial.total_amount || 0).toLocaleString('en-IN')}</div>
               <div className="text-[8px] text-[#6c757d]">Total Flow</div>
             </div>
             <div className="bg-red-900/20 rounded p-2 text-center border border-red-800/30">
-              <div className="text-xs font-bold text-[#d9251c]">{financial.suspicious_count}</div>
+              <div className="text-xs font-bold text-[#d9251c]">{financial.suspicious_count || 0}</div>
               <div className="text-[8px] text-[#6c757d]">Suspicious</div>
             </div>
             <div className="bg-red-900/20 rounded p-2 text-center border border-red-800/30">
-              <div className="text-xs font-bold text-[#d9251c]">Rs {financial.suspicious_amount.toLocaleString('en-IN')}</div>
+              <div className="text-xs font-bold text-[#d9251c]">Rs {(financial.suspicious_amount || 0).toLocaleString('en-IN')}</div>
               <div className="text-[8px] text-[#6c757d]">Flagged</div>
             </div>
           </div>
@@ -122,16 +143,16 @@ export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
       )}
 
       {/* Network Connections */}
-      {network.linked_cases.length > 0 && (
+      {linkedCases.length > 0 && (
         <div className="bg-white border border-[#d1d9e6] rounded-lg p-4">
           <h4 className="text-xs font-bold text-[#1e3a5f] uppercase tracking-wider mb-2 flex items-center gap-2">
             <Link size={12} /> Network Connections
           </h4>
           <div className="space-y-1.5">
-            {network.linked_cases.map((l: any, idx: number) => (
+            {linkedCases.map((l: any, idx: number) => (
               <div key={idx} className="flex items-center gap-2 text-[11px] text-[#2d4a6f]">
                 <ChevronRight size={10} className="text-[#1e3a5f] shrink-0" />
-                <span><strong>{l.fir}</strong> — {l.link_type.replace(/_/g, ' ')} ({(l.confidence * 100).toFixed(0)}% confidence)</span>
+                <span><strong>{l.fir}</strong> — {(l.link_type || '').replace(/_/g, ' ')} ({((l.confidence || 0) * 100).toFixed(0)}% confidence)</span>
               </div>
             ))}
           </div>
@@ -139,11 +160,11 @@ export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
       )}
 
       {/* Evidence */}
-      {summary.evidence.length > 0 && (
+      {evidenceList.length > 0 && (
         <div className="bg-white border border-[#d1d9e6] rounded-lg p-4">
           <h4 className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-2">Key Evidence</h4>
           <div className="space-y-1">
-            {summary.evidence.map((e, idx) => (
+            {evidenceList.map((e, idx) => (
               <p key={idx} className="text-[11px] text-[#2d4a6f]">• {e}</p>
             ))}
           </div>
@@ -151,11 +172,11 @@ export const CaseSummaryCard: React.FC<CaseSummaryCardProps> = ({ data }) => {
       )}
 
       {/* Investigative Leads */}
-      {summary.leads.length > 0 && (
+      {leadsList.length > 0 && (
         <div className="bg-emerald-50 border border-emerald-800/30 rounded-lg p-4">
           <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2">Investigative Leads</h4>
           <div className="space-y-1.5">
-            {summary.leads.map((lead, idx) => (
+            {leadsList.map((lead, idx) => (
               <div key={idx} className="flex items-start gap-2 text-[11px]">
                 <span className="text-emerald-700 font-bold">P{lead.priority}</span>
                 <span className="text-[#2d4a6f]"><strong>{lead.action}</strong> — {lead.rationale}</span>
