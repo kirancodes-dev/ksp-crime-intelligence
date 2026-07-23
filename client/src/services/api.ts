@@ -501,6 +501,12 @@ export const api = {
       underInvestigation: 89,
       identifiedSyndicates: 12,
       highThreatRecidivists: 24,
+      stats: {
+        total: 142,
+        open: 89,
+        syndicates: 12,
+        highRisk: 24
+      },
       hotspots: [
         { id: 1, lat: 12.9716, lng: 77.5946, title: 'Bengaluru Central PS', count: 42, risk: 'High', type: 'Cyber Crime' },
         { id: 2, lat: 12.9352, lng: 77.6245, title: 'Koramangala PS', count: 28, risk: 'Critical', type: 'Financial Fraud' },

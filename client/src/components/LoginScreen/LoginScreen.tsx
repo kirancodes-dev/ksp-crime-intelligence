@@ -51,7 +51,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
   // Helper to create a valid structured demo JWT token for local evaluation
   const createDemoJwtToken = (officer: LoginUser) => {
-    const b64 = (obj: any) => btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const b64 = (obj: any) => {
+      try {
+        return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      } catch (e) {
+        return btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      }
+    };
     const header = { alg: 'HS256', typ: 'JWT' };
     const payload = {
       sub: officer.userId,

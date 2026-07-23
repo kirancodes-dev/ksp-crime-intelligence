@@ -59,8 +59,8 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
 
       // Fetch anomalies
       const alertRes = await api.getAnomalies(userId, role);
-      if (alertRes.success) {
-        setAlerts(alertRes.anomalies.generatedAlerts);
+      if (alertRes && alertRes.success && alertRes.anomalies) {
+        setAlerts(alertRes.anomalies.generatedAlerts || []);
       }
 
       // Fetch CCTNS runs
