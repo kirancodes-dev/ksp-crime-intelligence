@@ -12,7 +12,7 @@
     "seed": "python3 datastore/seed/generate_synthetic_data.py",
     "dev": "concurrently \"npm run dev --prefix client\" \"node --watch functions/ksp/server.js\""
   },
-  "devDependencies": {
+  "dependencies": {
     "concurrently": "^8.2.2",
     "typescript": "^5.7.3",
     "vite": "^6.0.0"
