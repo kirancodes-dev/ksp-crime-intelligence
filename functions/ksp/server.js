@@ -84,6 +84,16 @@ app.use(cors(corsOptionsDelegate));
 
 app.use(express.json({ limit: '10mb' }));
 
+// Middleware to normalize Catalyst Cloud function path prefixes (/server/ksp/api -> /api)
+app.use((req, res, next) => {
+  if (req.url.startsWith('/server/ksp/api')) {
+    req.url = req.url.replace('/server/ksp/api', '/api');
+  } else if (req.url.startsWith('/server/')) {
+    req.url = req.url.replace(/^\/server\/[^/]+\/api/, '/api');
+  }
+  next();
+});
+
 // Serve static client build (production)
 const clientDistPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(clientDistPath));
