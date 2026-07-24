@@ -452,7 +452,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {paginatedLogs.length > 0 ? (
+                    {Array.isArray(paginatedLogs) && paginatedLogs.length > 0 ? (
                       paginatedLogs.map((log) => (
                         <tr key={log.id} className="hover:bg-slate-50 transition">
                           <td className="p-3 whitespace-nowrap">
@@ -806,7 +806,7 @@ export const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ userId
                   </span>
                   
                   <div className="bg-[#0d2137] text-[#2d4a6f] font-mono text-[10px] p-3 rounded-lg border border-slate-900 h-32 overflow-y-auto space-y-1">
-                    {logsOutput.map((l, i) => (
+                    {(logsOutput || []).map((l, i) => (
                       <div key={i} className="leading-tight">
                         <span className="text-emerald-500">&gt;</span> {l}
                       </div>

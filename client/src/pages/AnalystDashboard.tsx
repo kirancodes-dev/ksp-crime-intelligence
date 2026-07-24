@@ -511,7 +511,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
                   <Loader2 size={14} className="animate-spin text-[#1e3a5f]" />
                   <span>Fetching cellular logs...</span>
                 </div>
-              ) : cdrTimelineData && cdrTimelineData.breadcrumbs ? (
+              ) : cdrTimelineData && Array.isArray(cdrTimelineData.breadcrumbs) ? (
                 <div className="space-y-3">
                   {cdrTimelineData.breadcrumbs.map((b: any, idx: number) => {
                     const isActive = idx === timelineIndex;
@@ -547,7 +547,7 @@ export const AnalystDashboard: React.FC<AnalystDashboardProps> = ({
             </div>
 
             {/* Spatial Collision alerts */}
-            {cdrTimelineData && cdrTimelineData.collisionAlerts?.length > 0 && (
+            {cdrTimelineData && Array.isArray(cdrTimelineData.collisionAlerts) && cdrTimelineData.collisionAlerts.length > 0 && (
               <div className="bg-red-50 text-xs border border-red-200 rounded-lg p-4 space-y-2.5">
                 <div className="flex items-center gap-1.5 text-red-700 font-extrabold uppercase tracking-wide">
                   <AlertCircle size={14} /> Critical Spatial Intersection

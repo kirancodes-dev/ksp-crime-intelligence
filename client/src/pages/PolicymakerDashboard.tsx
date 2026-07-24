@@ -83,7 +83,7 @@ export const PolicymakerDashboard: React.FC<PolicymakerDashboardProps> = ({ user
           ...f,
           data_sources: typeof f.data_sources === 'string'
             ? f.data_sources.split(',').map((s: string) => s.trim())
-            : f.data_sources
+            : (Array.isArray(f.data_sources) ? f.data_sources : [])
         }));
         setForecasts(mappedForecasts);
         const criticalCount = mappedForecasts.filter(

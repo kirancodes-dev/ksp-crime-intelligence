@@ -82,15 +82,15 @@ ${sessionSummary ? `
   <div class="section-title">Intelligence Narrative</div>
   <div class="narrative-box">${sessionSummary.replace(/\n/g, '<br>')}</div>
 </div>` : ''}
-${findings.length > 0 ? `
+${(findings || []).length > 0 ? `
 <div class="section">
   <div class="section-title">Key Findings</div>
-  ${findings.map(f => `<div class="finding"><div class="bullet"></div><div>${f}</div></div>`).join('')}
+  ${(findings || []).map(f => `<div class="finding"><div class="bullet"></div><div>${f}</div></div>`).join('')}
 </div>` : ''}
-${recs.length > 0 ? `
+${(recs || []).length > 0 ? `
 <div class="section">
   <div class="section-title">Recommendations</div>
-  ${recs.map((r, i) => `<div class="rec"><div class="rec-num">${i+1}</div><div>${r}</div></div>`).join('')}
+  ${(recs || []).map((r, i) => `<div class="rec"><div class="rec-num">${i+1}</div><div>${r}</div></div>`).join('')}
 </div>` : ''}
 <div class="footer">
   <div>
